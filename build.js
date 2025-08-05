@@ -3,7 +3,7 @@
 const { execSync } = require('child_process');
 const path = require('path');
 
-console.log('🔨 Building Threads Bot Dashboard for Railway...');
+console.log('🔨 Building Threads Bot Dashboard...');
 
 try {
   // Install root dependencies
@@ -25,5 +25,6 @@ try {
   console.log('✅ Build completed successfully!');
 } catch (error) {
   console.error('❌ Build failed:', error);
+  console.error('Error details:', error.message);
   process.exit(1);
 } 
