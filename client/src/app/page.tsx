@@ -30,6 +30,7 @@ export default function Dashboard() {
   const [botStatus, setBotStatus] = useState('loading');
   const [loading, setLoading] = useState(true);
   const [backendUrl, setBackendUrl] = useState('');
+  const [connectionStatus, setConnectionStatus] = useState('checking');
 
   const [newAccount, setNewAccount] = useState({ username: '', password: '' });
   const [newCaption, setNewCaption] = useState('');
@@ -46,6 +47,14 @@ export default function Dashboard() {
   const fetchData = async (url: string) => {
     try {
       console.log('Fetching data from:', url);
+      setConnectionStatus('connecting');
+      
+      // Test connection first
+      const healthResponse = await fetch(`${url}/api/health`);
+      if (!healthResponse.ok) {
+        throw new Error(`Health check failed: ${healthResponse.status}`);
+      }
+      setConnectionStatus('connected');
       
       // Fetch bot status
       const statusResponse = await fetch(`${url}/api/status`);
@@ -74,6 +83,7 @@ export default function Dashboard() {
     } catch (error) {
       console.error('Error fetching data:', error);
       setBotStatus('error');
+      setConnectionStatus('error');
       setLoading(false);
       toast.error('Failed to connect to backend');
     }
@@ -188,6 +198,16 @@ export default function Dashboard() {
               <h1 className="text-3xl font-bold text-gray-900">Threads Bot Dashboard</h1>
               <p className="text-gray-600">Auto-posting bot for Threads</p>
               <p className="text-sm text-gray-500">Backend: {backendUrl}</p>
+              <p className="text-sm text-gray-500">
+                Connection: 
+                <span className={`ml-1 px-2 py-1 text-xs font-medium rounded-full ${
+                  connectionStatus === 'connected' ? 'bg-green-100 text-green-800' :
+                  connectionStatus === 'error' ? 'bg-red-100 text-red-800' :
+                  'bg-yellow-100 text-yellow-800'
+                }`}>
+                  {connectionStatus}
+                </span>
+              </p>
             </div>
             <div className="flex items-center space-x-4">
               <div className="flex items-center">

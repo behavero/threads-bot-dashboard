@@ -66,12 +66,30 @@ def status():
         "service": "threads-bot",
         "bot_running": bot_running,
         "timestamp": datetime.now().isoformat(),
-        "environment": "render"
+        "environment": "render",
+        "backend_url": "https://threads-bot-dashboard-3.onrender.com"
     })
 
 @app.route('/api/health')
 def health():
-    return jsonify({"health": "ok"})
+    return jsonify({
+        "health": "ok",
+        "service": "threads-bot",
+        "timestamp": datetime.now().isoformat(),
+        "environment": "render"
+    })
+
+@app.route('/api/info')
+def info():
+    """Get detailed service information"""
+    return jsonify({
+        "service": "threads-bot",
+        "environment": "render",
+        "backend_url": "https://threads-bot-dashboard-3.onrender.com",
+        "supabase_connected": bool(os.getenv("SUPABASE_URL")),
+        "bot_status": "running" if bot_running else "stopped",
+        "timestamp": datetime.now().isoformat()
+    })
 
 @app.route('/api/accounts', methods=['GET'])
 def get_accounts():
