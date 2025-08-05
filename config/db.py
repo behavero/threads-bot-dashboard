@@ -1,5 +1,5 @@
 """
-Database connection and configuration for Supabase PostgreSQL
+Database connection and configuration for Supabase
 """
 
 import os
@@ -7,7 +7,7 @@ import asyncio
 import logging
 from typing import Optional, List, Dict, Any
 from contextlib import asynccontextmanager
-import asyncpg
+from supabase import create_client, Client
 from sqlalchemy import create_engine, text
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
@@ -15,21 +15,57 @@ from sqlalchemy.pool import StaticPool
 
 logger = logging.getLogger(__name__)
 
-# Database configuration
+# Supabase configuration
+SUPABASE_URL = "https://perwbmtwutwzsvlirwik.supabase.co"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlcndibXR3dXR3enN2bGlyd2lrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0MDU1ODIsImV4cCI6MjA2OTk4MTU4Mn0.ACJ6v7w4brocGyhC3hlsWI_huE3-3kSdQjLSCijw56o"
+
+# Direct PostgreSQL connection (fallback)
 DATABASE_URL = "postgresql://postgres:jZGhekR4AO!0IJQsMYAG@db.perwbmtwutwzsvlirwik.supabase.co:5432/postgres"
 ASYNC_DATABASE_URL = "postgresql+asyncpg://postgres:jZGhekR4AO!0IJQsMYAG@db.perwbmtwutwzsvlirwik.supabase.co:5432/postgres"
 
-class DatabaseManager:
-    """Manages database connections and operations"""
+class SupabaseManager:
+    """Manages Supabase client and operations"""
     
     def __init__(self):
+        self.supabase: Optional[Client] = None
         self.engine = None
         self.async_engine = None
         self.session_factory = None
-        self._connection_pool = None
         
     async def initialize(self):
-        """Initialize database connections"""
+        """Initialize Supabase client and database connections"""
+        try:
+            # Initialize Supabase client
+            self.supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+            logger.info("✅ Supabase client initialized successfully")
+            
+            # Test Supabase connection
+            await self.test_supabase_connection()
+            
+            # Initialize direct PostgreSQL connections as fallback
+            await self._initialize_postgres_connections()
+            
+            # Create tables if they don't exist
+            await self.create_tables()
+            
+        except Exception as e:
+            logger.error(f"❌ Supabase initialization failed: {e}")
+            # Fallback to direct PostgreSQL
+            await self._initialize_postgres_connections()
+            await self.create_tables()
+    
+    async def test_supabase_connection(self):
+        """Test Supabase connection"""
+        try:
+            # Test with a simple query
+            response = self.supabase.table('captions').select('id').limit(1).execute()
+            logger.info("✅ Supabase connection test successful")
+        except Exception as e:
+            logger.error(f"❌ Supabase connection test failed: {e}")
+            raise
+    
+    async def _initialize_postgres_connections(self):
+        """Initialize direct PostgreSQL connections as fallback"""
         try:
             # Create async engine
             self.async_engine = create_async_engine(
@@ -58,27 +94,16 @@ class DatabaseManager:
                 autoflush=False
             )
             
-            # Test connection
-            await self.test_connection()
-            logger.info("✅ Database connection established successfully")
+            logger.info("✅ PostgreSQL fallback connections initialized")
             
         except Exception as e:
-            logger.error(f"❌ Database connection failed: {e}")
-            raise
-    
-    async def test_connection(self):
-        """Test database connection"""
-        try:
-            async with self.async_engine.begin() as conn:
-                await conn.execute(text("SELECT 1"))
-            logger.info("✅ Database connection test successful")
-        except Exception as e:
-            logger.error(f"❌ Database connection test failed: {e}")
+            logger.error(f"❌ PostgreSQL fallback initialization failed: {e}")
             raise
     
     async def create_tables(self):
         """Create database tables if they don't exist"""
         try:
+            # Try to create tables using direct PostgreSQL connection
             async with self.async_engine.begin() as conn:
                 # Create captions table
                 await conn.execute(text("""
@@ -159,6 +184,13 @@ class DatabaseManager:
         
         return self.session_factory()
     
+    def get_supabase_client(self) -> Client:
+        """Get Supabase client"""
+        if not self.supabase:
+            raise RuntimeError("Supabase not initialized")
+        
+        return self.supabase
+    
     async def close(self):
         """Close database connections"""
         if self.async_engine:
@@ -168,12 +200,11 @@ class DatabaseManager:
         logger.info("✅ Database connections closed")
 
 # Global database manager instance
-db_manager = DatabaseManager()
+db_manager = SupabaseManager()
 
 async def init_database():
     """Initialize database connection and tables"""
     await db_manager.initialize()
-    await db_manager.create_tables()
 
 def get_sync_session():
     """Get sync session for Flask"""
@@ -182,6 +213,10 @@ def get_sync_session():
 async def get_async_connection():
     """Get async connection context manager"""
     return db_manager.get_async_connection()
+
+def get_supabase_client():
+    """Get Supabase client"""
+    return db_manager.get_supabase_client()
 
 async def close_database():
     """Close database connections"""
