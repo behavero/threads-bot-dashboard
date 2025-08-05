@@ -2,6 +2,7 @@
 node_modules/
 package.json
 package-lock.json
+npm-shrinkwrap.json
 *.js
 *.jsx
 *.ts
@@ -11,6 +12,14 @@ package-lock.json
 *.sass
 *.less
 *.html
+
+# Frontend directories
+client/
+frontend/
+.next/
+out/
+dist/
+build/
 
 # Python cache
 __pycache__/
@@ -49,6 +58,13 @@ docs/
 .DS_Store
 Thumbs.db
 
-# Client files (should not be in server)
-client/
-frontend/ 
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Railway/Render/Vercel configs (keep only railway.json and railway.toml)
+render.yaml
+vercel.json
+.replit
+replit.nix 

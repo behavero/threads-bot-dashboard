@@ -1,3 +1,6 @@
+# Enhanced Threads Bot Backend - Python Application
+# This is a Python application, NOT a Node.js application
+
 FROM python:3.11-slim
 
 # Set working directory
@@ -7,10 +10,13 @@ WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app
+ENV ENVIRONMENT=production
+ENV PLATFORM=railway
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     gcc \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching
@@ -32,5 +38,5 @@ EXPOSE 5000
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:5000/api/status || exit 1
 
-# Start the application
+# Start the Python application
 CMD ["python", "start.py"] 
