@@ -16,8 +16,8 @@ RUN npm install
 RUN cd server && npm install
 RUN cd client && npm install
 
-# Build the client using build script
-RUN cd client && chmod +x build.sh && ./build.sh
+# Build the client
+RUN cd client && CI=true NODE_ENV=production npm run build
 
 # Expose port
 EXPOSE 5000
