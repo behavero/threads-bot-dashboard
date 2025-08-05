@@ -1,0 +1,167 @@
+[
+  {
+    "username": "tech_enthusiast_2024",
+    "email": "tech@example.com",
+    "password": "your_secure_password_here",
+    "enabled": true,
+    "description": "Tech and innovation content",
+    "posting_schedule": {
+      "frequency": "every_5_minutes",
+      "interval_minutes": 5,
+      "timezone": "UTC",
+      "start_time": "00:00",
+      "end_time": "23:59"
+    },
+    "posting_config": {
+      "use_random_caption": true,
+      "use_random_image": true,
+      "max_posts_per_day": 288,
+      "delay_between_posts_seconds": 300,
+      "user_agent_rotation": true,
+      "random_delays": true,
+      "media_variation": true,
+      "anti_detection_level": "high",
+      "session_timeout": 3600,
+      "max_retries": 3
+    },
+    "fingerprint_config": {
+      "device_type": "iPhone",
+      "os_version": "17.0",
+      "browser_version": "Safari/604.1",
+      "screen_resolution": "1170x2532",
+      "timezone": "UTC"
+    }
+  },
+  {
+    "username": "travel_adventures_blog",
+    "email": "travel@example.com",
+    "password": "your_secure_password_here",
+    "enabled": true,
+    "description": "Travel photography and stories",
+    "posting_schedule": {
+      "frequency": "every_5_minutes",
+      "interval_minutes": 5,
+      "timezone": "UTC",
+      "start_time": "00:00",
+      "end_time": "23:59"
+    },
+    "posting_config": {
+      "use_random_caption": true,
+      "use_random_image": true,
+      "max_posts_per_day": 288,
+      "delay_between_posts_seconds": 300,
+      "user_agent_rotation": true,
+      "random_delays": true,
+      "media_variation": true,
+      "anti_detection_level": "high",
+      "session_timeout": 3600,
+      "max_retries": 3
+    },
+    "fingerprint_config": {
+      "device_type": "iPad",
+      "os_version": "17.0",
+      "browser_version": "Safari/604.1",
+      "screen_resolution": "1668x2388",
+      "timezone": "UTC"
+    }
+  },
+  {
+    "username": "fitness_motivation_daily",
+    "email": "fitness@example.com",
+    "password": "your_secure_password_here",
+    "enabled": true,
+    "description": "Fitness tips and motivation",
+    "posting_schedule": {
+      "frequency": "every_5_minutes",
+      "interval_minutes": 5,
+      "timezone": "UTC",
+      "start_time": "00:00",
+      "end_time": "23:59"
+    },
+    "posting_config": {
+      "use_random_caption": true,
+      "use_random_image": true,
+      "max_posts_per_day": 288,
+      "delay_between_posts_seconds": 300,
+      "user_agent_rotation": true,
+      "random_delays": true,
+      "media_variation": true,
+      "anti_detection_level": "high",
+      "session_timeout": 3600,
+      "max_retries": 3
+    },
+    "fingerprint_config": {
+      "device_type": "iPhone",
+      "os_version": "16.6",
+      "browser_version": "Safari/604.1",
+      "screen_resolution": "1170x2532",
+      "timezone": "UTC"
+    }
+  },
+  {
+    "username": "food_lover_creations",
+    "email": "food@example.com",
+    "password": "your_secure_password_here",
+    "enabled": true,
+    "description": "Culinary adventures and recipes",
+    "posting_schedule": {
+      "frequency": "every_5_minutes",
+      "interval_minutes": 5,
+      "timezone": "UTC",
+      "start_time": "00:00",
+      "end_time": "23:59"
+    },
+    "posting_config": {
+      "use_random_caption": true,
+      "use_random_image": true,
+      "max_posts_per_day": 288,
+      "delay_between_posts_seconds": 300,
+      "user_agent_rotation": true,
+      "random_delays": true,
+      "media_variation": true,
+      "anti_detection_level": "high",
+      "session_timeout": 3600,
+      "max_retries": 3
+    },
+    "fingerprint_config": {
+      "device_type": "iPhone",
+      "os_version": "16.5",
+      "browser_version": "Safari/604.1",
+      "screen_resolution": "1170x2532",
+      "timezone": "UTC"
+    }
+  },
+  {
+    "username": "art_creative_minds",
+    "email": "art@example.com",
+    "password": "your_secure_password_here",
+    "enabled": true,
+    "description": "Art and creative inspiration",
+    "posting_schedule": {
+      "frequency": "every_5_minutes",
+      "interval_minutes": 5,
+      "timezone": "UTC",
+      "start_time": "00:00",
+      "end_time": "23:59"
+    },
+    "posting_config": {
+      "use_random_caption": true,
+      "use_random_image": true,
+      "max_posts_per_day": 288,
+      "delay_between_posts_seconds": 300,
+      "user_agent_rotation": true,
+      "random_delays": true,
+      "media_variation": true,
+      "anti_detection_level": "high",
+      "session_timeout": 3600,
+      "max_retries": 3
+    },
+    "fingerprint_config": {
+      "device_type": "iPad",
+      "os_version": "16.6",
+      "browser_version": "Safari/604.1",
+      "screen_resolution": "1668x2388",
+      "timezone": "UTC"
+    }
+  }
+] 

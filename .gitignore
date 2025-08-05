@@ -22,8 +22,10 @@ wheels/
 MANIFEST
 
 # Virtual environments
-venv/
+.env
+.venv
 env/
+venv/
 ENV/
 env.bak/
 venv.bak/
@@ -44,50 +46,83 @@ venv.bak/
 ehthumbs.db
 Thumbs.db
 
-# Project specific
+# Logs
+*.log
+logs/
+enhanced_bot.log
+bot.log
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Configuration files with sensitive data
 config/accounts.json
 config/legacy_accounts.json
-*.log
-enhanced_bot.log
-.env
-
-# Threads API token files
-*.token
-.token_*
-
-# Images (optional - uncomment if you don't want to track images)
-# images/*.jpg
-# images/*.jpeg
-# images/*.png
+.env*
+.secrets
 
 # Deployment
 .railway/
 .render/
 .replit/
-
-# Platform-specific
 railway.toml
 railway.json
 render.yaml
 .replit
 replit.nix
 pyproject.toml
+nixpacks.toml
+Procfile
+runtime.txt
 
-# Environment files
-.env
-.env.local
-.env.production
-.env.development
+# Node.js (Frontend)
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/.vercel/
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
 
-# Logs
-*.log
-enhanced_bot.log
-deploy.log
+# Build outputs
+frontend/dist/
+frontend/build/
+backend/dist/
+backend/build/
 
 # Temporary files
 *.tmp
 *.temp
 .cache/
+.temp/
 
-# Nested repositories
-threads-bot-dashboard/ 
+# Test coverage
+.coverage
+htmlcov/
+.tox/
+.pytest_cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Session files
+.session.json
+*.session
+
+# Threads API cache
+.token_*
+.cache/ 

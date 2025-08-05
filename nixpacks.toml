@@ -1,8 +1,0 @@
-[phases.setup]
-nixPkgs = ["python311", "pipenv"]
-
-[phases.install]
-cmds = ["pipenv install"]
-
-[start]
-cmd = "pipenv run python start.py" 
