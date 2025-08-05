@@ -29,28 +29,41 @@ export default function Dashboard() {
   const [images, setImages] = useState<Image[]>([]);
   const [botStatus, setBotStatus] = useState('loading');
   const [loading, setLoading] = useState(true);
+  const [backendUrl, setBackendUrl] = useState('');
 
   const [newAccount, setNewAccount] = useState({ username: '', password: '' });
   const [newCaption, setNewCaption] = useState('');
   const [newImage, setNewImage] = useState('');
 
   useEffect(() => {
-    fetchData();
-    const interval = setInterval(fetchData, 30000); // Refresh every 30 seconds
+    const url = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://threads-bot-dashboard-3.onrender.com';
+    setBackendUrl(url);
+    fetchData(url);
+    const interval = setInterval(() => fetchData(url), 30000); // Refresh every 30 seconds
     return () => clearInterval(interval);
   }, []);
 
-  const fetchData = async () => {
+  const fetchData = async (url: string) => {
     try {
+      console.log('Fetching data from:', url);
+      
       // Fetch bot status
-      const statusResponse = await fetch('/api/status');
+      const statusResponse = await fetch(`${url}/api/status`);
+      if (!statusResponse.ok) {
+        throw new Error(`Status API returned ${statusResponse.status}`);
+      }
       const statusData = await statusResponse.json();
       setBotStatus(statusData.status);
 
       // Fetch accounts
-      const accountsResponse = await fetch('/api/accounts');
-      const accountsData = await accountsResponse.json();
-      setAccounts(accountsData.accounts || []);
+      const accountsResponse = await fetch(`${url}/api/accounts`);
+      if (accountsResponse.ok) {
+        const accountsData = await accountsResponse.json();
+        setAccounts(accountsData.accounts || []);
+      } else {
+        console.warn('Accounts API returned:', accountsResponse.status);
+        setAccounts([]);
+      }
 
       // Fetch captions and images (these endpoints need to be implemented)
       // For now, we'll use empty arrays
@@ -62,6 +75,7 @@ export default function Dashboard() {
       console.error('Error fetching data:', error);
       setBotStatus('error');
       setLoading(false);
+      toast.error('Failed to connect to backend');
     }
   };
 
@@ -73,7 +87,7 @@ export default function Dashboard() {
     }
 
     try {
-      const response = await fetch('/api/accounts', {
+      const response = await fetch(`${backendUrl}/api/accounts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newAccount),
@@ -82,9 +96,10 @@ export default function Dashboard() {
       if (response.ok) {
         toast.success('Account added successfully');
         setNewAccount({ username: '', password: '' });
-        fetchData();
+        fetchData(backendUrl);
       } else {
-        toast.error('Failed to add account');
+        const errorData = await response.json();
+        toast.error(`Failed to add account: ${errorData.error || 'Unknown error'}`);
       }
     } catch (error) {
       toast.error('Error adding account');
@@ -99,7 +114,7 @@ export default function Dashboard() {
     }
 
     try {
-      const response = await fetch('/api/captions', {
+      const response = await fetch(`${backendUrl}/api/captions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: newCaption }),
@@ -108,9 +123,10 @@ export default function Dashboard() {
       if (response.ok) {
         toast.success('Caption added successfully');
         setNewCaption('');
-        fetchData();
+        fetchData(backendUrl);
       } else {
-        toast.error('Failed to add caption');
+        const errorData = await response.json();
+        toast.error(`Failed to add caption: ${errorData.error || 'Unknown error'}`);
       }
     } catch (error) {
       toast.error('Error adding caption');
@@ -125,7 +141,7 @@ export default function Dashboard() {
     }
 
     try {
-      const response = await fetch('/api/images', {
+      const response = await fetch(`${backendUrl}/api/images`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url: newImage }),
@@ -134,9 +150,10 @@ export default function Dashboard() {
       if (response.ok) {
         toast.success('Image added successfully');
         setNewImage('');
-        fetchData();
+        fetchData(backendUrl);
       } else {
-        toast.error('Failed to add image');
+        const errorData = await response.json();
+        toast.error(`Failed to add image: ${errorData.error || 'Unknown error'}`);
       }
     } catch (error) {
       toast.error('Error adding image');
@@ -145,10 +162,17 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading dashboard...</p>
+      <div className="min-h-screen bg-gray-100 py-12 px-4">
+        <div className="max-w-7xl mx-auto text-center">
+          <h1 className="text-4xl font-bold text-gray-900 mb-8">
+            Threads Bot Dashboard
+          </h1>
+          
+          <div className="bg-white shadow rounded-lg p-6 max-w-md mx-auto">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading dashboard...</p>
+            <p className="text-sm text-gray-500 mt-2">Backend: {backendUrl}</p>
+          </div>
         </div>
       </div>
     );
@@ -163,6 +187,7 @@ export default function Dashboard() {
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Threads Bot Dashboard</h1>
               <p className="text-gray-600">Auto-posting bot for Threads</p>
+              <p className="text-sm text-gray-500">Backend: {backendUrl}</p>
             </div>
             <div className="flex items-center space-x-4">
               <div className="flex items-center">
