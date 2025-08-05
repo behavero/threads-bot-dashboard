@@ -1,30 +1,34 @@
-# Use Node.js 18
-FROM node:18-alpine
+# Use Python 3.11
+FROM python:3.11-slim
 
 # Set working directory
 WORKDIR /app
 
-# Copy all source code first
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements first for better caching
+COPY requirements.txt .
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
 COPY . .
 
-# Set CI environment to avoid interactive prompts
-ENV CI=true
-ENV NODE_ENV=production
+# Create necessary directories
+RUN mkdir -p assets/images config
 
-# Install dependencies
-RUN npm install
-RUN cd server && npm install
-RUN cd client && npm install
+# Set environment variables
+ENV PYTHONPATH=/app
+ENV ENVIRONMENT=production
+ENV PLATFORM=docker
 
-# Build the client
-RUN cd client && CI=true NODE_ENV=production npm run build
-
-# Expose port
+# Expose port for health checks
 EXPOSE 5000
 
-# Set environment
-ENV NODE_ENV=production
-ENV PORT=5000
-
 # Start the application
-CMD ["npm", "run", "railway-start"] 
+CMD ["python", "start.py"] 
