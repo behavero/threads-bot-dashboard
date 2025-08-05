@@ -6,7 +6,8 @@ from typing import Optional, Dict
 from database import DatabaseManager
 
 try:
-    from threads_api import ThreadsAPI
+    from threads_api_mock import ThreadsAPI
+    print("✅ Using mock Threads API for development")
 except ImportError:
     print("⚠️ Threads API not available, using mock mode")
     ThreadsAPI = None

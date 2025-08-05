@@ -12,11 +12,35 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from dotenv import load_dotenv
 
-from database import DatabaseManager
-from threads_bot import ThreadsBot
-
 # Load environment variables
 load_dotenv()
+
+# Check environment variables first
+def validate_environment():
+    """Validate that required environment variables are set"""
+    required_vars = ['SUPABASE_URL', 'SUPABASE_KEY']
+    missing_vars = []
+    
+    for var in required_vars:
+        if not os.getenv(var):
+            missing_vars.append(var)
+    
+    if missing_vars:
+        print(f"❌ Missing environment variables: {', '.join(missing_vars)}")
+        print("Please set these in your Render/Railway environment variables:")
+        print("SUPABASE_URL=https://perwbmtwutwzsvlirwik.supabase.co")
+        print("SUPABASE_KEY=your-supabase-key")
+        return False
+    
+    return True
+
+# Validate environment before importing modules
+if not validate_environment():
+    print("❌ Environment not ready. Exiting.")
+    exit(1)
+
+from database import DatabaseManager
+from threads_bot import ThreadsBot
 
 app = Flask(__name__)
 CORS(app)
@@ -31,7 +55,8 @@ def home():
     return jsonify({
         "status": "running",
         "service": "threads-bot",
-        "timestamp": datetime.now().isoformat()
+        "timestamp": datetime.now().isoformat(),
+        "environment": "render"
     })
 
 @app.route('/api/status')
@@ -40,7 +65,8 @@ def status():
         "status": "running" if bot_running else "stopped",
         "service": "threads-bot",
         "bot_running": bot_running,
-        "timestamp": datetime.now().isoformat()
+        "timestamp": datetime.now().isoformat(),
+        "environment": "render"
     })
 
 @app.route('/api/health')
@@ -137,6 +163,7 @@ def run_bot():
     global bot, bot_running
     
     try:
+        print("🤖 Starting Threads Bot...")
         bot = ThreadsBot()
         bot_running = True
         bot.run_continuously()
@@ -158,6 +185,10 @@ def start_bot():
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
+    
+    print("🚀 Starting Threads Bot on Render...")
+    print(f"🌐 Port: {port}")
+    print(f"🔗 Supabase URL: {os.getenv('SUPABASE_URL', 'NOT SET')}")
     
     # Start the bot in background
     start_bot()
