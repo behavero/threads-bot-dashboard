@@ -1,5 +1,7 @@
 # Enhanced Threads Bot Backend - Python Application
 # This is a Python application, NOT a Node.js application
+# Railway deployment - Python backend only
+# NO npm, NO node, NO frontend logic
 
 FROM python:3.11-slim
 
@@ -22,10 +24,10 @@ RUN apt-get update && apt-get install -y \
 # Copy requirements first for better caching
 COPY requirements.txt .
 
-# Install Python dependencies
+# Install Python dependencies ONLY
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
+# Copy application code (Python only)
 COPY . .
 
 # Create necessary directories
@@ -38,5 +40,5 @@ EXPOSE 5000
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:5000/api/status || exit 1
 
-# Start the Python application
+# Start the Python application ONLY
 CMD ["python", "start.py"] 

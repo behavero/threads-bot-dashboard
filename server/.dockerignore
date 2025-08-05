@@ -1,8 +1,12 @@
+# Enhanced Threads Bot Backend - Python Application ONLY
+# This Dockerfile is for Python backend, NOT frontend
+
 # Node.js files (should not exist in Python project)
 node_modules/
 package.json
 package-lock.json
 npm-shrinkwrap.json
+yarn.lock
 *.js
 *.jsx
 *.ts
@@ -67,4 +71,22 @@ env/
 render.yaml
 vercel.json
 .replit
-replit.nix 
+replit.nix
+
+# Frontend build artifacts
+.next/
+out/
+dist/
+build/
+static/
+public/
+
+# Node.js build tools
+webpack.config.js
+rollup.config.js
+vite.config.js
+tailwind.config.js
+postcss.config.js
+babel.config.js
+.eslintrc*
+.prettierrc* 

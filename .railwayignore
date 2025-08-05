@@ -1,14 +1,16 @@
-# Railway should only deploy the server directory
-# Ignore everything except server/
+# Railway should ONLY deploy the server directory
+# This is a monorepo: client/ for Vercel, server/ for Railway
 
 # Ignore client directory (for Vercel)
 client/
 frontend/
 
-# Ignore Node.js files
+# Ignore Node.js files completely
 node_modules/
 package.json
 package-lock.json
+npm-shrinkwrap.json
+yarn.lock
 *.js
 *.jsx
 *.ts
@@ -18,6 +20,24 @@ package-lock.json
 *.sass
 *.less
 *.html
+
+# Ignore frontend build artifacts
+.next/
+out/
+dist/
+build/
+static/
+public/
+
+# Ignore Node.js build tools
+webpack.config.js
+rollup.config.js
+vite.config.js
+tailwind.config.js
+postcss.config.js
+babel.config.js
+.eslintrc*
+.prettierrc*
 
 # Ignore documentation
 docs/
@@ -29,4 +49,11 @@ docs/
 __pycache__/
 *.pyc
 *.log
-.env* 
+.env*
+
+# Ignore root-level config files that might confuse Railway
+accounts.example.json
+render.yaml
+vercel.json
+.replit
+replit.nix 
