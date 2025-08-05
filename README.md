@@ -15,23 +15,68 @@ Threads_Bot/
 │   ├── config/      # Configuration files
 │   ├── assets/      # Images and captions
 │   ├── start.py     # Entry point
+│   ├── Dockerfile   # Python Docker build
 │   └── railway.json
 └── docs/            # Documentation
 ```
 
-## 🚀 Quick Start
+## 🚀 Deployment
 
-### Backend (Railway)
-```bash
-cd server
-python start.py
+### **Railway (Backend Bot)**
+The backend bot runs on Railway using Python and Docker.
+
+#### **Railway Configuration:**
+- **Root Directory**: `server/`
+- **Builder**: `DOCKERFILE`
+- **Start Command**: `python start.py`
+- **Health Check**: `/api/status`
+
+#### **Railway Setup:**
+1. Connect your GitHub repository to Railway
+2. Railway will automatically detect the `server/` directory
+3. Set environment variables in Railway dashboard
+4. Deploy with `python start.py`
+
+#### **Required Environment Variables:**
+```env
+# Supabase Configuration
+SUPABASE_URL=https://perwbmtwutwzsvlirwik.supabase.co
+SUPABASE_KEY=your_supabase_key
+
+# Bot Configuration
+PLATFORM=railway
+ENVIRONMENT=production
+ANTI_DETECTION_ENABLED=true
+SESSION_TIMEOUT=3600
+MAX_RETRIES=3
+
+# File Paths
+ACCOUNTS_FILE=config/accounts.json
+CAPTIONS_FILE=assets/captions.txt
+IMAGES_DIR=assets/images/
+USER_AGENTS_FILE=config/user_agents.txt
 ```
 
-### Frontend (Vercel)
-```bash
-cd client
-npm install
-npm run dev
+### **Vercel (Frontend Dashboard)**
+The frontend dashboard runs on Vercel using Next.js.
+
+#### **Vercel Configuration:**
+- **Root Directory**: `client/`
+- **Framework**: Next.js
+- **Build Command**: `npm run build`
+- **Output Directory**: `.next`
+
+#### **Vercel Setup:**
+1. Connect your GitHub repository to Vercel
+2. Vercel will automatically detect the `client/` directory
+3. Set environment variables in Vercel dashboard
+4. Deploy with `npm run build`
+
+#### **Required Environment Variables:**
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://perwbmtwutwzsvlirwik.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+NEXT_PUBLIC_BACKEND_URL=https://your-railway-app.railway.app
 ```
 
 ## 🎯 Features
@@ -81,51 +126,6 @@ cd client
 npm install
 npm run dev
 ```
-
-## 🔧 Configuration
-
-### Environment Variables
-
-#### Backend (Railway)
-```env
-# Supabase Configuration
-SUPABASE_URL=https://perwbmtwutwzsvlirwik.supabase.co
-SUPABASE_KEY=your_supabase_key
-
-# Bot Configuration
-PLATFORM=railway
-ENVIRONMENT=production
-ANTI_DETECTION_ENABLED=true
-SESSION_TIMEOUT=3600
-MAX_RETRIES=3
-
-# File Paths
-ACCOUNTS_FILE=config/accounts.json
-CAPTIONS_FILE=assets/captions.txt
-IMAGES_DIR=assets/images/
-USER_AGENTS_FILE=config/user_agents.txt
-```
-
-#### Frontend (Vercel)
-```env
-NEXT_PUBLIC_SUPABASE_URL=https://perwbmtwutwzsvlirwik.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-NEXT_PUBLIC_BACKEND_URL=https://your-railway-app.railway.app
-```
-
-## 🚀 Deployment
-
-### Railway (Backend)
-1. Connect your GitHub repository to Railway
-2. Railway will automatically detect the `server/` directory
-3. Set environment variables in Railway dashboard
-4. Deploy with `python start.py`
-
-### Vercel (Frontend)
-1. Connect your GitHub repository to Vercel
-2. Vercel will automatically detect the `client/` directory
-3. Set environment variables in Vercel dashboard
-4. Deploy with `npm run build`
 
 ## 📊 Database Schema
 

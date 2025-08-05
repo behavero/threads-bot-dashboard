@@ -1,0 +1,32 @@
+# Railway should only deploy the server directory
+# Ignore everything except server/
+
+# Ignore client directory (for Vercel)
+client/
+frontend/
+
+# Ignore Node.js files
+node_modules/
+package.json
+package-lock.json
+*.js
+*.jsx
+*.ts
+*.tsx
+*.css
+*.scss
+*.sass
+*.less
+*.html
+
+# Ignore documentation
+docs/
+*.md
+!README.md
+
+# Ignore other files
+.venv/
+__pycache__/
+*.pyc
+*.log
+.env* 
