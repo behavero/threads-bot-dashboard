@@ -1,3 +1,6 @@
+# Python Requirements for Enhanced Threads Bot Backend
+# This is a Python application, not Node.js
+
 # Core dependencies for Enhanced Threads Bot
 python-dotenv==1.0.0
 aiohttp==3.8.0
