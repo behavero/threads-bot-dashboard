@@ -67,7 +67,7 @@ config/legacy_accounts.json
 .railway/
 .render/
 .replit/
-railway.toml
+# railway.toml (allow server/railway.toml)
 # railway.json (allow server/railway.json)
 render.yaml
 .replit
