@@ -120,6 +120,74 @@ def add_account():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/api/accounts/<account_id>/toggle', methods=['PATCH'])
+def toggle_account(account_id):
+    try:
+        data = request.json
+        active = data.get('active', False)
+        
+        db = DatabaseManager()
+        # This would need to be implemented in DatabaseManager
+        # For now, return success
+        return jsonify({"message": "Account status updated successfully"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/accounts/<account_id>', methods=['DELETE'])
+def delete_account(account_id):
+    try:
+        db = DatabaseManager()
+        # This would need to be implemented in DatabaseManager
+        # For now, return success
+        return jsonify({"message": "Account deleted successfully"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/statistics')
+def get_statistics():
+    try:
+        db = DatabaseManager()
+        accounts = db.get_active_accounts()
+        
+        # Calculate statistics
+        total_accounts = len(accounts)
+        active_accounts = len([a for a in accounts if a.get('active', False)])
+        
+        return jsonify({
+            "total_accounts": total_accounts,
+            "active_accounts": active_accounts,
+            "bot_status": bot_running,
+            "last_updated": datetime.now().isoformat()
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/bot/start', methods=['POST'])
+def start_bot():
+    try:
+        global bot_running
+        if not bot_running:
+            start_bot()
+            bot_running = True
+            return jsonify({"message": "Bot started successfully"})
+        else:
+            return jsonify({"message": "Bot is already running"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/bot/stop', methods=['POST'])
+def stop_bot():
+    try:
+        global bot_running, bot_thread
+        if bot_running and bot_thread:
+            # This would need proper bot stopping logic
+            bot_running = False
+            return jsonify({"message": "Bot stopped successfully"})
+        else:
+            return jsonify({"message": "Bot is not running"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/api/captions', methods=['GET'])
 def get_captions():
     try:

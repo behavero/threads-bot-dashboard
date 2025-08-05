@@ -1,7 +1,20 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { PlusIcon, UserIcon, DocumentTextIcon, PhotoIcon, ClockIcon } from '@heroicons/react/24/outline';
+import { 
+  PlusIcon, 
+  UserIcon, 
+  DocumentTextIcon, 
+  PhotoIcon, 
+  PlayIcon,
+  StopIcon,
+  TrashIcon,
+  ChartBarIcon,
+  CogIcon,
+  ExclamationTriangleIcon,
+  CheckCircleIcon,
+  ClockIcon
+} from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
 
 interface Account {
@@ -9,28 +22,43 @@ interface Account {
   username: string;
   active: boolean;
   last_posted?: string;
+  posts_count?: number;
+  shadowban?: boolean;
 }
 
 interface Caption {
   id: string;
   text: string;
   used: boolean;
+  created_at: string;
 }
 
 interface Image {
   id: string;
   url: string;
   used: boolean;
+  created_at: string;
+}
+
+interface PostingHistory {
+  id: string;
+  account_id: string;
+  status: string;
+  error_message?: string;
+  posted_at?: string;
+  created_at: string;
 }
 
 export default function Dashboard() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [captions, setCaptions] = useState<Caption[]>([]);
   const [images, setImages] = useState<Image[]>([]);
+  const [postingHistory, setPostingHistory] = useState<PostingHistory[]>([]);
   const [botStatus, setBotStatus] = useState('loading');
   const [loading, setLoading] = useState(true);
   const [backendUrl, setBackendUrl] = useState('');
   const [connectionStatus, setConnectionStatus] = useState('checking');
+  const [activeTab, setActiveTab] = useState('overview');
 
   const [newAccount, setNewAccount] = useState({ username: '', password: '' });
   const [newCaption, setNewCaption] = useState('');
@@ -40,7 +68,7 @@ export default function Dashboard() {
     const url = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://threads-bot-dashboard-3.onrender.com';
     setBackendUrl(url);
     fetchData(url);
-    const interval = setInterval(() => fetchData(url), 30000); // Refresh every 30 seconds
+    const interval = setInterval(() => fetchData(url), 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -74,10 +102,25 @@ export default function Dashboard() {
         setAccounts([]);
       }
 
-      // Fetch captions and images (these endpoints need to be implemented)
-      // For now, we'll use empty arrays
-      setCaptions([]);
-      setImages([]);
+      // Fetch captions and images (mock data for now)
+      setCaptions([
+        { id: '1', text: 'Amazing day! 🌟', used: false, created_at: '2025-08-05T19:00:00Z' },
+        { id: '2', text: 'Life is beautiful ✨', used: true, created_at: '2025-08-05T18:00:00Z' },
+        { id: '3', text: 'Living the dream 💫', used: false, created_at: '2025-08-05T17:00:00Z' }
+      ]);
+      
+      setImages([
+        { id: '1', url: 'https://picsum.photos/400/300?random=1', used: false, created_at: '2025-08-05T19:00:00Z' },
+        { id: '2', url: 'https://picsum.photos/400/300?random=2', used: true, created_at: '2025-08-05T18:00:00Z' },
+        { id: '3', url: 'https://picsum.photos/400/300?random=3', used: false, created_at: '2025-08-05T17:00:00Z' }
+      ]);
+
+      // Mock posting history
+      setPostingHistory([
+        { id: '1', account_id: '1', status: 'success', posted_at: '2025-08-05T19:30:00Z', created_at: '2025-08-05T19:30:00Z' },
+        { id: '2', account_id: '1', status: 'error', error_message: 'Rate limited', created_at: '2025-08-05T19:00:00Z' },
+        { id: '3', account_id: '2', status: 'success', posted_at: '2025-08-05T18:30:00Z', created_at: '2025-08-05T18:30:00Z' }
+      ]);
 
       setLoading(false);
     } catch (error) {
@@ -113,6 +156,44 @@ export default function Dashboard() {
       }
     } catch (error) {
       toast.error('Error adding account');
+    }
+  };
+
+  const toggleAccountStatus = async (accountId: string, currentStatus: boolean) => {
+    try {
+      const response = await fetch(`${backendUrl}/api/accounts/${accountId}/toggle`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ active: !currentStatus }),
+      });
+
+      if (response.ok) {
+        toast.success(`Account ${currentStatus ? 'deactivated' : 'activated'} successfully`);
+        fetchData(backendUrl);
+      } else {
+        toast.error('Failed to update account status');
+      }
+    } catch (error) {
+      toast.error('Error updating account status');
+    }
+  };
+
+  const deleteAccount = async (accountId: string) => {
+    if (!confirm('Are you sure you want to delete this account?')) return;
+
+    try {
+      const response = await fetch(`${backendUrl}/api/accounts/${accountId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        toast.success('Account deleted successfully');
+        fetchData(backendUrl);
+      } else {
+        toast.error('Failed to delete account');
+      }
+    } catch (error) {
+      toast.error('Error deleting account');
     }
   };
 
@@ -170,51 +251,53 @@ export default function Dashboard() {
     }
   };
 
+  const getAccountStats = (accountId: string) => {
+    const accountHistory = postingHistory.filter(h => h.account_id === accountId);
+    const successful = accountHistory.filter(h => h.status === 'success').length;
+    const failed = accountHistory.filter(h => h.status === 'error').length;
+    const total = accountHistory.length;
+    
+    return { successful, failed, total };
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 py-12 px-4">
-        <div className="max-w-7xl mx-auto text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-8">
-            Threads Bot Dashboard
-          </h1>
-          
-          <div className="bg-white shadow rounded-lg p-6 max-w-md mx-auto">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading dashboard...</p>
-            <p className="text-sm text-gray-500 mt-2">Backend: {backendUrl}</p>
-          </div>
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-yellow-400 mx-auto"></div>
+          <p className="mt-4 text-gray-300">Loading dashboard...</p>
+          <p className="text-sm text-gray-500 mt-2">Backend: {backendUrl}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-900">
       {/* Header */}
-      <div className="bg-white shadow">
+      <div className="bg-gray-800 border-b border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Threads Bot Dashboard</h1>
-              <p className="text-gray-600">Auto-posting bot for Threads</p>
-              <p className="text-sm text-gray-500">Backend: {backendUrl}</p>
-              <p className="text-sm text-gray-500">
-                Connection: 
-                <span className={`ml-1 px-2 py-1 text-xs font-medium rounded-full ${
+              <h1 className="text-3xl font-bold text-white">Threads Bot Dashboard</h1>
+              <p className="text-gray-400">Auto-posting bot for Threads</p>
+              <div className="flex items-center space-x-4 mt-2">
+                <span className="text-sm text-gray-500">Backend: {backendUrl}</span>
+                <span className={`px-2 py-1 text-xs font-medium rounded-full ${
                   connectionStatus === 'connected' ? 'bg-green-100 text-green-800' :
                   connectionStatus === 'error' ? 'bg-red-100 text-red-800' :
                   'bg-yellow-100 text-yellow-800'
                 }`}>
                   {connectionStatus}
                 </span>
-              </p>
+              </div>
             </div>
             <div className="flex items-center space-x-4">
               <div className="flex items-center">
                 <div className={`w-3 h-3 rounded-full mr-2 ${
                   botStatus === 'running' ? 'bg-green-500' : 'bg-red-500'
                 }`}></div>
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-gray-300">
                   Bot: {botStatus === 'running' ? 'Active' : 'Inactive'}
                 </span>
               </div>
@@ -223,143 +306,352 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Navigation Tabs */}
+      <div className="bg-gray-800 border-b border-gray-700">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <nav className="flex space-x-8">
+            {[
+              { id: 'overview', name: 'Overview', icon: ChartBarIcon },
+              { id: 'accounts', name: 'Accounts', icon: UserIcon },
+              { id: 'content', name: 'Content', icon: DocumentTextIcon },
+              { id: 'history', name: 'History', icon: ClockIcon },
+              { id: 'settings', name: 'Settings', icon: CogIcon }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === tab.id
+                    ? 'border-yellow-400 text-yellow-400'
+                    : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-300'
+                }`}
+              >
+                <tab.icon className="w-5 h-5" />
+                <span>{tab.name}</span>
+              </button>
+            ))}
+          </nav>
+        </div>
+      </div>
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Accounts Section */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-gray-900 flex items-center">
-                <UserIcon className="w-5 h-5 mr-2" />
-                Accounts ({accounts.length})
-              </h2>
+        {/* Overview Tab */}
+        {activeTab === 'overview' && (
+          <div className="space-y-6">
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div className="card">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <UserIcon className="h-8 w-8 text-yellow-400" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-400">Total Accounts</p>
+                    <p className="text-2xl font-bold text-white">{accounts.length}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="card">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <DocumentTextIcon className="h-8 w-8 text-yellow-400" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-400">Available Captions</p>
+                    <p className="text-2xl font-bold text-white">{captions.filter(c => !c.used).length}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="card">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <PhotoIcon className="h-8 w-8 text-yellow-400" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-400">Available Images</p>
+                    <p className="text-2xl font-bold text-white">{images.filter(i => !i.used).length}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="card">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <ChartBarIcon className="h-8 w-8 text-yellow-400" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-400">Total Posts</p>
+                    <p className="text-2xl font-bold text-white">{postingHistory.filter(h => h.status === 'success').length}</p>
+                  </div>
+                </div>
+              </div>
             </div>
 
+            {/* Recent Activity */}
+            <div className="card">
+              <h3 className="text-lg font-semibold text-white mb-4">Recent Activity</h3>
+              <div className="space-y-3">
+                {postingHistory.slice(0, 5).map((post) => {
+                  const account = accounts.find(a => a.id === post.account_id);
+                  return (
+                    <div key={post.id} className="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-2 h-2 rounded-full ${
+                          post.status === 'success' ? 'bg-green-500' : 'bg-red-500'
+                        }`}></div>
+                        <span className="text-sm text-gray-300">
+                          {account?.username || 'Unknown'} - {post.status}
+                        </span>
+                      </div>
+                      <span className="text-xs text-gray-400">
+                        {new Date(post.created_at).toLocaleString()}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Accounts Tab */}
+        {activeTab === 'accounts' && (
+          <div className="space-y-6">
             {/* Add Account Form */}
-            <form onSubmit={addAccount} className="mb-4 space-y-3">
-              <input
-                type="text"
-                placeholder="Username"
-                value={newAccount.username}
-                onChange={(e) => setNewAccount({ ...newAccount, username: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-              />
-              <input
-                type="password"
-                placeholder="Password"
-                value={newAccount.password}
-                onChange={(e) => setNewAccount({ ...newAccount, password: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-              />
-              <button
-                type="submit"
-                className="w-full bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500"
-              >
-                Add Account
-              </button>
-            </form>
+            <div className="card">
+              <h3 className="text-lg font-semibold text-white mb-4">Add New Account</h3>
+              <form onSubmit={addAccount} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <input
+                    type="text"
+                    placeholder="Username"
+                    value={newAccount.username}
+                    onChange={(e) => setNewAccount({ ...newAccount, username: e.target.value })}
+                    className="input-field"
+                  />
+                  <input
+                    type="password"
+                    placeholder="Password"
+                    value={newAccount.password}
+                    onChange={(e) => setNewAccount({ ...newAccount, password: e.target.value })}
+                    className="input-field"
+                  />
+                </div>
+                <button type="submit" className="btn-primary">
+                  <PlusIcon className="w-5 h-5 mr-2" />
+                  Add Account
+                </button>
+              </form>
+            </div>
 
             {/* Accounts List */}
-            <div className="space-y-2">
-              {accounts.map((account) => (
-                <div key={account.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-md">
-                  <div>
-                    <p className="font-medium text-gray-900">{account.username}</p>
-                    <p className="text-sm text-gray-500">
-                      {account.last_posted ? `Last posted: ${new Date(account.last_posted).toLocaleString()}` : 'Never posted'}
-                    </p>
-                  </div>
-                  <div className={`px-2 py-1 rounded-full text-xs ${
-                    account.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                  }`}>
-                    {account.active ? 'Active' : 'Inactive'}
-                  </div>
-                </div>
-              ))}
+            <div className="card">
+              <h3 className="text-lg font-semibold text-white mb-4">Manage Accounts</h3>
+              <div className="space-y-4">
+                {accounts.map((account) => {
+                  const stats = getAccountStats(account.id);
+                  return (
+                    <div key={account.id} className="bg-gray-700 rounded-lg p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-4">
+                          <div className="flex-shrink-0">
+                            <UserIcon className="h-8 w-8 text-yellow-400" />
+                          </div>
+                          <div>
+                            <h4 className="text-white font-medium">{account.username}</h4>
+                            <div className="flex items-center space-x-4 mt-1">
+                              <span className={`status-badge ${
+                                account.active ? 'status-active' : 'status-inactive'
+                              }`}>
+                                {account.active ? 'Active' : 'Inactive'}
+                              </span>
+                              {account.shadowban && (
+                                <span className="status-badge bg-red-100 text-red-800">
+                                  Shadowbanned
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center space-x-4 mt-2 text-sm text-gray-400">
+                              <span>Posts: {stats.successful}/{stats.total}</span>
+                              <span>Success Rate: {stats.total > 0 ? Math.round((stats.successful / stats.total) * 100) : 0}%</span>
+                              {account.last_posted && (
+                                <span>Last: {new Date(account.last_posted).toLocaleString()}</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => toggleAccountStatus(account.id, account.active)}
+                            className={`btn-secondary ${account.active ? 'text-red-400' : 'text-green-400'}`}
+                          >
+                            {account.active ? <StopIcon className="w-4 h-4" /> : <PlayIcon className="w-4 h-4" />}
+                          </button>
+                          <button
+                            onClick={() => deleteAccount(account.id)}
+                            className="btn-danger"
+                          >
+                            <TrashIcon className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
+        )}
 
-          {/* Captions Section */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-gray-900 flex items-center">
-                <DocumentTextIcon className="w-5 h-5 mr-2" />
-                Captions ({captions.length})
-              </h2>
+        {/* Content Tab */}
+        {activeTab === 'content' && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Captions */}
+            <div className="card">
+              <h3 className="text-lg font-semibold text-white mb-4">Manage Captions</h3>
+              <form onSubmit={addCaption} className="mb-4">
+                <textarea
+                  placeholder="Enter caption text..."
+                  value={newCaption}
+                  onChange={(e) => setNewCaption(e.target.value)}
+                  rows={3}
+                  className="input-field w-full"
+                />
+                <button type="submit" className="btn-primary mt-2">
+                  <PlusIcon className="w-4 h-4 mr-2" />
+                  Add Caption
+                </button>
+              </form>
+              <div className="space-y-2">
+                {captions.map((caption) => (
+                  <div key={caption.id} className="p-3 bg-gray-700 rounded-lg">
+                    <p className="text-sm text-gray-300">{caption.text}</p>
+                    <div className="flex items-center justify-between mt-2">
+                      <span className={`status-badge ${
+                        caption.used ? 'status-inactive' : 'status-active'
+                      }`}>
+                        {caption.used ? 'Used' : 'Available'}
+                      </span>
+                      <span className="text-xs text-gray-400">
+                        {new Date(caption.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            {/* Add Caption Form */}
-            <form onSubmit={addCaption} className="mb-4">
-              <textarea
-                placeholder="Enter caption text..."
-                value={newCaption}
-                onChange={(e) => setNewCaption(e.target.value)}
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-              />
-              <button
-                type="submit"
-                className="w-full mt-2 bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500"
-              >
-                Add Caption
-              </button>
-            </form>
-
-            {/* Captions List */}
-            <div className="space-y-2">
-              {captions.map((caption) => (
-                <div key={caption.id} className="p-3 bg-gray-50 rounded-md">
-                  <p className="text-sm text-gray-900">{caption.text}</p>
-                  <div className={`inline-block mt-1 px-2 py-1 rounded-full text-xs ${
-                    caption.used ? 'bg-gray-100 text-gray-600' : 'bg-green-100 text-green-800'
-                  }`}>
-                    {caption.used ? 'Used' : 'Available'}
+            {/* Images */}
+            <div className="card">
+              <h3 className="text-lg font-semibold text-white mb-4">Manage Images</h3>
+              <form onSubmit={addImage} className="mb-4">
+                <input
+                  type="url"
+                  placeholder="Image URL"
+                  value={newImage}
+                  onChange={(e) => setNewImage(e.target.value)}
+                  className="input-field w-full"
+                />
+                <button type="submit" className="btn-primary mt-2">
+                  <PlusIcon className="w-4 h-4 mr-2" />
+                  Add Image
+                </button>
+              </form>
+              <div className="space-y-2">
+                {images.map((image) => (
+                  <div key={image.id} className="p-3 bg-gray-700 rounded-lg">
+                    <img src={image.url} alt="Post image" className="w-full h-24 object-cover rounded-md mb-2" />
+                    <div className="flex items-center justify-between">
+                      <span className={`status-badge ${
+                        image.used ? 'status-inactive' : 'status-active'
+                      }`}>
+                        {image.used ? 'Used' : 'Available'}
+                      </span>
+                      <span className="text-xs text-gray-400">
+                        {new Date(image.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
+        )}
 
-          {/* Images Section */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-gray-900 flex items-center">
-                <PhotoIcon className="w-5 h-5 mr-2" />
-                Images ({images.length})
-              </h2>
-            </div>
-
-            {/* Add Image Form */}
-            <form onSubmit={addImage} className="mb-4 space-y-3">
-              <input
-                type="url"
-                placeholder="Image URL"
-                value={newImage}
-                onChange={(e) => setNewImage(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-              />
-              <button
-                type="submit"
-                className="w-full bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500"
-              >
-                Add Image
-              </button>
-            </form>
-
-            {/* Images List */}
-            <div className="space-y-2">
-              {images.map((image) => (
-                <div key={image.id} className="p-3 bg-gray-50 rounded-md">
-                  <img src={image.url} alt="Post image" className="w-full h-24 object-cover rounded-md mb-2" />
-                  <div className={`inline-block px-2 py-1 rounded-full text-xs ${
-                    image.used ? 'bg-gray-100 text-gray-600' : 'bg-green-100 text-green-800'
-                  }`}>
-                    {image.used ? 'Used' : 'Available'}
+        {/* History Tab */}
+        {activeTab === 'history' && (
+          <div className="card">
+            <h3 className="text-lg font-semibold text-white mb-4">Posting History</h3>
+            <div className="space-y-3">
+              {postingHistory.map((post) => {
+                const account = accounts.find(a => a.id === post.account_id);
+                return (
+                  <div key={post.id} className="flex items-center justify-between p-4 bg-gray-700 rounded-lg">
+                    <div className="flex items-center space-x-4">
+                      <div className={`w-3 h-3 rounded-full ${
+                        post.status === 'success' ? 'bg-green-500' : 'bg-red-500'
+                      }`}></div>
+                      <div>
+                        <p className="text-white font-medium">{account?.username || 'Unknown Account'}</p>
+                        <p className="text-sm text-gray-400">
+                          Status: {post.status} {post.error_message && `- ${post.error_message}`}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm text-gray-400">
+                        {post.posted_at ? new Date(post.posted_at).toLocaleString() : 'Pending'}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {new Date(post.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
-        </div>
+        )}
+
+        {/* Settings Tab */}
+        {activeTab === 'settings' && (
+          <div className="card">
+            <h3 className="text-lg font-semibold text-white mb-4">Bot Settings</h3>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-4 bg-gray-700 rounded-lg">
+                <div>
+                  <h4 className="text-white font-medium">Bot Status</h4>
+                  <p className="text-sm text-gray-400">Control the main bot process</p>
+                </div>
+                <button className="btn-primary">
+                  {botStatus === 'running' ? 'Stop Bot' : 'Start Bot'}
+                </button>
+              </div>
+              
+              <div className="flex items-center justify-between p-4 bg-gray-700 rounded-lg">
+                <div>
+                  <h4 className="text-white font-medium">Posting Interval</h4>
+                  <p className="text-sm text-gray-400">Time between posts (minutes)</p>
+                </div>
+                <input
+                  type="number"
+                  defaultValue="5"
+                  className="input-field w-20 text-center"
+                />
+              </div>
+              
+              <div className="flex items-center justify-between p-4 bg-gray-700 rounded-lg">
+                <div>
+                  <h4 className="text-white font-medium">Error Notifications</h4>
+                  <p className="text-sm text-gray-400">Get notified of posting errors</p>
+                </div>
+                <button className="btn-secondary">Configure</button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
