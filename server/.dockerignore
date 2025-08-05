@@ -1,0 +1,54 @@
+# Node.js files (should not exist in Python project)
+node_modules/
+package.json
+package-lock.json
+*.js
+*.jsx
+*.ts
+*.tsx
+*.css
+*.scss
+*.sass
+*.less
+*.html
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Environment files
+.env
+.env.local
+.env.production
+.env.development
+.env.test
+
+# Git
+.git
+.gitignore
+
+# Documentation
+README.md
+*.md
+docs/
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Client files (should not be in server)
+client/
+frontend/ 
