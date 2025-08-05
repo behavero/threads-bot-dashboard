@@ -19,10 +19,27 @@ class DatabaseManager:
     
     def initialize_schema(self):
         """Initialize database schema"""
-        sql_path = os.path.join("config", "init_schema.sql")
-        if not os.path.exists(sql_path):
-            print("❌ SQL schema file not found")
+        # Try multiple possible paths for the SQL file
+        possible_paths = [
+            "init_schema.sql",  # In current directory (server/)
+            os.path.join("config", "init_schema.sql"),
+            os.path.join("..", "config", "init_schema.sql"),
+            os.path.join(os.path.dirname(__file__), "..", "config", "init_schema.sql"),
+            os.path.join(os.getcwd(), "config", "init_schema.sql"),
+            os.path.join(os.getcwd(), "..", "config", "init_schema.sql")
+        ]
+        
+        sql_path = None
+        for path in possible_paths:
+            if os.path.exists(path):
+                sql_path = path
+                break
+        
+        if not sql_path:
+            print(f"❌ SQL schema file not found. Tried paths: {possible_paths}")
             return False
+        
+        print(f"✅ Found SQL schema at: {sql_path}")
         
         with open(sql_path, "r") as file:
             sql = file.read()
