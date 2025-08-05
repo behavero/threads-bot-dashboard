@@ -1,8 +1,6 @@
 {
   "build": {
-    "builder": "DOCKERFILE",
-    "rootDirectory": ".",
-    "dockerfilePath": "Dockerfile"
+    "builder": "NIXPACKS"
   },
   "deploy": {
     "startCommand": "python start.py",
@@ -16,8 +14,7 @@
     "production": {
       "variables": {
         "PLATFORM": "railway",
-        "ENVIRONMENT": "production",
-        "DOCKERFILE_PATH": "Dockerfile"
+        "ENVIRONMENT": "production"
       }
     }
   }
