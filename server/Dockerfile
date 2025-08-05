@@ -1,3 +1,4 @@
+# Enhanced Threads Bot - Python Application
 FROM python:3.11-slim
 
 WORKDIR /app
