@@ -1,7 +1,7 @@
 {
   "name": "threads-bot-dashboard",
   "version": "1.0.0",
-  "description": "Enhanced Threads Bot Dashboard",
+  "description": "Threads Auto-Posting Bot Dashboard",
   "private": true,
   "scripts": {
     "dev": "next dev",
