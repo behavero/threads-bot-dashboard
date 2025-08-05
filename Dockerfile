@@ -7,13 +7,17 @@ WORKDIR /app
 # Copy all source code first
 COPY . .
 
+# Set CI environment to avoid interactive prompts
+ENV CI=true
+ENV NODE_ENV=production
+
 # Install dependencies
 RUN npm install
 RUN cd server && npm install
 RUN cd client && npm install
 
-# Build the client
-RUN cd client && npm run build
+# Build the client using build script
+RUN cd client && chmod +x build.sh && ./build.sh
 
 # Expose port
 EXPOSE 5000
