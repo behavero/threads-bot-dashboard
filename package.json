@@ -1,0 +1,18 @@
+{
+  "name": "threads-bot-dashboard",
+  "version": "1.0.0",
+  "description": "Full-stack dashboard for Threads Bot management",
+  "scripts": {
+    "start": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "cd server && npm run dev",
+    "client": "cd client && npm start",
+    "build": "cd client && npm run build",
+    "install-all": "npm install && cd server && npm install && cd ../client && npm install"
+  },
+  "keywords": ["threads", "bot", "dashboard", "react", "express"],
+  "author": "Threads Bot Team",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+} 
