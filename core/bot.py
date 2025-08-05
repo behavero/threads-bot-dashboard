@@ -55,11 +55,11 @@ setup_logging()
 logger = logging.getLogger(__name__)
 
 try:
-    from threads_api.src.threads_api import ThreadsAPI
-    THREADS_API_AVAILABLE = True
+    from threads_api import ThreadsAPI
 except ImportError:
-    logger.warning("threads-api package not installed. Install with: pip install -r requirements.txt")
-    THREADS_API_AVAILABLE = False
+    print("⚠️  threads-api not available. Install with: pip install git+https://github.com/Danie1/threads-api.git")
+    print("📝 For now, the bot will run in simulation mode.")
+    ThreadsAPI = None
 
 
 class PostingFrequency(Enum):
@@ -763,7 +763,7 @@ class EnhancedThreadsBot:
     
     async def _initialize_api(self):
         """Initialize the Threads API with anti-detection features"""
-        if not THREADS_API_AVAILABLE:
+        if not ThreadsAPI:
             raise ImportError("threads-api package not available")
         
         self.api = ThreadsAPI()
@@ -1125,7 +1125,7 @@ class EnhancedThreadsBot:
     
     def run(self):
         """Main bot execution method (synchronous wrapper)"""
-        if not THREADS_API_AVAILABLE:
+        if not ThreadsAPI:
             logger.error("❌ Error: threads-api package not available")
             logger.info("💡 Please install it with: pip install -r requirements.txt")
             return
