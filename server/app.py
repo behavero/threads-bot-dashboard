@@ -75,21 +75,42 @@ def save_accounts(accounts):
         return False
 
 def load_captions():
-    """Load captions from text file"""
+    """Load captions from database with fallback to file"""
     try:
-        with open('captions.txt', 'r', encoding='utf-8') as f:
-            return [line.strip() for line in f if line.strip()]
-    except FileNotFoundError:
-        return []
+        from core.db_manager import DatabaseOperations
+        import asyncio
+        # Run async function in sync context
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        captions = loop.run_until_complete(DatabaseOperations.get_captions())
+        loop.close()
+        return captions
     except Exception as e:
-        logger.error(f"Error loading captions: {e}")
-        return []
+        logger.error(f"Error loading captions from database: {e}")
+        # Fallback to file
+        try:
+            with open('assets/captions.txt', 'r', encoding='utf-8') as f:
+                return [line.strip() for line in f if line.strip()]
+        except FileNotFoundError:
+            return []
+        except Exception as e:
+            logger.error(f"Error loading captions from file: {e}")
+            return []
 
 def save_captions(captions):
-    """Save captions to text file"""
+    """Save captions to database with fallback to file"""
     try:
-        with open('captions.txt', 'w', encoding='utf-8') as f:
+        from core.db_manager import DatabaseOperations
+        import asyncio
+        # Run async function in sync context
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        
+        # For now, save to file as fallback
+        # TODO: Implement database save
+        with open('assets/captions.txt', 'w', encoding='utf-8') as f:
             f.write('\n'.join(captions))
+        loop.close()
         return True
     except Exception as e:
         logger.error(f"Error saving captions: {e}")

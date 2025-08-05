@@ -706,10 +706,10 @@ class EnhancedThreadsBot:
         self.session_manager = SessionManager()
         self.rate_limit_handler = RateLimitHandler()
         
-        # Load data
+        # Load data (will be loaded asynchronously in run_async)
         self.accounts = self.external_config_manager.load_accounts()
-        self.captions = self._load_captions()
-        self.images = self._get_images()
+        self.captions = []
+        self.images = []
         
         # Initialize API
         self.api = None
@@ -728,34 +728,60 @@ class EnhancedThreadsBot:
             'human_like_delays': 0
         }
     
-    def _load_captions(self) -> List[str]:
-        """Load captions from text file"""
+    async def _load_captions(self) -> List[str]:
+        """Load captions from database with fallback to file"""
         try:
-            with open(self.config.captions_file, 'r', encoding='utf-8') as f:
-                return [line.strip() for line in f if line.strip()]
-        except FileNotFoundError:
-            logger.warning(f"{self.config.captions_file} not found. Creating empty captions file.")
-            return []
+            from core.db_manager import DatabaseOperations
+            captions = await DatabaseOperations.get_captions()
+            return captions
+        except Exception as e:
+            logger.error(f"❌ Error loading captions from database: {e}")
+            # Fallback to file-based loading
+            try:
+                with open(self.config.captions_file, 'r', encoding='utf-8') as f:
+                    captions = [line.strip() for line in f if line.strip()]
+                logger.info(f"📝 Loaded {len(captions)} captions from file (fallback)")
+                return captions
+            except FileNotFoundError:
+                logger.warning(f"⚠️  Captions file not found: {self.config.captions_file}")
+                return []
+            except Exception as e:
+                logger.error(f"❌ Error loading captions from file: {e}")
+                return []
     
-    def _get_images(self) -> List[Path]:
-        """Get list of available images"""
-        if not self.config.images_dir:
-            return []
-        
-        images_dir = Path(self.config.images_dir)
-        if not images_dir.exists():
-            logger.warning(f"{images_dir} directory not found. Creating it.")
-            images_dir.mkdir(exist_ok=True)
-            return []
-        
-        image_extensions = {'.jpg', '.jpeg', '.png', '.gif'}
-        images = []
-        
-        for file_path in images_dir.iterdir():
-            if file_path.is_file() and file_path.suffix.lower() in image_extensions:
-                images.append(file_path)
-        
-        return images
+    async def _get_images(self) -> List[Path]:
+        """Get list of available images from database with fallback to file system"""
+        try:
+            from core.db_manager import DatabaseOperations
+            db_images = await DatabaseOperations.get_images()
+            images = []
+            for img_data in db_images:
+                file_path = Path(img_data['file_path'])
+                if file_path.exists():
+                    images.append(file_path)
+            logger.info(f"📸 Loaded {len(images)} images from database")
+            return images
+        except Exception as e:
+            logger.error(f"❌ Error loading images from database: {e}")
+            # Fallback to file-based loading
+            if not self.config.images_dir:
+                return []
+            
+            images_dir = Path(self.config.images_dir)
+            if not images_dir.exists():
+                logger.warning(f"{images_dir} directory not found. Creating it.")
+                images_dir.mkdir(exist_ok=True)
+                return []
+            
+            image_extensions = {'.jpg', '.jpeg', '.png', '.gif'}
+            images = []
+            
+            for file_path in images_dir.iterdir():
+                if file_path.is_file() and file_path.suffix.lower() in image_extensions:
+                    images.append(file_path)
+            
+            logger.info(f"📸 Loaded {len(images)} images from file system (fallback)")
+            return images
     
     def _generate_session_id(self) -> str:
         """Generate unique session ID for tracking"""
@@ -1037,6 +1063,10 @@ class EnhancedThreadsBot:
     async def run_async(self):
         """Main bot execution with enhanced features"""
         await self._initialize_api()
+        
+        # Load data asynchronously
+        self.captions = await self._load_captions()
+        self.images = await self._get_images()
         
         logger.info("🚀 Enhanced Threads Bot Starting...")
         logger.info(f"📋 Loaded {len(self.accounts)} accounts")

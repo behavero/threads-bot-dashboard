@@ -77,6 +77,13 @@ def main():
     # Import and run the bot
     try:
         from core.bot import EnhancedThreadsBot, BotConfig
+        from config.db import init_database
+        
+        # Initialize database
+        print("🗄️  Initializing database...")
+        import asyncio
+        asyncio.run(init_database())
+        print("✅ Database initialized successfully")
         
         # Create configuration
         config = BotConfig()
