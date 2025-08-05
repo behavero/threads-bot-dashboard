@@ -1,8 +1,7 @@
 {
   "build": {
-    "builder": "DOCKERFILE",
-    "rootDirectory": "server",
-    "dockerfilePath": "server/Dockerfile"
+    "builder": "NIXPACKS",
+    "rootDirectory": "server"
   },
   "deploy": {
     "startCommand": "python start.py",
