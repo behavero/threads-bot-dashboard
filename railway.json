@@ -1,0 +1,8 @@
+{
+  "build": {
+    "builder": "DOCKERFILE",
+    "rootDirectory": "server",
+    "dockerfilePath": "Dockerfile"
+  },
+  "start": "python start.py"
+} 
