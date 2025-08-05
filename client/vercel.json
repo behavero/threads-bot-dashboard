@@ -1,14 +1,6 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": ".next",
   "framework": "nextjs",
+  "buildCommand": "npm run build",
   "installCommand": "npm install",
-  "devCommand": "npm run dev",
-  "rootDirectory": "client",
-  "env": {
-    "NEXT_PUBLIC_SUPABASE_URL": "@next_public_supabase_url",
-    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "@next_public_supabase_anon_key",
-    "NEXT_PUBLIC_BACKEND_URL": "@next_public_backend_url"
-  },
-  "ignoreCommand": "echo 'Vercel: Ignoring server files'"
+  "devCommand": "npm run dev"
 } 
