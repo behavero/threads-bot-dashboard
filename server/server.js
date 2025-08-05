@@ -12,6 +12,11 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
+// Serve built React app in production
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../client/build')));
+}
+
 // Serve images directory
 app.use('/images', express.static(path.join(__dirname, '../images')));
 
@@ -288,8 +293,18 @@ app.get('/api/status', async (req, res) => {
   }
 });
 
+// Serve React app for any non-API routes in production
+if (process.env.NODE_ENV === 'production') {
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../client/build/index.html'));
+  });
+}
+
 // Start server
 app.listen(PORT, () => {
   console.log(`🚀 Threads Bot Dashboard Server running on port ${PORT}`);
   console.log(`📊 API available at http://localhost:${PORT}/api`);
+  if (process.env.NODE_ENV === 'production') {
+    console.log(`🌐 Frontend available at http://localhost:${PORT}`);
+  }
 }); 
