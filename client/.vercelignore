@@ -1,5 +1,5 @@
-# Ignore backend files for Vercel deployment
-backend/
+# Ignore server files for Vercel deployment
+server/
 *.py
 *.pyc
 __pycache__/

@@ -1,84 +1,85 @@
-# 🚀 Enhanced Threads Bot - Full Stack Architecture
+# 🚀 Enhanced Threads Bot
 
-A complete Threads automation solution with **Railway backend** and **Vercel frontend**, powered by **Supabase PostgreSQL**.
+A sophisticated Threads automation bot with anti-detection features, multi-account support, and a modern web dashboard.
 
-## 🏗️ Architecture Overview
-
-```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Vercel        │    │   Railway       │    │   Supabase      │
-│   Frontend      │◄──►│   Backend       │◄──►│   PostgreSQL    │
-│   (Dashboard)   │    │   (Bot + API)   │    │   (Database)    │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-```
-
-## 📁 Project Structure
+## 🏗️ Project Structure
 
 ```
-threads-bot/
-├── backend/                 # Railway deployment (Bot + API)
-│   ├── core/               # Bot logic
-│   │   ├── bot.py         # Main bot implementation
-│   │   └── db_manager.py  # Database operations
-│   ├── config/            # Configuration files
-│   │   ├── db.py         # Database connection
-│   │   └── accounts.json # Account credentials
-│   ├── assets/           # Content files
-│   │   ├── captions.txt  # Post captions
-│   │   └── images/       # Post images
-│   ├── scripts/          # Utility scripts
-│   ├── app.py           # Flask API server
-│   ├── main.py          # Bot entry point
-│   ├── requirements.txt # Python dependencies
-│   ├── railway.json    # Railway configuration
-│   └── nixpacks.toml   # Railway build config
-│
-├── frontend/              # Vercel deployment (Dashboard)
+Threads_Bot/
+├── client/          # Vercel Frontend (Next.js Dashboard)
 │   ├── src/
-│   │   ├── app/         # Next.js app directory
-│   │   └── components/  # React components
-│   ├── package.json     # Node.js dependencies
-│   ├── next.config.js   # Next.js configuration
-│   ├── tailwind.config.js # Tailwind CSS
-│   └── vercel.json      # Vercel configuration
-│
-└── README.md
+│   ├── package.json
+│   └── vercel.json
+├── server/          # Railway Backend (Python Bot)
+│   ├── core/        # Bot logic
+│   ├── config/      # Configuration files
+│   ├── assets/      # Images and captions
+│   ├── start.py     # Entry point
+│   └── railway.json
+└── docs/            # Documentation
 ```
 
 ## 🚀 Quick Start
 
-### 1. Backend Deployment (Railway)
-
+### Backend (Railway)
 ```bash
-# Navigate to backend directory
-cd backend
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Test locally
-python main.py
-
-# Deploy to Railway
-railway login
-railway link
-railway up
+cd server
+python start.py
 ```
 
-### 2. Frontend Deployment (Vercel)
-
+### Frontend (Vercel)
 ```bash
-# Navigate to frontend directory
-cd frontend
-
-# Install dependencies
+cd client
 npm install
-
-# Test locally
 npm run dev
+```
 
-# Deploy to Vercel
-vercel
+## 🎯 Features
+
+### 🤖 Bot Features
+- **Multi-Account Support**: Rotate between multiple Threads accounts
+- **Anti-Detection**: User-agent rotation, random delays, fingerprint management
+- **Smart Scheduling**: Intelligent posting intervals with human-like patterns
+- **Media Management**: Image rotation with usage tracking
+- **Session Management**: Persistent login sessions with automatic refresh
+- **Error Handling**: Robust error recovery and rate limit handling
+
+### 📊 Dashboard Features
+- **Real-time Monitoring**: Live bot status and statistics
+- **Account Management**: Add, edit, and manage Threads accounts
+- **Content Management**: Upload images and manage captions
+- **Analytics**: Posting history and performance metrics
+- **Settings**: Configure bot behavior and timing
+
+## 🛠️ Technology Stack
+
+### Backend (Railway)
+- **Python 3.11** - Core bot logic
+- **Flask** - API server for dashboard
+- **Supabase** - PostgreSQL database
+- **Threads API** - Official posting interface
+- **APScheduler** - Task scheduling
+
+### Frontend (Vercel)
+- **Next.js 14** - React framework
+- **Tailwind CSS** - Styling
+- **Supabase JS** - Database client
+- **React Hot Toast** - Notifications
+
+## 📦 Installation
+
+### Backend Setup
+```bash
+cd server
+pip install -r requirements.txt
+python start.py
+```
+
+### Frontend Setup
+```bash
+cd client
+npm install
+npm run dev
 ```
 
 ## 🔧 Configuration
@@ -89,7 +90,7 @@ vercel
 ```env
 # Supabase Configuration
 SUPABASE_URL=https://perwbmtwutwzsvlirwik.supabase.co
-SUPABASE_KEY=your_supabase_anon_key
+SUPABASE_KEY=your_supabase_key
 
 # Bot Configuration
 PLATFORM=railway
@@ -107,241 +108,51 @@ USER_AGENTS_FILE=config/user_agents.txt
 
 #### Frontend (Vercel)
 ```env
-# Supabase Configuration
 NEXT_PUBLIC_SUPABASE_URL=https://perwbmtwutwzsvlirwik.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-
-# Backend API
 NEXT_PUBLIC_BACKEND_URL=https://your-railway-app.railway.app
-```
-
-## 🗄️ Database Schema
-
-### Tables (Supabase PostgreSQL)
-
-```sql
--- Captions table
-CREATE TABLE captions (
-    id SERIAL PRIMARY KEY,
-    text TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    is_active BOOLEAN DEFAULT TRUE
-);
-
--- Images table
-CREATE TABLE images (
-    id SERIAL PRIMARY KEY,
-    filename VARCHAR(255) NOT NULL,
-    file_path TEXT NOT NULL,
-    file_size BIGINT,
-    mime_type VARCHAR(100),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_used TIMESTAMP,
-    use_count INTEGER DEFAULT 0,
-    is_active BOOLEAN DEFAULT TRUE
-);
-
--- Accounts table
-CREATE TABLE accounts (
-    id SERIAL PRIMARY KEY,
-    username VARCHAR(255) UNIQUE NOT NULL,
-    email VARCHAR(255) NOT NULL,
-    password TEXT NOT NULL,
-    enabled BOOLEAN DEFAULT TRUE,
-    description TEXT,
-    posting_schedule JSONB,
-    posting_config JSONB,
-    fingerprint_config JSONB,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Posting history table
-CREATE TABLE posting_history (
-    id SERIAL PRIMARY KEY,
-    account_id INTEGER REFERENCES accounts(id),
-    caption_id INTEGER REFERENCES captions(id),
-    image_id INTEGER REFERENCES images(id),
-    posted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    success BOOLEAN DEFAULT TRUE,
-    error_message TEXT,
-    user_agent TEXT
-);
-```
-
-## 🤖 Bot Features
-
-### Core Functionality
-- ✅ **Multi-account support** - Manage multiple Threads accounts
-- ✅ **Scheduled posting** - Automatic posts every X minutes
-- ✅ **Anti-detection** - User agent rotation, delays, fingerprinting
-- ✅ **Content rotation** - Random captions and images
-- ✅ **Error handling** - Retry logic and fallback mechanisms
-- ✅ **Database integration** - Supabase with PostgreSQL fallback
-
-### Advanced Features
-- ✅ **Session management** - Per-account cookies and sessions
-- ✅ **Rate limiting** - Smart delays and cooldowns
-- ✅ **Image usage tracking** - Prevent overuse of images
-- ✅ **Shadowban detection** - Monitor account health
-- ✅ **Real-time monitoring** - Live dashboard updates
-
-## 🎛️ Dashboard Features
-
-### Management Interface
-- ✅ **Account management** - Add, edit, enable/disable accounts
-- ✅ **Caption management** - Add, edit, delete captions
-- ✅ **Image management** - Upload, track usage, delete images
-- ✅ **Bot control** - Start/stop bot, monitor status
-- ✅ **Real-time stats** - Live posting statistics
-
-### Analytics
-- ✅ **Posting history** - Track all posting attempts
-- ✅ **Success rates** - Monitor bot performance
-- ✅ **Error tracking** - Debug failed posts
-- ✅ **Usage analytics** - Image and caption usage stats
-
-## 🔄 API Endpoints
-
-### Bot Control
-```
-POST /api/bot/start     # Start the bot
-POST /api/bot/stop      # Stop the bot
-GET  /api/bot/status    # Get bot status
-```
-
-### Account Management
-```
-GET    /api/accounts    # Get all accounts
-POST   /api/accounts    # Create new account
-PUT    /api/accounts/:id # Update account
-DELETE /api/accounts/:id # Delete account
-```
-
-### Content Management
-```
-GET    /api/captions    # Get all captions
-POST   /api/captions    # Add new caption
-PUT    /api/captions/:id # Update caption
-DELETE /api/captions/:id # Delete caption
-
-GET    /api/images      # Get all images
-POST   /api/images      # Upload image
-DELETE /api/images/:id  # Delete image
-```
-
-### System Status
-```
-GET /api/status         # Overall system status
-```
-
-## 🛠️ Development
-
-### Backend Development
-```bash
-cd backend
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements.txt
-python main.py
-```
-
-### Frontend Development
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-### Database Setup
-```bash
-cd backend
-python scripts/init_db.py
 ```
 
 ## 🚀 Deployment
 
 ### Railway (Backend)
-1. Connect GitHub repository to Railway
-2. Set environment variables
-3. Deploy automatically on push
+1. Connect your GitHub repository to Railway
+2. Railway will automatically detect the `server/` directory
+3. Set environment variables in Railway dashboard
+4. Deploy with `python start.py`
 
 ### Vercel (Frontend)
-1. Connect GitHub repository to Vercel
-2. Set environment variables
-3. Deploy automatically on push
+1. Connect your GitHub repository to Vercel
+2. Vercel will automatically detect the `client/` directory
+3. Set environment variables in Vercel dashboard
+4. Deploy with `npm run build`
 
-## 📊 Monitoring
+## 📊 Database Schema
 
-### Health Checks
-- ✅ **Railway health check** - `/api/status`
-- ✅ **Database connectivity** - Automatic fallback
-- ✅ **Bot status monitoring** - Real-time status
-
-### Logging
-- ✅ **Structured logging** - JSON format
-- ✅ **Error tracking** - Detailed error messages
-- ✅ **Performance monitoring** - Response times
+### Tables
+- **accounts**: Threads account credentials and settings
+- **captions**: Post captions with metadata
+- **images**: Image files with usage tracking
+- **posting_history**: Post history and analytics
 
 ## 🔒 Security
 
-### Data Protection
-- ✅ **Environment variables** - Secure credential storage
-- ✅ **Database encryption** - Supabase security
-- ✅ **API authentication** - CORS protection
-- ✅ **Input validation** - Sanitized inputs
+- **Environment Variables**: All sensitive data stored in platform variables
+- **Database Security**: Supabase Row Level Security (RLS)
+- **API Keys**: Secure storage and rotation
+- **Session Management**: Encrypted session storage
 
-### Anti-Detection
-- ✅ **User agent rotation** - Random browser signatures
-- ✅ **Session rotation** - Fresh cookies per account
-- ✅ **Delay randomization** - Human-like timing
-- ✅ **Device fingerprinting** - Unique device profiles
+## 📈 Monitoring
 
-## 🐛 Troubleshooting
+### Health Checks
+- **Backend**: `/api/status` endpoint
+- **Database**: Connection monitoring
+- **Bot Status**: Real-time running status
 
-### Common Issues
-
-**Bot won't start:**
-- Check account credentials in `config/accounts.json`
-- Verify Supabase connection
-- Check logs for specific errors
-
-**Posts not appearing:**
-- Verify Threads API connectivity
-- Check account login status
-- Review anti-detection settings
-
-**Database errors:**
-- Verify Supabase credentials
-- Check table permissions
-- Review connection limits
-
-### Debug Commands
-```bash
-# Test database connection
-python -c "from config.db import init_database; import asyncio; asyncio.run(init_database())"
-
-# Test bot initialization
-python -c "from core.bot import EnhancedThreadsBot, BotConfig; bot = EnhancedThreadsBot(BotConfig())"
-
-# Check file structure
-find . -name "*.py" -o -name "*.json" -o -name "*.txt"
-```
-
-## 📈 Performance
-
-### Optimization
-- ✅ **Connection pooling** - Efficient database connections
-- ✅ **Async operations** - Non-blocking I/O
-- ✅ **Caching** - Reduced database queries
-- ✅ **Batch operations** - Efficient data processing
-
-### Scalability
-- ✅ **Horizontal scaling** - Multiple bot instances
-- ✅ **Load balancing** - Railway auto-scaling
-- ✅ **Database optimization** - Indexed queries
-- ✅ **CDN integration** - Vercel edge caching
+### Logging
+- **Structured Logging**: JSON format with levels
+- **Error Tracking**: Comprehensive error reporting
+- **Performance Metrics**: Response times and throughput
 
 ## 🤝 Contributing
 
@@ -353,15 +164,14 @@ find . -name "*.py" -o -name "*.json" -o -name "*.txt"
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+MIT License - see LICENSE file for details
 
 ## 🆘 Support
 
-- **Documentation**: Check the `/docs` folder
-- **Issues**: Create GitHub issues
-- **Discussions**: Use GitHub discussions
-- **Email**: Contact maintainers directly
+- **Issues**: GitHub Issues
+- **Documentation**: `/docs` directory
+- **Deployment Guide**: `DEPLOYMENT.md`
 
 ---
 
-**🚀 Ready to automate your Threads presence!** 
+**🎯 Ready to automate your Threads presence with style!** 

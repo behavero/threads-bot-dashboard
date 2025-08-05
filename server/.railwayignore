@@ -1,5 +1,5 @@
-# Ignore frontend files for Railway deployment
-frontend/
+# Ignore client files for Railway deployment
+client/
 node_modules/
 .next/
 out/
