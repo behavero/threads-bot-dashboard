@@ -1,0 +1,93 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Project specific
+config/accounts.json
+config/legacy_accounts.json
+*.log
+enhanced_bot.log
+.env
+
+# Threads API token files
+*.token
+.token_*
+
+# Images (optional - uncomment if you don't want to track images)
+# images/*.jpg
+# images/*.jpeg
+# images/*.png
+
+# Deployment
+.railway/
+.render/
+.replit/
+
+# Platform-specific
+railway.toml
+railway.json
+render.yaml
+.replit
+replit.nix
+pyproject.toml
+
+# Environment files
+.env
+.env.local
+.env.production
+.env.development
+
+# Logs
+*.log
+enhanced_bot.log
+deploy.log
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Nested repositories
+threads-bot-dashboard/ 
