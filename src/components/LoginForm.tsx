@@ -43,23 +43,31 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
     }
   }
 
-  return (
-    <div className="min-h-screen flex items-center justify-center relative">
-      {/* Background decorative elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-600 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>
-      </div>
+           return (
+           <div className="min-h-screen flex items-center justify-center relative">
+             {/* Background decorative elements */}
+             <div className="absolute inset-0 overflow-hidden pointer-events-none">
+               <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-pulse"></div>
+               <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-600 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-pulse"></div>
+               
+               {/* Decorative lines */}
+               <div className="absolute top-1/4 left-0 w-full h-px bg-gradient-to-r from-transparent via-purple-500/30 to-transparent"></div>
+               <div className="absolute top-3/4 left-0 w-full h-px bg-gradient-to-r from-transparent via-purple-500/20 to-transparent"></div>
+               
+               {/* Decorative circles */}
+               <div className="absolute top-1/3 right-1/4 w-32 h-32 border border-purple-500/20 rounded-full"></div>
+               <div className="absolute bottom-1/3 left-1/4 w-24 h-24 border border-purple-500/15 rounded-full"></div>
+             </div>
 
-      <div className="modern-card p-8 w-full max-w-md relative z-10 floating">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold gradient-text mb-2">
-            Threads Bot
-          </h1>
-          <p className="text-gray-300">
-            {isSignUp ? 'Create your account' : 'Sign in to your account'}
-          </p>
-        </div>
+             <div className="modern-card p-12 w-full max-w-lg relative z-10 floating">
+               <div className="text-center mb-12">
+                 <h1 className="text-5xl font-bold gradient-text mb-4">
+                   } Threads Bot
+                 </h1>
+                 <p className="text-lg text-gray-300">
+                   {isSignUp ? 'Create your account' : 'Sign in to your account'}
+                 </p>
+               </div>
         
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
@@ -98,13 +106,13 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
             </div>
           )}
           
-          <button 
-            type="submit" 
-            className="w-full modern-button py-3 glow-on-hover" 
-            disabled={loading}
-          >
-            {loading ? 'Loading...' : (isSignUp ? 'Sign Up' : 'Sign In')}
-          </button>
+                           <button
+                   type="submit"
+                   className="w-full modern-button py-4 text-lg glow-on-hover"
+                   disabled={loading}
+                 >
+                   {loading ? 'Loading...' : (isSignUp ? 'Sign Up' : 'Sign In')}
+                 </button>
         </form>
         
         <div className="mt-6 text-center">
