@@ -6,6 +6,7 @@ import ProtectedRoute from '@/components/ProtectedRoute'
 import EngagementChart from '@/components/EngagementChart'
 import AccountsPage from '@/app/accounts/page'
 import PromptsPage from '@/app/prompts/page'
+import ImagesPage from '@/app/images/page'
 
 export default function DashboardPage() {
   const { user, signOut } = useAuth()
@@ -72,7 +73,7 @@ export default function DashboardPage() {
                 { id: 'accounts', name: 'Accounts' },
                 { id: 'prompts', name: 'Prompts' },
                 { id: 'schedule', name: 'Schedule' },
-                { id: 'upload', name: 'Upload' },
+                                     { id: 'images', name: 'Images' },
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -96,7 +97,7 @@ export default function DashboardPage() {
           {activeTab === 'accounts' && <AccountsContent />}
           {activeTab === 'prompts' && <PromptsContent />}
           {activeTab === 'schedule' && <ScheduleContent />}
-          {activeTab === 'upload' && <UploadContent />}
+                           {activeTab === 'images' && <ImagesContent />}
         </main>
       </div>
     </ProtectedRoute>
@@ -197,13 +198,6 @@ function ScheduleContent() {
   )
 }
 
-function UploadContent() {
-  return (
-    <div className="modern-card p-8">
-      <h3 className="text-2xl font-bold text-white mb-6">
-        Upload
-      </h3>
-      <p className="text-gray-300">Upload your content here.</p>
-    </div>
-  )
-} 
+       function ImagesContent() {
+         return <ImagesPage />
+       } 
