@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
     const captionData = {
       text: text,
       category: category || 'general',
-      tags: Array.isArray(tags) ? tags : (tags ? tags.split(',').map(t => t.trim()) : []),
+      tags: Array.isArray(tags) ? tags : (tags ? tags.split(',').map((t: string) => t.trim()) : []),
       used: false
     }
     
