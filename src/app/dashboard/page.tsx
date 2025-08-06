@@ -57,7 +57,13 @@ export default function DashboardPage() {
                     width={400}
                     height={80}
                     priority
-                    className="max-h-8 sm:max-h-12 md:max-h-16 h-auto w-auto text-white hover:opacity-90 transition-opacity duration-200"
+                    className="max-h-8 sm:max-h-12 md:max-h-16 h-auto w-auto text-white hover:opacity-90 transition-opacity duration-200 [&_path]:fill-white [&_path]:dark:fill-white"
+                    onError={(e) => {
+                      console.error('Logo failed to load:', e)
+                    }}
+                    onLoad={() => {
+                      console.log('Logo loaded successfully')
+                    }}
                   />
                 </Link>
               </div>
@@ -179,21 +185,15 @@ export default function DashboardPage() {
 function DashboardContent() {
   return (
     <div className="space-y-6 sm:space-y-8">
-      {/* Hero Section */}
+      {/* Global Results Overview */}
       <div className="modern-card p-6 sm:p-12 floating">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center">
-          <div>
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold gradient-text mb-4 sm:mb-6">
-              Threads Bot Is a Premier Social Media Automation Platform
-            </h2>
-            <p className="text-base sm:text-lg text-gray-300 mb-6 sm:mb-8 leading-relaxed">
-              Renowned for powering the backbone of social media ecosystems with our state-of-the-art automation services, content scheduling & engagement tracking.
-            </p>
-            <button className="modern-button px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg glow-on-hover w-full sm:w-auto">
-              GET STARTED
-            </button>
-          </div>
-          <div className="relative">
+        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-6 sm:mb-8">
+          Global Results
+        </h2>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-start">
+          {/* Key Metrics */}
+          <div className="space-y-6">
             <div className="grid grid-cols-2 gap-4 sm:gap-6">
               <div className="modern-card p-4 sm:p-6 text-center">
                 <div className="text-3xl sm:text-4xl lg:text-5xl font-bold gradient-text mb-2">192k</div>
@@ -205,9 +205,61 @@ function DashboardContent() {
               </div>
             </div>
             
-            {/* Connection lines */}
-            <div className="absolute top-1/2 left-1/2 w-full h-px bg-gradient-to-r from-transparent via-purple-500/30 to-transparent transform -translate-y-1/2"></div>
-            <div className="absolute top-1/2 left-1/2 w-px h-full bg-gradient-to-b from-transparent via-purple-500/30 to-transparent transform -translate-x-1/2"></div>
+            {/* Traffic & Performance */}
+            <div className="space-y-4">
+              <div className="flex justify-between items-center p-4 bg-gray-800/50 rounded-lg">
+                <span className="text-gray-300 text-sm sm:text-base">Success Rate</span>
+                <span className="text-green-400 font-bold text-lg">98.5%</span>
+              </div>
+              <div className="flex justify-between items-center p-4 bg-gray-800/50 rounded-lg">
+                <span className="text-gray-300 text-sm sm:text-base">Avg Response Time</span>
+                <span className="text-blue-400 font-bold text-lg">2.3s</span>
+              </div>
+              <div className="flex justify-between items-center p-4 bg-gray-800/50 rounded-lg">
+                <span className="text-gray-300 text-sm sm:text-base">Daily Posts</span>
+                <span className="text-purple-400 font-bold text-lg">847</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Account Status & Alerts */}
+          <div className="space-y-6">
+            <div className="modern-card p-4 sm:p-6">
+              <h3 className="text-lg sm:text-xl font-bold text-white mb-4">Account Status</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-300 text-sm">Healthy Accounts</span>
+                  <span className="text-green-400 font-bold">28</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-300 text-sm">Warning Accounts</span>
+                  <span className="text-yellow-400 font-bold">4</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-300 text-sm">Suspended Accounts</span>
+                  <span className="text-red-400 font-bold">2</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Recent Activity */}
+            <div className="modern-card p-4 sm:p-6">
+              <h3 className="text-lg sm:text-xl font-bold text-white mb-4">Recent Activity</h3>
+              <div className="space-y-3 text-sm">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-300">Last Post</span>
+                  <span className="text-white">2 min ago</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-300">Next Scheduled</span>
+                  <span className="text-white">15 min</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-300">Queue Status</span>
+                  <span className="text-green-400">Active</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -215,7 +267,7 @@ function DashboardContent() {
       {/* Dashboard Overview */}
       <div className="modern-card p-6 sm:p-8">
         <h3 className="text-xl sm:text-2xl font-bold text-white mb-6 sm:mb-8">
-          Dashboard Overview
+          System Overview
         </h3>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           <div className="modern-card p-4 sm:p-6 text-center hover:scale-105 transition-transform duration-300">
