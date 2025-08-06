@@ -62,7 +62,7 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
              <div className="modern-card p-12 w-full max-w-lg relative z-10 floating">
                <div className="text-center mb-12">
                  <h1 className="text-5xl font-bold gradient-text mb-4">
-                   } Threads Bot
+                   Threads Bot
                  </h1>
                  <p className="text-lg text-gray-300">
                    {isSignUp ? 'Create your account' : 'Sign in to your account'}

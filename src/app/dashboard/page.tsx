@@ -40,7 +40,7 @@ export default function DashboardPage() {
                    <div className="flex justify-between items-center h-20">
                      <div className="flex items-center space-x-8">
                        <h1 className="text-3xl font-bold gradient-text">
-                         } Threads Bot Dashboard
+                         Threads Bot Dashboard
                        </h1>
                        <div className="hidden md:flex items-center space-x-8 text-sm">
                          <span className="text-gray-300">DASHBOARD</span>
@@ -112,10 +112,10 @@ export default function DashboardPage() {
                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                  <div>
                    <h2 className="text-4xl font-bold gradient-text mb-6">
-                     } Threads Bot Is a Premier Social Media Automation Platform
+                     Threads Bot Is a Premier Social Media Automation Platform
                    </h2>
                    <p className="text-lg text-gray-300 mb-8 leading-relaxed">
-                     } Renowned for powering the backbone of social media ecosystems with our state-of-the-art automation services, content scheduling & engagement tracking.
+                     Renowned for powering the backbone of social media ecosystems with our state-of-the-art automation services, content scheduling & engagement tracking.
                    </p>
                    <button className="modern-button px-8 py-4 text-lg glow-on-hover">
                      GET STARTED
