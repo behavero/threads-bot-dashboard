@@ -23,6 +23,7 @@ export default function PromptsPage() {
   const [prompts, setPrompts] = useState<Prompt[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
+  const [message, setMessage] = useState('')
   const [showModal, setShowModal] = useState(false)
   const [editingPrompt, setEditingPrompt] = useState<Prompt | null>(null)
   const [selectedCategory, setSelectedCategory] = useState('all')
@@ -31,6 +32,8 @@ export default function PromptsPage() {
     category: '',
     tags: ''
   })
+  const [csvFile, setCsvFile] = useState<File | null>(null)
+  const [isUploadingCsv, setIsUploadingCsv] = useState(false)
 
   const categories = [
     'all',
@@ -132,6 +135,44 @@ export default function PromptsPage() {
     }
   }
 
+  const handleCsvUpload = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!csvFile) return
+
+    setIsUploadingCsv(true)
+    setError('')
+
+    try {
+      const formData = new FormData()
+      formData.append('file', csvFile)
+
+      const response = await fetch('/api/prompts/upload-csv', {
+        method: 'POST',
+        body: formData
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        setCsvFile(null)
+        await fetchPrompts()
+        setMessage(`Successfully uploaded ${data.count} prompts`)
+      } else {
+        setError(data.error || 'Failed to upload CSV')
+      }
+    } catch (err) {
+      setError('Error uploading CSV')
+    } finally {
+      setIsUploadingCsv(false)
+    }
+  }
+
+  const handleCsvChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setCsvFile(e.target.files[0])
+    }
+  }
+
   const handleToggleUsed = async (prompt: Prompt) => {
     try {
       const response = await fetch(`/api/prompts/${prompt.id}`, {
@@ -218,12 +259,54 @@ export default function PromptsPage() {
         </div>
       </div>
 
-      {/* Error Message */}
-      {error && (
-        <div className="modern-card p-4 border border-red-500/30">
-          <div className="text-red-400">{error}</div>
-        </div>
-      )}
+                   {/* Messages */}
+             {error && (
+               <div className="modern-card p-4 border border-red-500/30">
+                 <div className="text-red-400">{error}</div>
+               </div>
+             )}
+             
+             {message && (
+               <div className="modern-card p-4 border border-green-500/30">
+                 <div className="text-green-400">{message}</div>
+               </div>
+             )}
+
+             {/* CSV Upload */}
+             <div className="modern-card p-6">
+               <h3 className="text-xl font-bold text-white mb-4">Bulk Upload Prompts</h3>
+               <form onSubmit={handleCsvUpload} className="space-y-4">
+                 <div className="space-y-2">
+                   <label htmlFor="csvFile" className="text-sm font-medium text-gray-300">
+                     Upload CSV File
+                   </label>
+                   <input
+                     id="csvFile"
+                     type="file"
+                     accept=".csv,.txt"
+                     onChange={handleCsvChange}
+                     className="w-full px-4 py-3 bg-transparent border border-gray-600 rounded-lg text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-purple-600 file:text-white hover:file:bg-purple-700 transition-colors"
+                   />
+                   <p className="text-xs text-gray-400">
+                     CSV format: text,category,tags (one prompt per line)
+                   </p>
+                 </div>
+                 
+                 {csvFile && (
+                   <div className="text-sm text-gray-300">
+                     Selected file: {csvFile.name}
+                   </div>
+                 )}
+                 
+                 <button
+                   type="submit"
+                   disabled={!csvFile || isUploadingCsv}
+                   className="modern-button px-6 py-3 glow-on-hover"
+                 >
+                   {isUploadingCsv ? 'Uploading...' : 'Upload CSV'}
+                 </button>
+               </form>
+             </div>
 
       {/* Prompts Grid */}
       {filteredPrompts.length === 0 ? (

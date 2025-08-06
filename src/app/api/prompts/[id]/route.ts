@@ -13,10 +13,13 @@ export async function PUT(
     const { text, category, tags, used } = body
     
     const [prompt] = await sql`
-      UPDATE captions 
+      UPDATE prompts 
       SET 
         text = ${text},
-        used = ${used !== undefined ? used : false}
+        category = ${category || 'general'},
+        tags = ${tags || []},
+        used = ${used || false},
+        updated_at = NOW()
       WHERE id = ${params.id} AND user_id = ${user.id}
       RETURNING *
     `
@@ -30,14 +33,7 @@ export async function PUT(
     
     return NextResponse.json({
       success: true,
-      prompt: {
-        id: prompt.id,
-        text: prompt.text,
-        category: category || 'general',
-        tags: tags || [],
-        used: prompt.used,
-        created_at: prompt.created_at
-      }
+      prompt
     })
   } catch (error) {
     console.error('Error updating prompt:', error)
@@ -62,7 +58,7 @@ export async function DELETE(
     const user = await requireAuth(request)
     
     const [prompt] = await sql`
-      DELETE FROM captions 
+      DELETE FROM prompts
       WHERE id = ${params.id} AND user_id = ${user.id}
       RETURNING *
     `

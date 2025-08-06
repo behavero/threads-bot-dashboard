@@ -4,13 +4,26 @@ import sql from '@/lib/database'
 
 export async function GET(request: NextRequest) {
   try {
-    // Temporarily return empty prompts until database is set up
+    const user = await requireAuth(request)
+    
+    const prompts = await sql`
+      SELECT * FROM prompts 
+      WHERE user_id = ${user.id}
+      ORDER BY created_at DESC
+    `
+    
     return NextResponse.json({
       success: true,
-      prompts: []
+      prompts: prompts || []
     })
   } catch (error) {
     console.error('Error fetching prompts:', error)
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
     return NextResponse.json(
       { success: false, error: 'Failed to fetch prompts' },
       { status: 500 }
@@ -26,23 +39,16 @@ export async function POST(request: NextRequest) {
     const { text, category, tags } = body
     
     const [prompt] = await sql`
-      INSERT INTO captions (
-        user_id, text, used
+      INSERT INTO prompts (
+        user_id, text, category, tags, used
       ) VALUES (
-        ${user.id}, ${text}, false
+        ${user.id}, ${text}, ${category || 'general'}, ${tags || []}, false
       ) RETURNING *
     `
     
     return NextResponse.json({
       success: true,
-      prompt: {
-        id: prompt.id,
-        text: prompt.text,
-        category: category || 'general',
-        tags: tags || [],
-        used: prompt.used,
-        created_at: prompt.created_at
-      }
+      prompt
     })
   } catch (error) {
     console.error('Error creating prompt:', error)
