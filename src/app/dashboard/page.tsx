@@ -7,6 +7,8 @@ import EngagementChart from '@/components/EngagementChart'
 import AccountsPage from '@/app/accounts/page'
 import CaptionsPage from '@/app/captions/page'
 import ImagesPage from '@/app/images/page'
+import Link from 'next/link'
+import Image from 'next/image'
 
 export default function DashboardPage() {
   const { user, signOut } = useAuth()
@@ -39,9 +41,16 @@ export default function DashboardPage() {
                  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                    <div className="flex justify-between items-center h-20">
                      <div className="flex items-center space-x-8">
-                       <h1 className="text-3xl font-bold gradient-text">
-                         Threads Bot Dashboard
-                       </h1>
+                       <Link href="/" className="flex items-center">
+                         <Image
+                           src="/logo.svg"
+                           alt="Threadly Logo"
+                           width={160}
+                           height={40}
+                           priority
+                           className="max-h-10 h-auto w-auto text-black dark:text-white"
+                         />
+                       </Link>
                        <div className="hidden md:flex items-center space-x-8 text-sm">
                          <span className="text-gray-300">DASHBOARD</span>
                          <span className="text-gray-300">ACCOUNTS</span>

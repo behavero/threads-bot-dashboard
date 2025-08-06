@@ -3,7 +3,7 @@ import './globals.css'
 import { AuthProvider } from '@/lib/auth'
 
 export const metadata: Metadata = {
-  title: 'Threads Bot Dashboard',
+  title: 'Threadly - Threads Bot Dashboard',
   description: 'Manage your Threads accounts and schedule posts',
 }
 
