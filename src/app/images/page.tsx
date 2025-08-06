@@ -41,11 +41,11 @@ export default function ImagesPage() {
 
   const fetchUploadedImages = async () => {
     try {
-      const response = await fetch('/api/upload')
+      const response = await fetch('/api/images')
       const data = await response.json()
       
       if (data.success) {
-        setUploadedImages(data.data.images)
+        setUploadedImages(data.images)
       }
     } catch (error) {
       console.error('Error fetching images:', error)
@@ -71,7 +71,7 @@ export default function ImagesPage() {
         formData.append('images', image)
       })
 
-      const response = await fetch('/api/upload', {
+      const response = await fetch('/api/images', {
         method: 'POST',
         body: formData
       })
