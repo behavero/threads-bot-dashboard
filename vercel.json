@@ -1,5 +1,6 @@
 {
   "buildCommand": "npm run build",
-  "outputDirectory": "frontend/out",
-  "framework": "nextjs"
+  "outputDirectory": "out",
+  "framework": "nextjs",
+  "rootDirectory": "frontend"
 } 
