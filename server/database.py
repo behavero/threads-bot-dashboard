@@ -2,6 +2,7 @@ import os
 import requests
 from typing import List, Dict, Optional
 from datetime import datetime
+from supabase import create_client, Client
 
 class DatabaseManager:
     def __init__(self):
@@ -11,11 +12,20 @@ class DatabaseManager:
         if not self.supabase_url or not self.supabase_key:
             raise ValueError("Supabase credentials not configured")
         
+        # Initialize headers for HTTP requests
         self.headers = {
             "apikey": self.supabase_key,
             "Authorization": f"Bearer {self.supabase_key}",
             "Content-Type": "application/json"
         }
+        
+        # Try to initialize Supabase client (optional)
+        try:
+            self.supabase: Client = create_client(self.supabase_url, self.supabase_key)
+            self.use_supabase_client = True
+        except Exception as e:
+            print(f"⚠️ Supabase client initialization failed, using HTTP requests: {e}")
+            self.use_supabase_client = False
     
     def initialize_schema(self):
         """Initialize database schema"""
@@ -64,12 +74,16 @@ class DatabaseManager:
     def get_active_accounts(self) -> List[Dict]:
         """Get all active accounts"""
         try:
-            response = requests.get(
-                f"{self.supabase_url}/rest/v1/accounts",
-                params={"active": "eq.true"},
-                headers=self.headers
-            )
-            return response.json() if response.status_code == 200 else []
+            if hasattr(self, 'use_supabase_client') and self.use_supabase_client:
+                response = self.supabase.table("accounts").select("*").eq("status", "enabled").execute()
+                return response.data if response.data else []
+            else:
+                response = requests.get(
+                    f"{self.supabase_url}/rest/v1/accounts",
+                    params={"status": "eq.enabled"},
+                    headers=self.headers
+                )
+                return response.json() if response.status_code == 200 else []
         except Exception as e:
             print(f"❌ Error fetching accounts: {e}")
             return []
@@ -77,13 +91,8 @@ class DatabaseManager:
     def get_unused_caption(self) -> Optional[Dict]:
         """Get a random unused caption"""
         try:
-            response = requests.get(
-                f"{self.supabase_url}/rest/v1/captions",
-                params={"used": "eq.false"},
-                headers=self.headers
-            )
-            captions = response.json() if response.status_code == 200 else []
-            return captions[0] if captions else None
+            response = self.supabase.table("captions").select("*").eq("used", False).limit(1).execute()
+            return response.data[0] if response.data else None
         except Exception as e:
             print(f"❌ Error fetching caption: {e}")
             return None
@@ -91,13 +100,8 @@ class DatabaseManager:
     def get_unused_image(self) -> Optional[Dict]:
         """Get a random unused image"""
         try:
-            response = requests.get(
-                f"{self.supabase_url}/rest/v1/images",
-                params={"used": "eq.false"},
-                headers=self.headers
-            )
-            images = response.json() if response.status_code == 200 else []
-            return images[0] if images else None
+            response = self.supabase.table("images").select("*").eq("used", False).limit(1).execute()
+            return response.data[0] if response.data else None
         except Exception as e:
             print(f"❌ Error fetching image: {e}")
             return None
@@ -105,36 +109,21 @@ class DatabaseManager:
     def mark_caption_used(self, caption_id: str):
         """Mark a caption as used"""
         try:
-            requests.patch(
-                f"{self.supabase_url}/rest/v1/captions",
-                json={"used": True},
-                params={"id": f"eq.{caption_id}"},
-                headers=self.headers
-            )
+            self.supabase.table("captions").update({"used": True}).eq("id", caption_id).execute()
         except Exception as e:
             print(f"❌ Error marking caption used: {e}")
     
     def mark_image_used(self, image_id: str):
         """Mark an image as used"""
         try:
-            requests.patch(
-                f"{self.supabase_url}/rest/v1/images",
-                json={"used": True},
-                params={"id": f"eq.{image_id}"},
-                headers=self.headers
-            )
+            self.supabase.table("images").update({"used": True}).eq("id", image_id).execute()
         except Exception as e:
             print(f"❌ Error marking image used: {e}")
     
     def update_account_last_posted(self, account_id: str):
         """Update account's last posted timestamp"""
         try:
-            requests.patch(
-                f"{self.supabase_url}/rest/v1/accounts",
-                json={"last_posted": datetime.now().isoformat()},
-                params={"id": f"eq.{account_id}"},
-                headers=self.headers
-            )
+            self.supabase.table("accounts").update({"last_posted": datetime.now().isoformat()}).eq("id", account_id).execute()
         except Exception as e:
             print(f"❌ Error updating account: {e}")
     
@@ -151,23 +140,15 @@ class DatabaseManager:
                 "posted_at": datetime.now().isoformat() if status == "success" else None
             }
             
-            requests.post(
-                f"{self.supabase_url}/rest/v1/posting_history",
-                json=data,
-                headers=self.headers
-            )
+            self.supabase.table("posting_history").insert(data).execute()
         except Exception as e:
             print(f"❌ Error recording posting history: {e}")
     
     def add_account(self, username: str, password: str) -> bool:
         """Add a new account"""
         try:
-            response = requests.post(
-                f"{self.supabase_url}/rest/v1/accounts",
-                json={"username": username, "password": password},
-                headers=self.headers
-            )
-            return response.status_code == 201
+            response = self.supabase.table("accounts").insert({"username": username, "password": password}).execute()
+            return len(response.data) > 0
         except Exception as e:
             print(f"❌ Error adding account: {e}")
             return False
@@ -175,12 +156,8 @@ class DatabaseManager:
     def add_caption(self, text: str) -> bool:
         """Add a new caption"""
         try:
-            response = requests.post(
-                f"{self.supabase_url}/rest/v1/captions",
-                json={"text": text},
-                headers=self.headers
-            )
-            return response.status_code == 201
+            response = self.supabase.table("captions").insert({"text": text}).execute()
+            return len(response.data) > 0
         except Exception as e:
             print(f"❌ Error adding caption: {e}")
             return False
@@ -188,12 +165,79 @@ class DatabaseManager:
     def add_image(self, url: str) -> bool:
         """Add a new image"""
         try:
-            response = requests.post(
-                f"{self.supabase_url}/rest/v1/images",
-                json={"url": url},
-                headers=self.headers
-            )
-            return response.status_code == 201
+            response = self.supabase.table("images").insert({"url": url}).execute()
+            return len(response.data) > 0
         except Exception as e:
             print(f"❌ Error adding image: {e}")
-            return False 
+            return False
+    
+    def get_all_captions(self) -> List[Dict]:
+        """Get all captions"""
+        try:
+            if hasattr(self, 'use_supabase_client') and self.use_supabase_client:
+                response = self.supabase.table("captions").select("*").execute()
+                return response.data if response.data else []
+            else:
+                response = requests.get(
+                    f"{self.supabase_url}/rest/v1/captions",
+                    headers=self.headers
+                )
+                return response.json() if response.status_code == 200 else []
+        except Exception as e:
+            print(f"❌ Error fetching captions: {e}")
+            return []
+    
+    def get_all_images(self) -> List[Dict]:
+        """Get all images"""
+        try:
+            if hasattr(self, 'use_supabase_client') and self.use_supabase_client:
+                response = self.supabase.table("images").select("*").execute()
+                return response.data if response.data else []
+            else:
+                response = requests.get(
+                    f"{self.supabase_url}/rest/v1/images",
+                    headers=self.headers
+                )
+                return response.json() if response.status_code == 200 else []
+        except Exception as e:
+            print(f"❌ Error fetching images: {e}")
+            return []
+    
+    def get_posting_history(self) -> List[Dict]:
+        """Get posting history"""
+        try:
+            if hasattr(self, 'use_supabase_client') and self.use_supabase_client:
+                response = self.supabase.table("posting_history").select("*").order("posted_at", desc=True).execute()
+                return response.data if response.data else []
+            else:
+                response = requests.get(
+                    f"{self.supabase_url}/rest/v1/posting_history",
+                    params={"order": "posted_at.desc"},
+                    headers=self.headers
+                )
+                return response.json() if response.status_code == 200 else []
+        except Exception as e:
+            print(f"❌ Error fetching posting history: {e}")
+            return []
+    
+    def get_statistics(self) -> Dict:
+        """Get comprehensive statistics"""
+        try:
+            accounts = self.get_active_accounts()
+            captions = self.get_all_captions()
+            images = self.get_all_images()
+            history = self.get_posting_history()
+            
+            return {
+                "total_accounts": len(accounts),
+                "active_accounts": len([a for a in accounts if a.get('status') == 'enabled']),
+                "total_captions": len(captions),
+                "total_images": len(images),
+                "total_posts": len(history),
+                "successful_posts": len([h for h in history if h.get('status') == 'success']),
+                "failed_posts": len([h for h in history if h.get('status') == 'failed']),
+                "last_posted": history[0].get('posted_at') if history else None
+            }
+        except Exception as e:
+            print(f"❌ Error getting statistics: {e}")
+            return {} 

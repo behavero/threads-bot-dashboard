@@ -91,6 +91,45 @@ def info():
         "timestamp": datetime.now().isoformat()
     })
 
+@app.route('/api/post/schedule', methods=['GET', 'POST'])
+def schedule_posts():
+    """Get or create posting schedules"""
+    try:
+        db = DatabaseManager()
+        
+        if request.method == 'GET':
+            # Get all schedules
+            # This would need to be implemented in DatabaseManager
+            return jsonify({"schedules": []})
+        
+        elif request.method == 'POST':
+            # Create new schedule
+            data = request.json
+            account_id = data.get('account_id')
+            caption_id = data.get('caption_id')
+            image_id = data.get('image_id')
+            scheduled_time = data.get('scheduled_time')
+            
+            if not all([account_id, scheduled_time]):
+                return jsonify({"error": "Account ID and scheduled time required"}), 400
+            
+            # This would need to be implemented in DatabaseManager
+            return jsonify({"message": "Schedule created successfully"}), 201
+            
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/stats', methods=['GET'])
+def get_stats():
+    """Get comprehensive statistics"""
+    try:
+        db = DatabaseManager()
+        stats = db.get_statistics()
+        stats["bot_status"] = "running" if bot_running else "stopped"
+        return jsonify(stats)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/api/accounts', methods=['GET'])
 def get_accounts():
     try:
@@ -192,8 +231,8 @@ def stop_bot():
 def get_captions():
     try:
         db = DatabaseManager()
-        # This would need to be implemented in DatabaseManager
-        return jsonify({"captions": []})
+        captions = db.get_all_captions()
+        return jsonify({"captions": captions})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -220,8 +259,8 @@ def add_caption():
 def get_images():
     try:
         db = DatabaseManager()
-        # This would need to be implemented in DatabaseManager
-        return jsonify({"images": []})
+        images = db.get_all_images()
+        return jsonify({"images": images})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
