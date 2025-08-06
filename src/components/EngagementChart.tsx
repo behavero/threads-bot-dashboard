@@ -96,189 +96,193 @@ export default function EngagementChart() {
   const avgEngagement = totalPosts > 0 ? Math.round(totalEngagement / totalPosts) : 0
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header with controls */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
         <div>
-          <h2 className="text-2xl font-bold">Engagement Analytics</h2>
-          <p className="text-gray-600">Daily engagement across all Threads accounts</p>
+          <h2 className="text-3xl font-bold text-white mb-2">Engagement Analytics</h2>
+          <p className="text-gray-300">Daily engagement across all Threads accounts</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-3">
           <select 
             value={days} 
             onChange={(e) => setDays(Number(e.target.value))}
-            className="px-3 py-2 border rounded-md"
+            className="modern-button px-4 py-2 bg-transparent border border-gray-600 text-white"
           >
             <option value={7}>Last 7 days</option>
             <option value={14}>Last 14 days</option>
             <option value={30}>Last 30 days</option>
           </select>
-          <Button 
+          <button 
             onClick={refreshEngagementData}
             disabled={isRefreshing}
-            variant="outline"
+            className="modern-button px-6 py-2 glow-on-hover"
           >
             {isRefreshing ? 'Refreshing...' : 'Refresh Data'}
-          </Button>
+          </button>
         </div>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Engagement</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalEngagement.toLocaleString()}</div>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="modern-card p-6 text-center hover:scale-105 transition-transform duration-300">
+          <div className="text-3xl font-bold gradient-text mb-2">{totalEngagement.toLocaleString()}</div>
+          <div className="text-sm text-gray-300">Total Engagement</div>
+          <div className="mt-4 w-8 h-8 bg-purple-500 rounded-full mx-auto opacity-60"></div>
+        </div>
         
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Posts</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalPosts}</div>
-          </CardContent>
-        </Card>
+        <div className="modern-card p-6 text-center hover:scale-105 transition-transform duration-300">
+          <div className="text-3xl font-bold gradient-text mb-2">{totalPosts}</div>
+          <div className="text-sm text-gray-300">Total Posts</div>
+          <div className="mt-4 w-8 h-8 bg-green-500 rounded-full mx-auto opacity-60"></div>
+        </div>
         
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Avg Engagement</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{avgEngagement}</div>
-          </CardContent>
-        </Card>
+        <div className="modern-card p-6 text-center hover:scale-105 transition-transform duration-300">
+          <div className="text-3xl font-bold gradient-text mb-2">{avgEngagement}</div>
+          <div className="text-sm text-gray-300">Avg Engagement</div>
+          <div className="mt-4 w-8 h-8 bg-yellow-500 rounded-full mx-auto opacity-60"></div>
+        </div>
         
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Days Tracked</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{engagementData.length}</div>
-          </CardContent>
-        </Card>
+        <div className="modern-card p-6 text-center hover:scale-105 transition-transform duration-300">
+          <div className="text-3xl font-bold gradient-text mb-2">{engagementData.length}</div>
+          <div className="text-sm text-gray-300">Days Tracked</div>
+          <div className="mt-4 w-8 h-8 bg-red-500 rounded-full mx-auto opacity-60"></div>
+        </div>
       </div>
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-          {error}
+        <div className="modern-card p-4 border border-red-500/30">
+          <div className="text-red-400">{error}</div>
         </div>
       )}
 
       {/* Loading State */}
       {isLoading && (
-        <div className="text-center py-8">
-          <div className="text-gray-600">Loading engagement data...</div>
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
+          <div className="text-gray-300">Loading engagement data...</div>
         </div>
       )}
 
       {/* Charts */}
       {!isLoading && engagementData.length > 0 && (
-        <div className="space-y-6">
+        <div className="space-y-8">
           {/* Total Engagement Line Chart */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Daily Total Engagement</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={engagementData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    dataKey="date" 
-                    tickFormatter={formatDate}
-                    tick={{ fontSize: 12 }}
-                  />
-                  <YAxis />
-                  <Tooltip 
-                    labelFormatter={formatDate}
-                    formatter={(value: number) => [value.toLocaleString(), 'Engagement']}
-                  />
-                  <Legend />
-                  <Line 
-                    type="monotone" 
-                    dataKey="total_engagement" 
-                    stroke="#3b82f6" 
-                    strokeWidth={2}
-                    name="Total Engagement"
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
+          <div className="modern-card p-6">
+            <h3 className="text-xl font-bold text-white mb-6">Daily Total Engagement</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={engagementData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                <XAxis 
+                  dataKey="date" 
+                  tickFormatter={formatDate}
+                  tick={{ fontSize: 12, fill: '#9ca3af' }}
+                  stroke="rgba(255,255,255,0.3)"
+                />
+                <YAxis 
+                  tick={{ fontSize: 12, fill: '#9ca3af' }}
+                  stroke="rgba(255,255,255,0.3)"
+                />
+                <Tooltip 
+                  labelFormatter={formatDate}
+                  formatter={(value: number) => [value.toLocaleString(), 'Engagement']}
+                  contentStyle={{
+                    backgroundColor: 'rgba(0,0,0,0.9)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '8px'
+                  }}
+                />
+                <Legend />
+                <Line 
+                  type="monotone" 
+                  dataKey="total_engagement" 
+                  stroke="#B693FE" 
+                  strokeWidth={3}
+                  name="Total Engagement"
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
 
           {/* Engagement Breakdown Bar Chart */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Engagement Breakdown</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={engagementData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    dataKey="date" 
-                    tickFormatter={formatDate}
-                    tick={{ fontSize: 12 }}
-                  />
-                  <YAxis />
-                  <Tooltip 
-                    labelFormatter={formatDate}
-                    formatter={(value: number) => [value.toLocaleString(), 'Count']}
-                  />
-                  <Legend />
-                  <Bar dataKey="likes" fill="#ef4444" name="Likes" />
-                  <Bar dataKey="replies" fill="#f59e0b" name="Replies" />
-                  <Bar dataKey="reposts" fill="#10b981" name="Reposts" />
-                  <Bar dataKey="quotes" fill="#8b5cf6" name="Quotes" />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
+          <div className="modern-card p-6">
+            <h3 className="text-xl font-bold text-white mb-6">Engagement Breakdown</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={engagementData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                <XAxis 
+                  dataKey="date" 
+                  tickFormatter={formatDate}
+                  tick={{ fontSize: 12, fill: '#9ca3af' }}
+                  stroke="rgba(255,255,255,0.3)"
+                />
+                <YAxis 
+                  tick={{ fontSize: 12, fill: '#9ca3af' }}
+                  stroke="rgba(255,255,255,0.3)"
+                />
+                <Tooltip 
+                  labelFormatter={formatDate}
+                  formatter={(value: number) => [value.toLocaleString(), 'Count']}
+                  contentStyle={{
+                    backgroundColor: 'rgba(0,0,0,0.9)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '8px'
+                  }}
+                />
+                <Legend />
+                <Bar dataKey="likes" fill="#ef4444" name="Likes" />
+                <Bar dataKey="replies" fill="#f59e0b" name="Replies" />
+                <Bar dataKey="reposts" fill="#10b981" name="Reposts" />
+                <Bar dataKey="quotes" fill="#8b5cf6" name="Quotes" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
 
           {/* Posts Per Day Chart */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Posts Per Day</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={engagementData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    dataKey="date" 
-                    tickFormatter={formatDate}
-                    tick={{ fontSize: 12 }}
-                  />
-                  <YAxis />
-                  <Tooltip 
-                    labelFormatter={formatDate}
-                    formatter={(value: number) => [value, 'Posts']}
-                  />
-                  <Legend />
-                  <Line 
-                    type="monotone" 
-                    dataKey="post_count" 
-                    stroke="#06b6d4" 
-                    strokeWidth={2}
-                    name="Posts"
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
+          <div className="modern-card p-6">
+            <h3 className="text-xl font-bold text-white mb-6">Posts Per Day</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={engagementData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                <XAxis 
+                  dataKey="date" 
+                  tickFormatter={formatDate}
+                  tick={{ fontSize: 12, fill: '#9ca3af' }}
+                  stroke="rgba(255,255,255,0.3)"
+                />
+                <YAxis 
+                  tick={{ fontSize: 12, fill: '#9ca3af' }}
+                  stroke="rgba(255,255,255,0.3)"
+                />
+                <Tooltip 
+                  labelFormatter={formatDate}
+                  formatter={(value: number) => [value, 'Posts']}
+                  contentStyle={{
+                    backgroundColor: 'rgba(0,0,0,0.9)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '8px'
+                  }}
+                />
+                <Legend />
+                <Line 
+                  type="monotone" 
+                  dataKey="post_count" 
+                  stroke="#06b6d4" 
+                  strokeWidth={3}
+                  name="Posts"
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
         </div>
       )}
 
       {/* Empty State */}
       {!isLoading && engagementData.length === 0 && !error && (
         <div className="text-center py-12">
-          <div className="text-gray-500 text-lg">No engagement data available</div>
-          <p className="text-gray-400 mt-2">Add some accounts and refresh the data to see engagement analytics</p>
+          <div className="text-gray-300 text-lg mb-2">No engagement data available</div>
+          <p className="text-gray-400">Add some accounts and refresh the data to see engagement analytics</p>
         </div>
       )}
     </div>

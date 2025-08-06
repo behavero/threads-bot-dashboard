@@ -1,11 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useAuth } from '@/lib/auth'
 
 interface Caption {
   id: number
@@ -23,6 +19,7 @@ interface Image {
 }
 
 export default function UploadPage() {
+  const { user } = useAuth()
   const [captions, setCaptions] = useState('')
   const [images, setImages] = useState<File[]>([])
   const [uploadedCaptions, setUploadedCaptions] = useState<Caption[]>([])
@@ -142,137 +139,137 @@ export default function UploadPage() {
   }
 
   return (
-    <div className="container mx-auto p-6 max-w-4xl">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Upload Content</h1>
-        <div className={`px-3 py-1 rounded-full text-sm font-medium ${
-          supabaseStatus === 'Connected' 
-            ? 'bg-green-100 text-green-800' 
-            : 'bg-red-100 text-red-800'
-        }`}>
-          Supabase: {supabaseStatus || 'Checking...'}
+    <div className="space-y-8">
+      {/* Status Indicators */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="modern-card p-6 text-center hover:scale-105 transition-transform duration-300">
+          <div className="text-3xl font-bold gradient-text mb-2">
+            {supabaseStatus === 'Connected' ? '✓' : '✗'}
+          </div>
+          <div className="text-sm text-gray-300">Supabase Status</div>
+          <div className="mt-4 w-8 h-8 bg-purple-500 rounded-full mx-auto opacity-60"></div>
+        </div>
+        
+        <div className="modern-card p-6 text-center hover:scale-105 transition-transform duration-300">
+          <div className="text-3xl font-bold gradient-text mb-2">{uploadedCaptions.length}</div>
+          <div className="text-sm text-gray-300">Uploaded Captions</div>
+          <div className="mt-4 w-8 h-8 bg-green-500 rounded-full mx-auto opacity-60"></div>
+        </div>
+        
+        <div className="modern-card p-6 text-center hover:scale-105 transition-transform duration-300">
+          <div className="text-3xl font-bold gradient-text mb-2">{uploadedImages.length}</div>
+          <div className="text-sm text-gray-300">Uploaded Images</div>
+          <div className="mt-4 w-8 h-8 bg-yellow-500 rounded-full mx-auto opacity-60"></div>
         </div>
       </div>
-      
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle>Upload Captions and Images</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <Label htmlFor="captions">Captions (one per line)</Label>
-              <Textarea
-                id="captions"
-                value={captions}
-                onChange={(e) => setCaptions(e.target.value)}
-                placeholder="Enter your captions here, one per line..."
-                className="mt-2"
-                rows={4}
-              />
-            </div>
 
-            <div>
-              <Label htmlFor="images">Images</Label>
-              <Input
-                id="images"
-                type="file"
-                multiple
-                accept=".png,.jpg,.jpeg"
-                onChange={handleImageChange}
-                className="mt-2"
-              />
-              {images.length > 0 && (
-                <div className="mt-2 text-sm text-gray-600">
-                  Selected {images.length} file(s): {images.map(img => img.name).join(', ')}
-                </div>
-              )}
-            </div>
-
-            <Button type="submit" disabled={isUploading} className="w-full">
-              {isUploading ? 'Uploading...' : 'Upload Content'}
-            </Button>
-          </form>
-
+      {/* Upload Form */}
+      <div className="modern-card p-8">
+        <h3 className="text-2xl font-bold text-white mb-6">Upload Captions and Images</h3>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-2">
+            <label htmlFor="captions" className="text-sm font-medium text-gray-300">
+              Captions (one per line)
+            </label>
+            <textarea
+              id="captions"
+              value={captions}
+              onChange={(e) => setCaptions(e.target.value)}
+              placeholder="Enter your captions here, one per line..."
+              rows={4}
+              className="w-full px-4 py-3 bg-transparent border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 transition-colors resize-none"
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <label htmlFor="images" className="text-sm font-medium text-gray-300">
+              Images
+            </label>
+            <input
+              id="images"
+              type="file"
+              multiple
+              accept=".png,.jpg,.jpeg"
+              onChange={handleImageChange}
+              className="w-full px-4 py-3 bg-transparent border border-gray-600 rounded-lg text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-purple-600 file:text-white hover:file:bg-purple-700 transition-colors"
+            />
+            {images.length > 0 && (
+              <div className="mt-2 text-sm text-gray-400">
+                Selected {images.length} file(s): {images.map(img => img.name).join(', ')}
+              </div>
+            )}
+          </div>
+          
           {message && (
-            <div className={`mt-4 p-3 rounded ${
-              message.includes('successful') ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+            <div className={`p-3 rounded-lg ${
+              message.includes('successful') 
+                ? 'bg-green-500/10 text-green-400 border border-green-500/30' 
+                : 'bg-red-500/10 text-red-400 border border-red-500/30'
             }`}>
               {message}
             </div>
           )}
-        </CardContent>
-      </Card>
+          
+          <button 
+            type="submit" 
+            className="modern-button px-6 py-3 glow-on-hover" 
+            disabled={isUploading}
+          >
+            {isUploading ? 'Uploading...' : 'Upload Content'}
+          </button>
+        </form>
+      </div>
 
       {/* Uploaded Captions */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Uploaded Captions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {uploadedCaptions.length === 0 ? (
-            <p className="text-gray-500">No captions uploaded yet.</p>
-          ) : (
-            <div className="space-y-3">
-              {uploadedCaptions.map((caption) => (
-                <div key={caption.id} className="flex justify-between items-start p-3 bg-gray-50 rounded">
-                  <div className="flex-1">
-                    <p className="text-sm">{caption.text}</p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {new Date(caption.created_at).toLocaleString()}
-                    </p>
-                  </div>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => handleDeleteCaption(caption.id)}
-                  >
-                    Delete
-                  </Button>
+      {uploadedCaptions.length > 0 && (
+        <div className="modern-card p-8">
+          <h3 className="text-2xl font-bold text-white mb-6">Uploaded Captions</h3>
+          <div className="space-y-3">
+            {uploadedCaptions.map((caption) => (
+              <div key={caption.id} className="flex justify-between items-start p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+                <div className="flex-1">
+                  <p className="text-gray-300">{caption.text}</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {new Date(caption.created_at).toLocaleString()}
+                  </p>
                 </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                <button
+                  onClick={() => handleDeleteCaption(caption.id)}
+                  className="modern-button px-3 py-1 text-sm"
+                >
+                  Delete
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Uploaded Images */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Uploaded Images</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {uploadedImages.length === 0 ? (
-            <p className="text-gray-500">No images uploaded yet.</p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {uploadedImages.map((image) => (
-                <div key={image.id} className="border rounded-lg overflow-hidden">
-                  <img
-                    src={image.url}
-                    alt={image.filename}
-                    className="w-full h-48 object-cover"
-                  />
-                  <div className="p-3">
-                    <p className="text-sm font-medium truncate">{image.filename}</p>
-                    <p className="text-xs text-gray-500">
-                      {(image.size / 1024 / 1024).toFixed(2)} MB
-                    </p>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      className="mt-2 w-full"
-                      onClick={() => handleDeleteImage(image.id, image.filename)}
-                    >
-                      Delete
-                    </Button>
-                  </div>
+      {uploadedImages.length > 0 && (
+        <div className="modern-card p-8">
+          <h3 className="text-2xl font-bold text-white mb-6">Uploaded Images</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {uploadedImages.map((image) => (
+              <div key={image.id} className="relative group">
+                <img
+                  src={image.url}
+                  alt={image.filename}
+                  className="w-full h-48 object-cover rounded-lg border border-gray-700"
+                />
+                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 flex items-center justify-center rounded-lg">
+                  <button
+                    onClick={() => handleDeleteImage(image.id, image.filename)}
+                    className="modern-button px-3 py-1 text-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    Delete
+                  </button>
                 </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 } 

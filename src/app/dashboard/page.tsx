@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { useAuth } from '@/lib/auth'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import EngagementChart from '@/components/EngagementChart'
+import AccountsPage from '@/app/accounts/page'
+import PromptsPage from '@/app/prompts/page'
 
 export default function DashboardPage() {
   const { user, signOut } = useAuth()
@@ -15,21 +17,27 @@ export default function DashboardPage() {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen relative">
+        {/* Background decorative elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-600 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>
+        </div>
+
         {/* Header */}
-        <header className="bg-white shadow-sm border-b">
+        <header className="modern-nav relative z-10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              <h1 className="text-xl font-semibold text-gray-900">
+            <div className="flex justify-between items-center h-20">
+              <h1 className="text-2xl font-bold gradient-text">
                 Threads Bot Dashboard
               </h1>
-              <div className="flex items-center space-x-4">
-                <span className="text-sm text-gray-600">
+              <div className="flex items-center space-x-6">
+                <span className="text-sm text-gray-300">
                   Welcome, {user?.email}
                 </span>
                 <button
                   onClick={handleSignOut}
-                  className="text-gray-500 hover:text-gray-700"
+                  className="modern-button px-4 py-2 text-sm"
                 >
                   Sign Out
                 </button>
@@ -39,22 +47,23 @@ export default function DashboardPage() {
         </header>
 
         {/* Navigation */}
-        <nav className="bg-white shadow-sm border-b">
+        <nav className="modern-nav relative z-10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex space-x-8">
               {[
                 { id: 'dashboard', name: 'Dashboard' },
                 { id: 'accounts', name: 'Accounts' },
+                { id: 'prompts', name: 'Prompts' },
                 { id: 'schedule', name: 'Schedule' },
                 { id: 'upload', name: 'Upload' },
               ].map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  className={`nav-link py-6 px-1 font-medium text-sm transition-all duration-300 ${
                     activeTab === tab.id
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      ? 'text-white'
+                      : 'text-gray-400 hover:text-white'
                   }`}
                 >
                   {tab.name}
@@ -65,9 +74,10 @@ export default function DashboardPage() {
         </nav>
 
         {/* Content */}
-        <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <main className="relative z-10 max-w-7xl mx-auto py-8 sm:px-6 lg:px-8">
           {activeTab === 'dashboard' && <DashboardContent />}
           {activeTab === 'accounts' && <AccountsContent />}
+          {activeTab === 'prompts' && <PromptsContent />}
           {activeTab === 'schedule' && <ScheduleContent />}
           {activeTab === 'upload' && <UploadContent />}
         </main>
@@ -78,78 +88,70 @@ export default function DashboardPage() {
 
 function DashboardContent() {
   return (
-    <div className="space-y-6">
-      <div className="bg-white overflow-hidden shadow rounded-lg">
-        <div className="px-4 py-5 sm:p-6">
-          <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
-            Dashboard Overview
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <div className="text-2xl font-bold text-blue-600">0</div>
-              <div className="text-sm text-blue-600">Total Accounts</div>
-            </div>
-            <div className="bg-green-50 p-4 rounded-lg">
-              <div className="text-2xl font-bold text-green-600">0</div>
-              <div className="text-sm text-green-600">Active</div>
-            </div>
-            <div className="bg-yellow-50 p-4 rounded-lg">
-              <div className="text-2xl font-bold text-yellow-600">0</div>
-              <div className="text-sm text-yellow-600">Scheduled</div>
-            </div>
-            <div className="bg-red-50 p-4 rounded-lg">
-              <div className="text-2xl font-bold text-red-600">0</div>
-              <div className="text-sm text-red-600">Errors</div>
-            </div>
+    <div className="space-y-8">
+      {/* Dashboard Overview */}
+      <div className="modern-card p-8 floating">
+        <h3 className="text-2xl font-bold text-white mb-8">
+          Dashboard Overview
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="modern-card p-6 text-center hover:scale-105 transition-transform duration-300">
+            <div className="text-4xl font-bold gradient-text mb-2">0</div>
+            <div className="text-sm text-gray-300">Total Accounts</div>
+            <div className="mt-4 w-8 h-8 bg-purple-500 rounded-full mx-auto opacity-60"></div>
+          </div>
+          <div className="modern-card p-6 text-center hover:scale-105 transition-transform duration-300">
+            <div className="text-4xl font-bold gradient-text mb-2">0</div>
+            <div className="text-sm text-gray-300">Active</div>
+            <div className="mt-4 w-8 h-8 bg-green-500 rounded-full mx-auto opacity-60"></div>
+          </div>
+          <div className="modern-card p-6 text-center hover:scale-105 transition-transform duration-300">
+            <div className="text-4xl font-bold gradient-text mb-2">0</div>
+            <div className="text-sm text-gray-300">Scheduled</div>
+            <div className="mt-4 w-8 h-8 bg-yellow-500 rounded-full mx-auto opacity-60"></div>
+          </div>
+          <div className="modern-card p-6 text-center hover:scale-105 transition-transform duration-300">
+            <div className="text-4xl font-bold gradient-text mb-2">0</div>
+            <div className="text-sm text-gray-300">Errors</div>
+            <div className="mt-4 w-8 h-8 bg-red-500 rounded-full mx-auto opacity-60"></div>
           </div>
         </div>
       </div>
       
       {/* Engagement Analytics */}
-      <div className="bg-white shadow rounded-lg">
-        <div className="px-4 py-5 sm:p-6">
-          <EngagementChart />
-        </div>
+      <div className="modern-card p-8">
+        <EngagementChart />
       </div>
     </div>
   )
 }
 
 function AccountsContent() {
-  return (
-    <div className="bg-white shadow rounded-lg">
-      <div className="px-4 py-5 sm:p-6">
-        <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
-          Accounts
-        </h3>
-        <p className="text-gray-500">No accounts configured yet.</p>
-      </div>
-    </div>
-  )
+  return <AccountsPage />
+}
+
+function PromptsContent() {
+  return <PromptsPage />
 }
 
 function ScheduleContent() {
   return (
-    <div className="bg-white shadow rounded-lg">
-      <div className="px-4 py-5 sm:p-6">
-        <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
-          Schedule
-        </h3>
-        <p className="text-gray-500">No scheduled posts yet.</p>
-      </div>
+    <div className="modern-card p-8">
+      <h3 className="text-2xl font-bold text-white mb-6">
+        Schedule
+      </h3>
+      <p className="text-gray-300">No scheduled posts yet.</p>
     </div>
   )
 }
 
 function UploadContent() {
   return (
-    <div className="bg-white shadow rounded-lg">
-      <div className="px-4 py-5 sm:p-6">
-        <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
-          Upload
-        </h3>
-        <p className="text-gray-500">Upload your content here.</p>
-      </div>
+    <div className="modern-card p-8">
+      <h3 className="text-2xl font-bold text-white mb-6">
+        Upload
+      </h3>
+      <p className="text-gray-300">Upload your content here.</p>
     </div>
   )
 } 

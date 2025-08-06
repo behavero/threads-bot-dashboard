@@ -25,13 +25,7 @@ class DatabaseManager:
             # Use minimal client initialization to avoid proxy issues
             self.supabase: Client = create_client(
                 self.supabase_url, 
-                self.supabase_key,
-                options={
-                    'auth': {
-                        'autoRefreshToken': False,
-                        'persistSession': False
-                    }
-                }
+                self.supabase_key
             )
             self.use_supabase_client = True
             print("✅ Supabase client initialized successfully")

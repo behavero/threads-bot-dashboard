@@ -1,40 +1,46 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/lib/auth'
 
 interface Account {
   id: number
   username: string
   email: string
   password: string
-  description?: string
+  description: string
   posting_config: any
   fingerprint_config: any
   status: 'enabled' | 'disabled'
+  last_posted: string | null
   created_at: string
 }
 
+interface AccountFormData {
+  username: string
+  email: string
+  password: string
+  description: string
+  posting_config: string
+  fingerprint_config: string
+  status: 'enabled' | 'disabled'
+}
+
 export default function AccountsPage() {
+  const { user } = useAuth()
   const [accounts, setAccounts] = useState<Account[]>([])
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [message, setMessage] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [showModal, setShowModal] = useState(false)
   const [editingAccount, setEditingAccount] = useState<Account | null>(null)
-  
-  // Form state
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<AccountFormData>({
     username: '',
     email: '',
     password: '',
     description: '',
     posting_config: '{}',
-    fingerprint_config: '{}'
+    fingerprint_config: '{}',
+    status: 'enabled'
   })
 
   useEffect(() => {
@@ -43,73 +49,56 @@ export default function AccountsPage() {
 
   const fetchAccounts = async () => {
     try {
-      const { data, error } = await supabase
-        .from('accounts')
-        .select('*')
-        .order('created_at', { ascending: false })
-
-      if (error) {
-        setMessage('Error fetching accounts: ' + error.message)
+      const response = await fetch('/api/accounts')
+      const data = await response.json()
+      
+      if (data.success) {
+        setAccounts(data.accounts)
       } else {
-        setAccounts(data || [])
+        setError(data.error || 'Failed to fetch accounts')
       }
-    } catch (error) {
-      setMessage('Error fetching accounts: ' + error)
+    } catch (err) {
+      setError('Error fetching accounts')
+    } finally {
+      setIsLoading(false)
     }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
-    setMessage('')
+    setError('')
 
     try {
-      const accountData = {
-        username: formData.username,
-        email: formData.email,
-        password: formData.password,
-        description: formData.description || null,
-        posting_config: JSON.parse(formData.posting_config),
-        fingerprint_config: JSON.parse(formData.fingerprint_config),
-        status: 'enabled' as const,
-        created_at: new Date().toISOString()
-      }
+      const url = editingAccount 
+        ? `/api/accounts/${editingAccount.id}`
+        : '/api/accounts'
+      
+      const method = editingAccount ? 'PUT' : 'POST'
+      
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          ...formData,
+          posting_config: JSON.parse(formData.posting_config),
+          fingerprint_config: JSON.parse(formData.fingerprint_config)
+        })
+      })
 
-      if (editingAccount) {
-        // Update existing account
-        const { error } = await supabase
-          .from('accounts')
-          .update(accountData)
-          .eq('id', editingAccount.id)
+      const data = await response.json()
 
-        if (error) {
-          setMessage('Error updating account: ' + error.message)
-        } else {
-          setMessage('Account updated successfully!')
-          setIsModalOpen(false)
-          setEditingAccount(null)
-          resetForm()
-          await fetchAccounts()
-        }
+      if (data.success) {
+        setShowModal(false)
+        setEditingAccount(null)
+        resetForm()
+        await fetchAccounts()
       } else {
-        // Create new account
-        const { error } = await supabase
-          .from('accounts')
-          .insert([accountData])
-
-        if (error) {
-          setMessage('Error creating account: ' + error.message)
-        } else {
-          setMessage('Account created successfully!')
-          setIsModalOpen(false)
-          resetForm()
-          await fetchAccounts()
-        }
+        setError(data.error || 'Failed to save account')
       }
-    } catch (error) {
-      setMessage('Error: ' + error)
-    } finally {
-      setIsLoading(false)
+    } catch (err) {
+      setError('Error saving account')
     }
   }
 
@@ -117,50 +106,58 @@ export default function AccountsPage() {
     setEditingAccount(account)
     setFormData({
       username: account.username,
-      email: account.email,
-      password: account.password,
+      email: account.email || '',
+      password: account.password || '',
       description: account.description || '',
-      posting_config: JSON.stringify(account.posting_config, null, 2),
-      fingerprint_config: JSON.stringify(account.fingerprint_config, null, 2)
+      posting_config: JSON.stringify(account.posting_config || {}, null, 2),
+      fingerprint_config: JSON.stringify(account.fingerprint_config || {}, null, 2),
+      status: account.status
     })
-    setIsModalOpen(true)
+    setShowModal(true)
   }
 
   const handleDelete = async (id: number) => {
     if (!confirm('Are you sure you want to delete this account?')) return
 
     try {
-      const { error } = await supabase
-        .from('accounts')
-        .delete()
-        .eq('id', id)
+      const response = await fetch(`/api/accounts/${id}`, {
+        method: 'DELETE'
+      })
 
-      if (error) {
-        setMessage('Error deleting account: ' + error.message)
-      } else {
-        setMessage('Account deleted successfully!')
+      const data = await response.json()
+
+      if (data.success) {
         await fetchAccounts()
+      } else {
+        setError(data.error || 'Failed to delete account')
       }
-    } catch (error) {
-      setMessage('Error deleting account: ' + error)
+    } catch (err) {
+      setError('Error deleting account')
     }
   }
 
   const handleToggleStatus = async (account: Account) => {
     try {
-      const newStatus = account.status === 'enabled' ? 'disabled' : 'enabled'
-      const { error } = await supabase
-        .from('accounts')
-        .update({ status: newStatus })
-        .eq('id', account.id)
+      const response = await fetch(`/api/accounts/${account.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          ...account,
+          status: account.status === 'enabled' ? 'disabled' : 'enabled'
+        })
+      })
 
-      if (error) {
-        setMessage('Error updating status: ' + error.message)
-      } else {
+      const data = await response.json()
+
+      if (data.success) {
         await fetchAccounts()
+      } else {
+        setError(data.error || 'Failed to update account status')
       }
-    } catch (error) {
-      setMessage('Error updating status: ' + error)
+    } catch (err) {
+      setError('Error updating account status')
     }
   }
 
@@ -171,198 +168,256 @@ export default function AccountsPage() {
       password: '',
       description: '',
       posting_config: '{}',
-      fingerprint_config: '{}'
+      fingerprint_config: '{}',
+      status: 'enabled'
     })
   }
 
-  const openModal = () => {
+  const openAddModal = () => {
     setEditingAccount(null)
     resetForm()
-    setIsModalOpen(true)
+    setShowModal(true)
   }
 
-  const closeModal = () => {
-    setIsModalOpen(false)
-    setEditingAccount(null)
-    resetForm()
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
+      </div>
+    )
   }
 
   return (
-    <div className="container mx-auto p-6 max-w-6xl">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Threads Accounts</h1>
-        <Button onClick={openModal} className="bg-blue-600 hover:bg-blue-700">
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-3xl font-bold text-white mb-2">Threads Accounts</h2>
+          <p className="text-gray-300">Manage your Threads accounts and posting settings</p>
+        </div>
+        <button
+          onClick={openAddModal}
+          className="modern-button px-6 py-3 glow-on-hover"
+        >
           Add Account
-        </Button>
+        </button>
       </div>
 
-      {message && (
-        <div className={`mb-4 p-3 rounded ${
-          message.includes('successfully') ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-        }`}>
-          {message}
+      {/* Error Message */}
+      {error && (
+        <div className="modern-card p-4 border border-red-500/30">
+          <div className="text-red-400">{error}</div>
         </div>
       )}
 
       {/* Accounts Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {accounts.map((account) => (
-          <Card key={account.id} className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <div className="flex justify-between items-start">
+      {accounts.length === 0 ? (
+        <div className="modern-card p-12 text-center">
+          <div className="text-6xl mb-4">📱</div>
+          <h3 className="text-xl font-semibold text-white mb-2">No Accounts Yet</h3>
+          <p className="text-gray-300 mb-6">Add your first Threads account to start automating posts</p>
+          <button
+            onClick={openAddModal}
+            className="modern-button px-6 py-3 glow-on-hover"
+          >
+            Add Your First Account
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {accounts.map((account) => (
+            <div key={account.id} className="modern-card p-6 hover:scale-105 transition-transform duration-300">
+              <div className="flex justify-between items-start mb-4">
                 <div>
-                  <CardTitle className="text-lg">{account.username}</CardTitle>
-                  <p className="text-sm text-gray-600">{account.email}</p>
+                  <h3 className="text-xl font-bold text-white">{account.username}</h3>
+                  <p className="text-gray-400 text-sm">{account.email}</p>
                 </div>
-                <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  account.status === 'enabled' 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-red-100 text-red-800'
-                }`}>
-                  {account.status}
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => handleToggleStatus(account)}
+                    className={`w-12 h-6 rounded-full transition-colors ${
+                      account.status === 'enabled' 
+                        ? 'bg-green-500' 
+                        : 'bg-gray-600'
+                    }`}
+                  >
+                    <div className={`w-4 h-4 bg-white rounded-full transition-transform ${
+                      account.status === 'enabled' ? 'translate-x-6' : 'translate-x-1'
+                    }`}></div>
+                  </button>
                 </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {account.description && (
-                <p className="text-sm text-gray-600 mb-3">{account.description}</p>
-              )}
-              
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-medium">Bot Status:</span>
-                <Button
-                  variant={account.status === 'enabled' ? 'default' : 'secondary'}
-                  size="sm"
-                  onClick={() => handleToggleStatus(account)}
-                >
-                  {account.status === 'enabled' ? 'Enabled' : 'Disabled'}
-                </Button>
               </div>
 
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
+              {account.description && (
+                <p className="text-gray-300 text-sm mb-4">{account.description}</p>
+              )}
+
+              <div className="space-y-2 mb-4">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-400">Status:</span>
+                  <span className={`font-medium ${
+                    account.status === 'enabled' ? 'text-green-400' : 'text-red-400'
+                  }`}>
+                    {account.status}
+                  </span>
+                </div>
+                {account.last_posted && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-400">Last Posted:</span>
+                    <span className="text-gray-300">
+                      {new Date(account.last_posted).toLocaleDateString()}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex space-x-2">
+                <button
                   onClick={() => handleEdit(account)}
-                  className="flex-1"
+                  className="modern-button px-3 py-1 text-sm flex-1"
                 >
                   Edit
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="sm"
+                </button>
+                <button
                   onClick={() => handleDelete(account.id)}
-                  className="flex-1"
+                  className="modern-button px-3 py-1 text-sm bg-red-600 hover:bg-red-700"
                 >
                   Delete
-                </Button>
+                </button>
               </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {accounts.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-gray-500 text-lg">No accounts found. Add your first Threads account!</p>
+            </div>
+          ))}
         </div>
       )}
 
-      {/* Modal */}
-      {isModalOpen && (
+      {/* Add/Edit Modal */}
+      {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold">
+          <div className="modern-card p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-2xl font-bold text-white">
                 {editingAccount ? 'Edit Account' : 'Add New Account'}
-              </h2>
-              <Button variant="ghost" onClick={closeModal} size="sm">
+              </h3>
+              <button
+                onClick={() => setShowModal(false)}
+                className="text-gray-400 hover:text-white"
+              >
                 ✕
-              </Button>
+              </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="username">Username *</Label>
-                  <Input
-                    id="username"
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-300">
+                    Username *
+                  </label>
+                  <input
+                    type="text"
                     value={formData.username}
                     onChange={(e) => setFormData({...formData, username: e.target.value})}
                     required
-                    className="mt-1"
+                    className="w-full px-4 py-3 bg-transparent border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 transition-colors"
+                    placeholder="Enter Threads username"
                   />
                 </div>
 
-                <div>
-                  <Label htmlFor="email">Email *</Label>
-                  <Input
-                    id="email"
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-300">
+                    Email
+                  </label>
+                  <input
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    required
-                    className="mt-1"
+                    className="w-full px-4 py-3 bg-transparent border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 transition-colors"
+                    placeholder="Enter email"
                   />
                 </div>
               </div>
 
-              <div>
-                <Label htmlFor="password">Password *</Label>
-                <Input
-                  id="password"
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">
+                  Password
+                </label>
+                <input
                   type="password"
                   value={formData.password}
                   onChange={(e) => setFormData({...formData, password: e.target.value})}
-                  required
-                  className="mt-1"
+                  className="w-full px-4 py-3 bg-transparent border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 transition-colors"
+                  placeholder="Enter password"
                 />
               </div>
 
-              <div>
-                <Label htmlFor="description">Description (Optional)</Label>
-                <Textarea
-                  id="description"
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">
+                  Description
+                </label>
+                <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({...formData, description: e.target.value})}
-                  className="mt-1"
-                  rows={2}
+                  rows={3}
+                  className="w-full px-4 py-3 bg-transparent border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 transition-colors resize-none"
+                  placeholder="Account description (optional)"
                 />
               </div>
 
-              <div>
-                <Label htmlFor="posting_config">Posting Config JSON *</Label>
-                <Textarea
-                  id="posting_config"
-                  value={formData.posting_config}
-                  onChange={(e) => setFormData({...formData, posting_config: e.target.value})}
-                  required
-                  className="mt-1 font-mono text-sm"
-                  rows={4}
-                  placeholder='{"key": "value"}'
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-300">
+                    Posting Config (JSON)
+                  </label>
+                  <textarea
+                    value={formData.posting_config}
+                    onChange={(e) => setFormData({...formData, posting_config: e.target.value})}
+                    rows={6}
+                    className="w-full px-4 py-3 bg-transparent border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 transition-colors resize-none font-mono text-sm"
+                    placeholder='{"posting_interval": 3600, "max_posts_per_day": 5}'
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-300">
+                    Fingerprint Config (JSON)
+                  </label>
+                  <textarea
+                    value={formData.fingerprint_config}
+                    onChange={(e) => setFormData({...formData, fingerprint_config: e.target.value})}
+                    rows={6}
+                    className="w-full px-4 py-3 bg-transparent border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 transition-colors resize-none font-mono text-sm"
+                    placeholder='{"user_agent": "custom", "proxy": null}'
+                  />
+                </div>
               </div>
 
-              <div>
-                <Label htmlFor="fingerprint_config">Fingerprint Config JSON *</Label>
-                <Textarea
-                  id="fingerprint_config"
-                  value={formData.fingerprint_config}
-                  onChange={(e) => setFormData({...formData, fingerprint_config: e.target.value})}
-                  required
-                  className="mt-1 font-mono text-sm"
-                  rows={4}
-                  placeholder='{"key": "value"}'
-                />
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">
+                  Status
+                </label>
+                <select
+                  value={formData.status}
+                  onChange={(e) => setFormData({...formData, status: e.target.value as 'enabled' | 'disabled'})}
+                  className="w-full px-4 py-3 bg-transparent border border-gray-600 rounded-lg text-white focus:outline-none focus:border-purple-500 transition-colors"
+                >
+                  <option value="enabled">Enabled</option>
+                  <option value="disabled">Disabled</option>
+                </select>
               </div>
 
-              <div className="flex gap-3 pt-4">
-                <Button type="submit" disabled={isLoading} className="flex-1">
-                  {isLoading ? 'Saving...' : (editingAccount ? 'Update Account' : 'Add Account')}
-                </Button>
-                <Button type="button" variant="outline" onClick={closeModal} className="flex-1">
+              <div className="flex space-x-4 pt-4">
+                <button
+                  type="submit"
+                  className="modern-button px-6 py-3 glow-on-hover flex-1"
+                >
+                  {editingAccount ? 'Update Account' : 'Add Account'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                  className="modern-button px-6 py-3 bg-gray-600 hover:bg-gray-700"
+                >
                   Cancel
-                </Button>
+                </button>
               </div>
             </form>
           </div>
