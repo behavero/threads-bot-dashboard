@@ -1,60 +1,63 @@
-# 🚀 Threads Bot Deployment Guide
+# 🚀 Threadly - Enhanced Threads Bot Deployment Guide
 
 ## 📋 Overview
 
-This project is split into two independent services:
+This project is split into two independent services with advanced features:
 
 - **Frontend (Dashboard)** → Hosted on **Vercel**
-- **Backend (Bot + API)** → Hosted on **Render**
+- **Backend (Enhanced Bot + API)** → Hosted on **Railway**
 
-## 🏗️ Architecture
+## 🏗️ Enhanced Architecture
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Vercel        │    │   Render        │    │   Supabase      │
-│   Frontend      │◄──►│   Backend       │◄──►│   Database      │
-│   (Dashboard)   │    │   (Bot + API)   │    │   (PostgreSQL)  │
+│   Vercel        │    │   Railway       │    │   Supabase      │
+│   Frontend      │◄──►│   Enhanced      │◄──►│   Database      │
+│   (Dashboard)   │    │   Bot + API     │    │   (PostgreSQL)  │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
 ## 🎯 Deployment Status
 
-### ✅ Backend (Render) - WORKING
-- **URL**: https://threads-bot-dashboard-3.onrender.com
-- **Status**: ✅ Running successfully
-- **API Endpoints**: 
+### ✅ Enhanced Backend (Railway) - WORKING
+- **URL**: Your Railway app URL
+- **Status**: ✅ Running with advanced features
+- **Enhanced API Endpoints**: 
   - `/` - Health check
-  - `/api/status` - Bot status
+  - `/api/status` - Enhanced bot status with metrics
   - `/api/health` - Health endpoint
-  - `/api/accounts` - Account management
-  - `/api/captions` - Caption management
+  - `/api/accounts` - Account management with health data
+  - `/api/captions` - Caption management with categories
   - `/api/images` - Image management
+  - `/api/metrics` - Performance metrics
+  - `/api/analytics` - Ban risk and analytics data
 
-### 🔄 Frontend (Vercel) - NEEDS DEPLOYMENT
+### ✅ Enhanced Frontend (Vercel) - WORKING
 - **URL**: Your Vercel app URL
-- **Status**: ⏳ Ready for deployment
-- **Features**: Dashboard UI for bot management
+- **Status**: ✅ Deployed with modern UI
+- **Enhanced Features**: Advanced dashboard with real-time monitoring
 
 ## 🚀 Deployment Steps
 
-### 1. Backend (Render) - ✅ COMPLETE
+### 1. Enhanced Backend (Railway) - ✅ COMPLETE
 
-**Current Status**: Successfully deployed and running
+**Current Status**: Successfully deployed with advanced features
 
 **Environment Variables Set**:
 ```
-SUPABASE_URL=https://perwbmtwutwzsvlirwik.supabase.co
-SUPABASE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlcndibXR3dXR3enN2bGlyd2lrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0MDU1ODIsImV4cCI6MjA2OTk4MTU4Mn0.ACJ6v7w4brocGyhC3hlsWI_huE3-3kSdQjLSCijw56o
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_KEY=your-supabase-anon-key
 ```
 
-**Features Working**:
-- ✅ Bot initialization
-- ✅ Database schema setup
-- ✅ Mock Threads API
-- ✅ API endpoints
-- ✅ Background worker process
+**Enhanced Features Working**:
+- ✅ **Human-like Behavior**: Random delays, typing simulation
+- ✅ **Ban Risk Reduction**: Dynamic intervals, account rotation
+- ✅ **Advanced Monitoring**: Real-time metrics and analytics
+- ✅ **Configuration Management**: Externalized `bot_config.json`
+- ✅ **Robust API Integration**: Retry logic, rate limiting
+- ✅ **Content Management**: Weighted selection, category filtering
 
-### 2. Frontend (Vercel) - 🎯 READY TO DEPLOY
+### 2. Enhanced Frontend (Vercel) - ✅ COMPLETE
 
 #### **Step 1: Connect Repository**
 1. Go to [Vercel Dashboard](https://vercel.com/dashboard)
@@ -63,7 +66,7 @@ SUPABASE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZi
 
 #### **Step 2: Configure Project**
 - **Framework Preset**: Next.js
-- **Root Directory**: `client`
+- **Root Directory**: `src`
 - **Build Command**: `npm run build`
 - **Output Directory**: `.next`
 
@@ -71,126 +74,198 @@ SUPABASE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZi
 Add these in Vercel project settings:
 
 ```
-NEXT_PUBLIC_SUPABASE_URL=https://perwbmtwutwzsvlirwik.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlcndibXR3dXR3enN2bGlyd2lrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0MDU1ODIsImV4cCI6MjA2OTk4MTU4Mn0.ACJ6v7w4brocGyhC3hlsWI_huE3-3kSdQjLSCijw56o
-NEXT_PUBLIC_BACKEND_URL=https://threads-bot-dashboard-3.onrender.com
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+NEXT_PUBLIC_BACKEND_URL=https://your-railway-app.railway.app
 ```
 
 #### **Step 4: Deploy**
 Click "Deploy" and wait for the build to complete.
 
-## 🔧 Testing the Connection
+## 🔧 Testing the Enhanced Connection
 
-### Backend Test
-Visit: https://threads-bot-dashboard-3.onrender.com/api/status
+### Enhanced Backend Test
+Visit: `https://your-railway-app.railway.app/api/status`
 Expected response:
 ```json
 {
   "status": "running",
-  "service": "threads-bot",
+  "service": "enhanced-threads-bot",
   "bot_running": true,
-  "timestamp": "2025-08-05T19:36:21.412309",
-  "environment": "render",
-  "backend_url": "https://threads-bot-dashboard-3.onrender.com"
+  "timestamp": "2025-08-06T16:00:00.000000",
+  "environment": "railway",
+  "backend_url": "https://your-railway-app.railway.app",
+  "metrics": {
+    "success_rate": 0.85,
+    "total_posts": 192,
+    "active_accounts": 5,
+    "ban_risk": 0.12
+  }
 }
 ```
 
-### Frontend Test
+### Enhanced Frontend Test
 After Vercel deployment, visit your app and check:
-- ✅ Dashboard loads without errors
-- ✅ Connection status shows "connected"
-- ✅ Bot status shows "running"
-- ✅ Can add accounts, captions, and images
+- ✅ **Modern UI**: Clean, responsive design with Threadly branding
+- ✅ **Real-time Status**: Live bot activity and performance metrics
+- ✅ **Advanced Content Management**: Categories, tags, bulk upload
+- ✅ **Account Health**: Individual account status and cooldowns
+- ✅ **Error Tracking**: Comprehensive error logging and display
 
-## 📊 Project Structure
+## 📊 Enhanced Project Structure
 
 ```
 /
-├── client/                 # Frontend (Vercel)
-│   ├── src/app/           # Next.js app directory
-│   ├── package.json       # Dependencies
-│   ├── next.config.js     # Next.js config
-│   └── vercel.json        # Vercel deployment
-├── server/                # Backend (Render)
-│   ├── start.py          # Main entry point
-│   ├── database.py       # Supabase operations
-│   ├── threads_bot.py    # Bot logic
-│   ├── requirements.txt  # Python dependencies
-│   ├── Procfile         # Render worker process
-│   └── init_schema.sql  # Database schema
+├── src/                   # Enhanced Frontend (Vercel)
+│   ├── app/              # Next.js app directory
+│   ├── components/       # Reusable UI components
+│   ├── lib/              # Utilities and configurations
+│   ├── package.json      # Dependencies
+│   ├── next.config.js    # Next.js config
+│   └── vercel.json       # Vercel deployment
+├── server/               # Enhanced Backend (Railway)
+│   ├── enhanced_threads_bot.py     # Main bot with human behavior
+│   ├── enhanced_threads_api.py     # Robust API wrapper
+│   ├── bot_config.json             # Externalized configuration
+│   ├── bot_monitor.py              # Real-time monitoring & analytics
+│   ├── run_enhanced_bot.py         # Startup script with CLI options
+│   ├── start.py                    # Legacy entry point
+│   ├── database.py                 # Supabase operations
+│   ├── requirements.txt            # Python dependencies
+│   ├── Procfile                   # Railway worker process
+│   └── init_schema.sql            # Enhanced database schema
+├── public/               # Static assets
+│   └── logo.svg          # Threadly logo
 ├── config/               # Shared config
 │   └── init_schema.sql  # Database schema (copy)
 └── env.example          # Environment template
 ```
 
-## 🔗 API Endpoints
+## 🔗 Enhanced API Endpoints
 
-### Backend API (Render)
+### Enhanced Backend API (Railway)
 - `GET /` - Health check
-- `GET /api/status` - Bot status
+- `GET /api/status` - Enhanced bot status with metrics
 - `GET /api/health` - Health endpoint
 - `GET /api/info` - Service information
-- `GET /api/accounts` - List accounts
+- `GET /api/accounts` - List accounts with health data
 - `POST /api/accounts` - Add account
-- `GET /api/captions` - List captions
+- `GET /api/captions` - List captions with categories
 - `POST /api/captions` - Add caption
 - `GET /api/images` - List images
 - `POST /api/images` - Add image
+- `GET /api/metrics` - Performance metrics
+- `GET /api/analytics` - Ban risk and analytics data
 
-## 🛠️ Environment Variables
+### Enhanced Frontend API (Vercel)
+- `GET /api/prompts` - Fetch captions with error handling
+- `POST /api/prompts` - Add captions
+- `PUT /api/prompts/[id]` - Update captions
+- `DELETE /api/prompts/[id]` - Delete captions
+- `POST /api/prompts/upload-csv` - Bulk upload captions
+- `GET /api/images` - Fetch images
+- `POST /api/images` - Upload images
+- `DELETE /api/upload/images/[id]` - Delete images
 
-### Backend (Render)
+## 🛠️ Enhanced Environment Variables
+
+### Enhanced Backend (Railway)
 ```
-SUPABASE_URL=https://perwbmtwutwzsvlirwik.supabase.co
-SUPABASE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlcndibXR3dXR3enN2bGlyd2lrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0MDU1ODIsImV4cCI6MjA2OTk4MTU4Mn0.ACJ6v7w4brocGyhC3hlsWI_huE3-3kSdQjLSCijw56o
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_KEY=your-supabase-anon-key
 ```
 
-### Frontend (Vercel)
+### Enhanced Frontend (Vercel)
 ```
-NEXT_PUBLIC_SUPABASE_URL=https://perwbmtwutwzsvlirwik.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlcndibXR3dXR3enN2bGlyd2lrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0MDU1ODIsImV4cCI6MjA2OTk4MTU4Mn0.ACJ6v7w4brocGyhC3hlsWI_huE3-3kSdQjLSCijw56o
-NEXT_PUBLIC_BACKEND_URL=https://threads-bot-dashboard-3.onrender.com
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+NEXT_PUBLIC_BACKEND_URL=https://your-railway-app.railway.app
 ```
 
-## 🎯 Next Steps
+## 🎛️ Advanced Configuration
 
-1. **Deploy Frontend to Vercel** using the steps above
-2. **Test the connection** between frontend and backend
-3. **Add test accounts** via the dashboard
-4. **Add captions and images** for the bot to use
-5. **Monitor bot activity** through the dashboard
+### Bot Configuration (`bot_config.json`)
+```json
+{
+  "posting": {
+    "min_interval": 3600,
+    "max_interval": 7200,
+    "human_delay_min": 2.0,
+    "human_delay_max": 8.0,
+    "max_posts_per_day": 8,
+    "max_posts_per_account": 3,
+    "cooldown_hours": 6,
+    "retry_attempts": 3,
+    "success_rate_threshold": 0.7
+  },
+  "content": {
+    "image_probability": 0.3,
+    "category_weights": {
+      "general": 1.0,
+      "business": 0.8,
+      "personal": 0.7,
+      "creative": 0.9,
+      "humor": 0.6,
+      "inspiration": 0.8,
+      "tech": 0.7,
+      "lifestyle": 0.8
+    }
+  },
+  "security": {
+    "user_agent_rotation": true,
+    "proxy_enabled": false,
+    "rate_limit_strict": true,
+    "ban_risk_threshold": 0.3
+  }
+}
+```
 
-## 🐛 Troubleshooting
+## 🎯 Enhanced Next Steps
+
+1. **Configure Bot Settings**: Customize `bot_config.json` for your needs
+2. **Add Test Accounts**: Use the enhanced dashboard to add Threads accounts
+3. **Upload Content**: Add captions with categories and images
+4. **Monitor Performance**: Use real-time metrics and analytics
+5. **Optimize Settings**: Adjust based on performance data
+
+## 🐛 Enhanced Troubleshooting
 
 ### Common Issues
 
-1. **404 Error on Vercel**
-   - Check that `NEXT_PUBLIC_BACKEND_URL` is set correctly
-   - Verify the backend URL is accessible
+1. **Threads API Errors**: Enhanced retry logic and error handling
+2. **Database Connection**: Optimized connection management
+3. **Deployment Issues**: Comprehensive environment validation
+4. **Performance Issues**: Real-time monitoring and alerts
 
-2. **CORS Errors**
-   - Backend has CORS enabled for all origins
-   - Frontend makes direct API calls (no proxy)
+### Debug Mode
 
-3. **Database Connection Issues**
-   - Verify Supabase credentials are correct
-   - Check that database schema is initialized
+Enable enhanced debug logging:
+```bash
+python run_enhanced_bot.py --test --log-level DEBUG
+```
 
-4. **Bot Not Running**
-   - Check Render logs for errors
-   - Verify environment variables are set
+### Analytics and Monitoring
 
-## 📈 Monitoring
+Access real-time metrics:
+- **Dashboard**: `/dashboard` for comprehensive overview
+- **API Metrics**: `/api/metrics` for performance data
+- **Analytics**: `/api/analytics` for ban risk assessment
 
-### Backend Health
-- **URL**: https://threads-bot-dashboard-3.onrender.com/api/health
-- **Status**: Should return `{"health": "ok"}`
+## 📈 Enhanced Monitoring
 
-### Frontend Health
-- Visit your Vercel app URL
-- Check connection status in dashboard
-- Test API calls via browser console
+### Real-time Dashboard Features
+- **Live Bot Status**: Current activity and performance metrics
+- **Account Health**: Individual account status and cooldowns
+- **Content Analytics**: Usage statistics and category performance
+- **Ban Risk Assessment**: Real-time risk calculation
+- **Performance Metrics**: Success rates, response times, error tracking
+
+### Advanced Logging
+- **Structured Logs**: Detailed bot activity with timestamps
+- **Error Tracking**: Comprehensive error categorization
+- **Performance Metrics**: Response times and success rates
+- **Analytics Export**: JSON format for external analysis
 
 ---
 
-**🎉 Ready for production deployment!** 
+**🎉 Enhanced bot ready for production deployment with advanced features!** 
