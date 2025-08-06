@@ -30,8 +30,11 @@ CREATE TABLE IF NOT EXISTS captions (
     id SERIAL PRIMARY KEY,
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
     text TEXT NOT NULL,
+    category VARCHAR(100) DEFAULT 'general',
+    tags TEXT[] DEFAULT '{}',
     used BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT NOW()
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
 );
 
 -- Images table
@@ -95,6 +98,7 @@ CREATE INDEX IF NOT EXISTS idx_accounts_username ON accounts(username);
 
 -- Captions indexes
 CREATE INDEX IF NOT EXISTS idx_captions_user_id ON captions(user_id);
+CREATE INDEX IF NOT EXISTS idx_captions_category ON captions(category);
 CREATE INDEX IF NOT EXISTS idx_captions_used ON captions(used);
 CREATE INDEX IF NOT EXISTS idx_captions_created_at ON captions(created_at);
 

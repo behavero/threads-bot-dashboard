@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
 
         // Insert into database
         await sql`
-          INSERT INTO prompts (
+          INSERT INTO captions (
             text, category, tags, used
           ) VALUES (
             ${text}, ${category}, ${tags}, false

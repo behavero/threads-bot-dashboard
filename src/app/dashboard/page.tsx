@@ -5,7 +5,7 @@ import { useAuth } from '@/lib/auth'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import EngagementChart from '@/components/EngagementChart'
 import AccountsPage from '@/app/accounts/page'
-import PromptsPage from '@/app/prompts/page'
+import CaptionsPage from '@/app/captions/page'
 import ImagesPage from '@/app/images/page'
 
 export default function DashboardPage() {
@@ -45,7 +45,7 @@ export default function DashboardPage() {
                        <div className="hidden md:flex items-center space-x-8 text-sm">
                          <span className="text-gray-300">DASHBOARD</span>
                          <span className="text-gray-300">ACCOUNTS</span>
-                         <span className="text-gray-300">PROMPTS</span>
+                         <span className="text-gray-300">CAPTIONS</span>
                          <span className="text-gray-300">SCHEDULE</span>
                        </div>
                      </div>
@@ -71,7 +71,7 @@ export default function DashboardPage() {
               {[
                 { id: 'dashboard', name: 'Dashboard' },
                 { id: 'accounts', name: 'Accounts' },
-                { id: 'prompts', name: 'Prompts' },
+                { id: 'captions', name: 'Captions' },
                 { id: 'schedule', name: 'Schedule' },
                                      { id: 'images', name: 'Images' },
               ].map((tab) => (
@@ -95,7 +95,7 @@ export default function DashboardPage() {
         <main className="relative z-10 max-w-7xl mx-auto py-8 sm:px-6 lg:px-8">
           {activeTab === 'dashboard' && <DashboardContent />}
           {activeTab === 'accounts' && <AccountsContent />}
-          {activeTab === 'prompts' && <PromptsContent />}
+          {activeTab === 'captions' && <CaptionsContent />}
           {activeTab === 'schedule' && <ScheduleContent />}
                            {activeTab === 'images' && <ImagesContent />}
         </main>
@@ -183,8 +183,8 @@ function AccountsContent() {
   return <AccountsPage />
 }
 
-function PromptsContent() {
-  return <PromptsPage />
+function CaptionsContent() {
+  return <CaptionsPage />
 }
 
 function ScheduleContent() {

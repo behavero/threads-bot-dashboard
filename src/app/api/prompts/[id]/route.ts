@@ -13,14 +13,14 @@ export async function PUT(
     const { text, category, tags, used } = body
     
     const [prompt] = await sql`
-      UPDATE prompts 
+      UPDATE captions 
       SET 
         text = ${text},
         category = ${category || 'general'},
         tags = ${tags || []},
         used = ${used || false},
         updated_at = NOW()
-      WHERE id = ${params.id} AND user_id = ${user.id}
+      WHERE id = ${params.id}
       RETURNING *
     `
     
@@ -58,8 +58,8 @@ export async function DELETE(
     const user = await requireAuth(request)
     
     const [prompt] = await sql`
-      DELETE FROM prompts
-      WHERE id = ${params.id} AND user_id = ${user.id}
+      DELETE FROM captions
+      WHERE id = ${params.id}
       RETURNING *
     `
     

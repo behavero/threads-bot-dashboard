@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
     // const user = await requireAuth(request)
     
     const prompts = await sql`
-      SELECT * FROM prompts 
+      SELECT * FROM captions 
       ORDER BY created_at DESC
     `
     
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     const { text, category, tags } = body
     
     const [prompt] = await sql`
-      INSERT INTO prompts (
+      INSERT INTO captions (
         text, category, tags, used
       ) VALUES (
         ${text}, ${category || 'general'}, ${tags || []}, false
