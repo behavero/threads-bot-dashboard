@@ -1,0 +1,1046 @@
+2025-08-05 16:00:41,809 - INFO - [32m<---- START ---->
+Keyword arguments:
+  [message]: [[0m"ThreadsAPI.__init__ Configurations"[32m]
+  [settings_path]: [[0m".session.json"[32m]
+  [log_level]: [[0m20[32m]
+  [http_session_class]: [[0m"AioHTTPSession"[32m]
+  [settings]: [[0m{
+    "authentication": {
+        "encrypted_token": null
+    },
+    "timezone": {
+        "offset": "-10799"
+    },
+    "device": {
+        "id": "android-969afbfad9065c52",
+        "manufacturer": "OnePlus",
+        "model": "ONEPLUS+A3010",
+        "android_version": 25,
+        "android_release": "7.1.1"
+    }
+}[32m]
+<---- END ---->
+[0m
+2025-08-05 16:00:41,809 - INFO - 🔧 Initializing API session: a1ba6cd4
+2025-08-05 16:00:41,809 - ERROR - ❌ Unexpected error: 'BotConfig' object has no attribute 'user_agent_rotation'
+2025-08-05 16:00:41,809 - INFO - 🔄 Restarting bot in 30 seconds...
+2025-08-05 16:01:11,817 - INFO - [32m<---- START ---->
+Keyword arguments:
+  [message]: [[0m"ThreadsAPI.__init__ Configurations"[32m]
+  [settings_path]: [[0m".session.json"[32m]
+  [log_level]: [[0m20[32m]
+  [http_session_class]: [[0m"AioHTTPSession"[32m]
+  [settings]: [[0m{
+    "authentication": {
+        "encrypted_token": null
+    },
+    "timezone": {
+        "offset": "-10799"
+    },
+    "device": {
+        "id": "android-969afbfad9065c52",
+        "manufacturer": "OnePlus",
+        "model": "ONEPLUS+A3010",
+        "android_version": 25,
+        "android_release": "7.1.1"
+    }
+}[32m]
+<---- END ---->
+[0m
+2025-08-05 16:01:11,818 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a745a90>
+2025-08-05 16:01:11,818 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a745730>
+2025-08-05 16:01:11,818 - INFO - 🔧 Initializing API session: f33a2909
+2025-08-05 16:01:11,819 - ERROR - ❌ Unexpected error: 'BotConfig' object has no attribute 'user_agent_rotation'
+2025-08-05 16:01:11,819 - INFO - 🔄 Restarting bot in 30 seconds...
+2025-08-05 16:01:41,837 - INFO - [32m<---- START ---->
+Keyword arguments:
+  [message]: [[0m"ThreadsAPI.__init__ Configurations"[32m]
+  [settings_path]: [[0m".session.json"[32m]
+  [log_level]: [[0m20[32m]
+  [http_session_class]: [[0m"AioHTTPSession"[32m]
+  [settings]: [[0m{
+    "authentication": {
+        "encrypted_token": null
+    },
+    "timezone": {
+        "offset": "-10799"
+    },
+    "device": {
+        "id": "android-969afbfad9065c52",
+        "manufacturer": "OnePlus",
+        "model": "ONEPLUS+A3010",
+        "android_version": 25,
+        "android_release": "7.1.1"
+    }
+}[32m]
+<---- END ---->
+[0m
+2025-08-05 16:01:41,838 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a741430>
+2025-08-05 16:01:41,838 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a734f40>
+2025-08-05 16:01:41,838 - INFO - 🔧 Initializing API session: 86408289
+2025-08-05 16:01:41,839 - ERROR - ❌ Unexpected error: 'BotConfig' object has no attribute 'user_agent_rotation'
+2025-08-05 16:01:41,839 - INFO - 🔄 Restarting bot in 30 seconds...
+2025-08-05 16:02:11,848 - INFO - [32m<---- START ---->
+Keyword arguments:
+  [message]: [[0m"ThreadsAPI.__init__ Configurations"[32m]
+  [settings_path]: [[0m".session.json"[32m]
+  [log_level]: [[0m20[32m]
+  [http_session_class]: [[0m"AioHTTPSession"[32m]
+  [settings]: [[0m{
+    "authentication": {
+        "encrypted_token": null
+    },
+    "timezone": {
+        "offset": "-10799"
+    },
+    "device": {
+        "id": "android-969afbfad9065c52",
+        "manufacturer": "OnePlus",
+        "model": "ONEPLUS+A3010",
+        "android_version": 25,
+        "android_release": "7.1.1"
+    }
+}[32m]
+<---- END ---->
+[0m
+2025-08-05 16:02:11,849 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a7417c0>
+2025-08-05 16:02:11,849 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a745610>
+2025-08-05 16:02:11,849 - INFO - 🔧 Initializing API session: 1aabb65a
+2025-08-05 16:02:11,850 - ERROR - ❌ Unexpected error: 'BotConfig' object has no attribute 'user_agent_rotation'
+2025-08-05 16:02:11,850 - INFO - 🔄 Restarting bot in 30 seconds...
+2025-08-05 16:02:41,858 - INFO - [32m<---- START ---->
+Keyword arguments:
+  [message]: [[0m"ThreadsAPI.__init__ Configurations"[32m]
+  [settings_path]: [[0m".session.json"[32m]
+  [log_level]: [[0m20[32m]
+  [http_session_class]: [[0m"AioHTTPSession"[32m]
+  [settings]: [[0m{
+    "authentication": {
+        "encrypted_token": null
+    },
+    "timezone": {
+        "offset": "-10799"
+    },
+    "device": {
+        "id": "android-969afbfad9065c52",
+        "manufacturer": "OnePlus",
+        "model": "ONEPLUS+A3010",
+        "android_version": 25,
+        "android_release": "7.1.1"
+    }
+}[32m]
+<---- END ---->
+[0m
+2025-08-05 16:02:41,859 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a76d790>
+2025-08-05 16:02:41,859 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a734cd0>
+2025-08-05 16:02:41,860 - INFO - 🔧 Initializing API session: cd4156fc
+2025-08-05 16:02:41,860 - ERROR - ❌ Unexpected error: 'BotConfig' object has no attribute 'user_agent_rotation'
+2025-08-05 16:02:41,860 - INFO - 🔄 Restarting bot in 30 seconds...
+2025-08-05 16:03:11,866 - INFO - [32m<---- START ---->
+Keyword arguments:
+  [message]: [[0m"ThreadsAPI.__init__ Configurations"[32m]
+  [settings_path]: [[0m".session.json"[32m]
+  [log_level]: [[0m20[32m]
+  [http_session_class]: [[0m"AioHTTPSession"[32m]
+  [settings]: [[0m{
+    "authentication": {
+        "encrypted_token": null
+    },
+    "timezone": {
+        "offset": "-10799"
+    },
+    "device": {
+        "id": "android-969afbfad9065c52",
+        "manufacturer": "OnePlus",
+        "model": "ONEPLUS+A3010",
+        "android_version": 25,
+        "android_release": "7.1.1"
+    }
+}[32m]
+<---- END ---->
+[0m
+2025-08-05 16:03:11,866 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a745760>
+2025-08-05 16:03:11,867 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a745430>
+2025-08-05 16:03:11,867 - INFO - 🔧 Initializing API session: 5c66c4b2
+2025-08-05 16:03:11,867 - ERROR - ❌ Unexpected error: 'BotConfig' object has no attribute 'user_agent_rotation'
+2025-08-05 16:03:11,868 - INFO - 🔄 Restarting bot in 30 seconds...
+2025-08-05 16:03:41,875 - INFO - [32m<---- START ---->
+Keyword arguments:
+  [message]: [[0m"ThreadsAPI.__init__ Configurations"[32m]
+  [settings_path]: [[0m".session.json"[32m]
+  [log_level]: [[0m20[32m]
+  [http_session_class]: [[0m"AioHTTPSession"[32m]
+  [settings]: [[0m{
+    "authentication": {
+        "encrypted_token": null
+    },
+    "timezone": {
+        "offset": "-10799"
+    },
+    "device": {
+        "id": "android-969afbfad9065c52",
+        "manufacturer": "OnePlus",
+        "model": "ONEPLUS+A3010",
+        "android_version": 25,
+        "android_release": "7.1.1"
+    }
+}[32m]
+<---- END ---->
+[0m
+2025-08-05 16:03:41,875 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a734f70>
+2025-08-05 16:03:41,875 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a76d040>
+2025-08-05 16:03:41,876 - INFO - 🔧 Initializing API session: 9a41c17b
+2025-08-05 16:03:41,876 - ERROR - ❌ Unexpected error: 'BotConfig' object has no attribute 'user_agent_rotation'
+2025-08-05 16:03:41,876 - INFO - 🔄 Restarting bot in 30 seconds...
+2025-08-05 16:04:11,882 - INFO - [32m<---- START ---->
+Keyword arguments:
+  [message]: [[0m"ThreadsAPI.__init__ Configurations"[32m]
+  [settings_path]: [[0m".session.json"[32m]
+  [log_level]: [[0m20[32m]
+  [http_session_class]: [[0m"AioHTTPSession"[32m]
+  [settings]: [[0m{
+    "authentication": {
+        "encrypted_token": null
+    },
+    "timezone": {
+        "offset": "-10799"
+    },
+    "device": {
+        "id": "android-969afbfad9065c52",
+        "manufacturer": "OnePlus",
+        "model": "ONEPLUS+A3010",
+        "android_version": 25,
+        "android_release": "7.1.1"
+    }
+}[32m]
+<---- END ---->
+[0m
+2025-08-05 16:04:11,882 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a774fa0>
+2025-08-05 16:04:11,883 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a745790>
+2025-08-05 16:04:11,883 - INFO - 🔧 Initializing API session: f436e543
+2025-08-05 16:04:11,884 - ERROR - ❌ Unexpected error: 'BotConfig' object has no attribute 'user_agent_rotation'
+2025-08-05 16:04:11,884 - INFO - 🔄 Restarting bot in 30 seconds...
+2025-08-05 16:04:41,893 - INFO - [32m<---- START ---->
+Keyword arguments:
+  [message]: [[0m"ThreadsAPI.__init__ Configurations"[32m]
+  [settings_path]: [[0m".session.json"[32m]
+  [log_level]: [[0m20[32m]
+  [http_session_class]: [[0m"AioHTTPSession"[32m]
+  [settings]: [[0m{
+    "authentication": {
+        "encrypted_token": null
+    },
+    "timezone": {
+        "offset": "-10799"
+    },
+    "device": {
+        "id": "android-969afbfad9065c52",
+        "manufacturer": "OnePlus",
+        "model": "ONEPLUS+A3010",
+        "android_version": 25,
+        "android_release": "7.1.1"
+    }
+}[32m]
+<---- END ---->
+[0m
+2025-08-05 16:04:41,894 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a76de80>
+2025-08-05 16:04:41,894 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a76d400>
+2025-08-05 16:04:41,894 - INFO - 🔧 Initializing API session: c3c340e9
+2025-08-05 16:04:41,894 - ERROR - ❌ Unexpected error: 'BotConfig' object has no attribute 'user_agent_rotation'
+2025-08-05 16:04:41,895 - INFO - 🔄 Restarting bot in 30 seconds...
+2025-08-05 16:05:11,903 - INFO - [32m<---- START ---->
+Keyword arguments:
+  [message]: [[0m"ThreadsAPI.__init__ Configurations"[32m]
+  [settings_path]: [[0m".session.json"[32m]
+  [log_level]: [[0m20[32m]
+  [http_session_class]: [[0m"AioHTTPSession"[32m]
+  [settings]: [[0m{
+    "authentication": {
+        "encrypted_token": null
+    },
+    "timezone": {
+        "offset": "-10799"
+    },
+    "device": {
+        "id": "android-969afbfad9065c52",
+        "manufacturer": "OnePlus",
+        "model": "ONEPLUS+A3010",
+        "android_version": 25,
+        "android_release": "7.1.1"
+    }
+}[32m]
+<---- END ---->
+[0m
+2025-08-05 16:05:11,903 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a741760>
+2025-08-05 16:05:11,903 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a7458b0>
+2025-08-05 16:05:11,903 - INFO - 🔧 Initializing API session: 76632658
+2025-08-05 16:05:11,903 - ERROR - ❌ Unexpected error: 'BotConfig' object has no attribute 'user_agent_rotation'
+2025-08-05 16:05:11,904 - INFO - 🔄 Restarting bot in 30 seconds...
+2025-08-05 16:05:41,915 - INFO - [32m<---- START ---->
+Keyword arguments:
+  [message]: [[0m"ThreadsAPI.__init__ Configurations"[32m]
+  [settings_path]: [[0m".session.json"[32m]
+  [log_level]: [[0m20[32m]
+  [http_session_class]: [[0m"AioHTTPSession"[32m]
+  [settings]: [[0m{
+    "authentication": {
+        "encrypted_token": null
+    },
+    "timezone": {
+        "offset": "-10799"
+    },
+    "device": {
+        "id": "android-969afbfad9065c52",
+        "manufacturer": "OnePlus",
+        "model": "ONEPLUS+A3010",
+        "android_version": 25,
+        "android_release": "7.1.1"
+    }
+}[32m]
+<---- END ---->
+[0m
+2025-08-05 16:05:41,915 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a7794f0>
+2025-08-05 16:05:41,916 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a774cd0>
+2025-08-05 16:05:41,917 - INFO - 🔧 Initializing API session: 35c6ee4a
+2025-08-05 16:05:41,917 - ERROR - ❌ Unexpected error: 'BotConfig' object has no attribute 'user_agent_rotation'
+2025-08-05 16:05:41,918 - INFO - 🔄 Restarting bot in 30 seconds...
+2025-08-05 16:06:11,924 - INFO - [32m<---- START ---->
+Keyword arguments:
+  [message]: [[0m"ThreadsAPI.__init__ Configurations"[32m]
+  [settings_path]: [[0m".session.json"[32m]
+  [log_level]: [[0m20[32m]
+  [http_session_class]: [[0m"AioHTTPSession"[32m]
+  [settings]: [[0m{
+    "authentication": {
+        "encrypted_token": null
+    },
+    "timezone": {
+        "offset": "-10799"
+    },
+    "device": {
+        "id": "android-969afbfad9065c52",
+        "manufacturer": "OnePlus",
+        "model": "ONEPLUS+A3010",
+        "android_version": 25,
+        "android_release": "7.1.1"
+    }
+}[32m]
+<---- END ---->
+[0m
+2025-08-05 16:06:11,924 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a779850>
+2025-08-05 16:06:11,924 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a7456a0>
+2025-08-05 16:06:11,924 - INFO - 🔧 Initializing API session: 5fca6168
+2025-08-05 16:06:11,925 - ERROR - ❌ Unexpected error: 'BotConfig' object has no attribute 'user_agent_rotation'
+2025-08-05 16:06:11,925 - INFO - 🔄 Restarting bot in 30 seconds...
+2025-08-05 16:06:41,933 - INFO - [32m<---- START ---->
+Keyword arguments:
+  [message]: [[0m"ThreadsAPI.__init__ Configurations"[32m]
+  [settings_path]: [[0m".session.json"[32m]
+  [log_level]: [[0m20[32m]
+  [http_session_class]: [[0m"AioHTTPSession"[32m]
+  [settings]: [[0m{
+    "authentication": {
+        "encrypted_token": null
+    },
+    "timezone": {
+        "offset": "-10799"
+    },
+    "device": {
+        "id": "android-969afbfad9065c52",
+        "manufacturer": "OnePlus",
+        "model": "ONEPLUS+A3010",
+        "android_version": 25,
+        "android_release": "7.1.1"
+    }
+}[32m]
+<---- END ---->
+[0m
+2025-08-05 16:06:41,934 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a779040>
+2025-08-05 16:06:41,934 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a76dd90>
+2025-08-05 16:06:41,934 - INFO - 🔧 Initializing API session: aa0e3098
+2025-08-05 16:06:41,934 - ERROR - ❌ Unexpected error: 'BotConfig' object has no attribute 'user_agent_rotation'
+2025-08-05 16:06:41,934 - INFO - 🔄 Restarting bot in 30 seconds...
+2025-08-05 16:07:11,943 - INFO - [32m<---- START ---->
+Keyword arguments:
+  [message]: [[0m"ThreadsAPI.__init__ Configurations"[32m]
+  [settings_path]: [[0m".session.json"[32m]
+  [log_level]: [[0m20[32m]
+  [http_session_class]: [[0m"AioHTTPSession"[32m]
+  [settings]: [[0m{
+    "authentication": {
+        "encrypted_token": null
+    },
+    "timezone": {
+        "offset": "-10799"
+    },
+    "device": {
+        "id": "android-969afbfad9065c52",
+        "manufacturer": "OnePlus",
+        "model": "ONEPLUS+A3010",
+        "android_version": 25,
+        "android_release": "7.1.1"
+    }
+}[32m]
+<---- END ---->
+[0m
+2025-08-05 16:07:11,944 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a745370>
+2025-08-05 16:07:11,944 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a734f70>
+2025-08-05 16:07:11,944 - INFO - 🔧 Initializing API session: 271afc66
+2025-08-05 16:07:11,945 - ERROR - ❌ Unexpected error: 'BotConfig' object has no attribute 'user_agent_rotation'
+2025-08-05 16:07:11,945 - INFO - 🔄 Restarting bot in 30 seconds...
+2025-08-05 16:07:41,958 - INFO - [32m<---- START ---->
+Keyword arguments:
+  [message]: [[0m"ThreadsAPI.__init__ Configurations"[32m]
+  [settings_path]: [[0m".session.json"[32m]
+  [log_level]: [[0m20[32m]
+  [http_session_class]: [[0m"AioHTTPSession"[32m]
+  [settings]: [[0m{
+    "authentication": {
+        "encrypted_token": null
+    },
+    "timezone": {
+        "offset": "-10799"
+    },
+    "device": {
+        "id": "android-969afbfad9065c52",
+        "manufacturer": "OnePlus",
+        "model": "ONEPLUS+A3010",
+        "android_version": 25,
+        "android_release": "7.1.1"
+    }
+}[32m]
+<---- END ---->
+[0m
+2025-08-05 16:07:41,959 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a76d9a0>
+2025-08-05 16:07:41,959 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a76d6a0>
+2025-08-05 16:07:41,959 - INFO - 🔧 Initializing API session: 29727910
+2025-08-05 16:07:41,960 - ERROR - ❌ Unexpected error: 'BotConfig' object has no attribute 'user_agent_rotation'
+2025-08-05 16:07:41,960 - INFO - 🔄 Restarting bot in 30 seconds...
+2025-08-05 16:08:11,968 - INFO - [32m<---- START ---->
+Keyword arguments:
+  [message]: [[0m"ThreadsAPI.__init__ Configurations"[32m]
+  [settings_path]: [[0m".session.json"[32m]
+  [log_level]: [[0m20[32m]
+  [http_session_class]: [[0m"AioHTTPSession"[32m]
+  [settings]: [[0m{
+    "authentication": {
+        "encrypted_token": null
+    },
+    "timezone": {
+        "offset": "-10799"
+    },
+    "device": {
+        "id": "android-969afbfad9065c52",
+        "manufacturer": "OnePlus",
+        "model": "ONEPLUS+A3010",
+        "android_version": 25,
+        "android_release": "7.1.1"
+    }
+}[32m]
+<---- END ---->
+[0m
+2025-08-05 16:08:11,968 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a774580>
+2025-08-05 16:08:11,968 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a745850>
+2025-08-05 16:08:11,968 - INFO - 🔧 Initializing API session: da4de891
+2025-08-05 16:08:11,969 - ERROR - ❌ Unexpected error: 'BotConfig' object has no attribute 'user_agent_rotation'
+2025-08-05 16:08:11,969 - INFO - 🔄 Restarting bot in 30 seconds...
+2025-08-05 16:08:41,976 - INFO - [32m<---- START ---->
+Keyword arguments:
+  [message]: [[0m"ThreadsAPI.__init__ Configurations"[32m]
+  [settings_path]: [[0m".session.json"[32m]
+  [log_level]: [[0m20[32m]
+  [http_session_class]: [[0m"AioHTTPSession"[32m]
+  [settings]: [[0m{
+    "authentication": {
+        "encrypted_token": null
+    },
+    "timezone": {
+        "offset": "-10799"
+    },
+    "device": {
+        "id": "android-969afbfad9065c52",
+        "manufacturer": "OnePlus",
+        "model": "ONEPLUS+A3010",
+        "android_version": 25,
+        "android_release": "7.1.1"
+    }
+}[32m]
+<---- END ---->
+[0m
+2025-08-05 16:08:41,976 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a7810d0>
+2025-08-05 16:08:41,976 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a741850>
+2025-08-05 16:08:41,976 - INFO - 🔧 Initializing API session: 911fd35f
+2025-08-05 16:08:41,977 - ERROR - ❌ Unexpected error: 'BotConfig' object has no attribute 'user_agent_rotation'
+2025-08-05 16:08:41,977 - INFO - 🔄 Restarting bot in 30 seconds...
+2025-08-05 16:09:11,984 - INFO - [32m<---- START ---->
+Keyword arguments:
+  [message]: [[0m"ThreadsAPI.__init__ Configurations"[32m]
+  [settings_path]: [[0m".session.json"[32m]
+  [log_level]: [[0m20[32m]
+  [http_session_class]: [[0m"AioHTTPSession"[32m]
+  [settings]: [[0m{
+    "authentication": {
+        "encrypted_token": null
+    },
+    "timezone": {
+        "offset": "-10799"
+    },
+    "device": {
+        "id": "android-969afbfad9065c52",
+        "manufacturer": "OnePlus",
+        "model": "ONEPLUS+A3010",
+        "android_version": 25,
+        "android_release": "7.1.1"
+    }
+}[32m]
+<---- END ---->
+[0m
+2025-08-05 16:09:11,984 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a781fa0>
+2025-08-05 16:09:11,984 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a781820>
+2025-08-05 16:09:11,985 - INFO - 🔧 Initializing API session: 16e42306
+2025-08-05 16:09:11,985 - ERROR - ❌ Unexpected error: 'BotConfig' object has no attribute 'user_agent_rotation'
+2025-08-05 16:09:11,985 - INFO - 🔄 Restarting bot in 30 seconds...
+2025-08-05 16:09:41,994 - INFO - [32m<---- START ---->
+Keyword arguments:
+  [message]: [[0m"ThreadsAPI.__init__ Configurations"[32m]
+  [settings_path]: [[0m".session.json"[32m]
+  [log_level]: [[0m20[32m]
+  [http_session_class]: [[0m"AioHTTPSession"[32m]
+  [settings]: [[0m{
+    "authentication": {
+        "encrypted_token": null
+    },
+    "timezone": {
+        "offset": "-10799"
+    },
+    "device": {
+        "id": "android-969afbfad9065c52",
+        "manufacturer": "OnePlus",
+        "model": "ONEPLUS+A3010",
+        "android_version": 25,
+        "android_release": "7.1.1"
+    }
+}[32m]
+<---- END ---->
+[0m
+2025-08-05 16:09:41,995 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a76d8e0>
+2025-08-05 16:09:41,995 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a76de20>
+2025-08-05 16:09:41,995 - INFO - 🔧 Initializing API session: 34e62244
+2025-08-05 16:09:41,996 - ERROR - ❌ Unexpected error: 'BotConfig' object has no attribute 'user_agent_rotation'
+2025-08-05 16:09:41,997 - INFO - 🔄 Restarting bot in 30 seconds...
+2025-08-05 16:10:12,004 - INFO - [32m<---- START ---->
+Keyword arguments:
+  [message]: [[0m"ThreadsAPI.__init__ Configurations"[32m]
+  [settings_path]: [[0m".session.json"[32m]
+  [log_level]: [[0m20[32m]
+  [http_session_class]: [[0m"AioHTTPSession"[32m]
+  [settings]: [[0m{
+    "authentication": {
+        "encrypted_token": null
+    },
+    "timezone": {
+        "offset": "-10799"
+    },
+    "device": {
+        "id": "android-969afbfad9065c52",
+        "manufacturer": "OnePlus",
+        "model": "ONEPLUS+A3010",
+        "android_version": 25,
+        "android_release": "7.1.1"
+    }
+}[32m]
+<---- END ---->
+[0m
+2025-08-05 16:10:12,005 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a774df0>
+2025-08-05 16:10:12,005 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a774580>
+2025-08-05 16:10:12,005 - INFO - 🔧 Initializing API session: 427a7156
+2025-08-05 16:10:12,006 - ERROR - ❌ Unexpected error: 'BotConfig' object has no attribute 'user_agent_rotation'
+2025-08-05 16:10:12,006 - INFO - 🔄 Restarting bot in 30 seconds...
+2025-08-05 16:10:42,015 - INFO - [32m<---- START ---->
+Keyword arguments:
+  [message]: [[0m"ThreadsAPI.__init__ Configurations"[32m]
+  [settings_path]: [[0m".session.json"[32m]
+  [log_level]: [[0m20[32m]
+  [http_session_class]: [[0m"AioHTTPSession"[32m]
+  [settings]: [[0m{
+    "authentication": {
+        "encrypted_token": null
+    },
+    "timezone": {
+        "offset": "-10799"
+    },
+    "device": {
+        "id": "android-969afbfad9065c52",
+        "manufacturer": "OnePlus",
+        "model": "ONEPLUS+A3010",
+        "android_version": 25,
+        "android_release": "7.1.1"
+    }
+}[32m]
+<---- END ---->
+[0m
+2025-08-05 16:10:42,016 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a7415b0>
+2025-08-05 16:10:42,016 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a781940>
+2025-08-05 16:10:42,016 - INFO - 🔧 Initializing API session: 20783c1e
+2025-08-05 16:10:42,017 - ERROR - ❌ Unexpected error: 'BotConfig' object has no attribute 'user_agent_rotation'
+2025-08-05 16:10:42,017 - INFO - 🔄 Restarting bot in 30 seconds...
+2025-08-05 16:11:12,024 - INFO - [32m<---- START ---->
+Keyword arguments:
+  [message]: [[0m"ThreadsAPI.__init__ Configurations"[32m]
+  [settings_path]: [[0m".session.json"[32m]
+  [log_level]: [[0m20[32m]
+  [http_session_class]: [[0m"AioHTTPSession"[32m]
+  [settings]: [[0m{
+    "authentication": {
+        "encrypted_token": null
+    },
+    "timezone": {
+        "offset": "-10799"
+    },
+    "device": {
+        "id": "android-969afbfad9065c52",
+        "manufacturer": "OnePlus",
+        "model": "ONEPLUS+A3010",
+        "android_version": 25,
+        "android_release": "7.1.1"
+    }
+}[32m]
+<---- END ---->
+[0m
+2025-08-05 16:11:12,025 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a745370>
+2025-08-05 16:11:12,025 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a781be0>
+2025-08-05 16:11:12,026 - INFO - 🔧 Initializing API session: d7757c05
+2025-08-05 16:11:12,026 - ERROR - ❌ Unexpected error: 'BotConfig' object has no attribute 'user_agent_rotation'
+2025-08-05 16:11:12,026 - INFO - 🔄 Restarting bot in 30 seconds...
+2025-08-05 16:11:42,034 - INFO - [32m<---- START ---->
+Keyword arguments:
+  [message]: [[0m"ThreadsAPI.__init__ Configurations"[32m]
+  [settings_path]: [[0m".session.json"[32m]
+  [log_level]: [[0m20[32m]
+  [http_session_class]: [[0m"AioHTTPSession"[32m]
+  [settings]: [[0m{
+    "authentication": {
+        "encrypted_token": null
+    },
+    "timezone": {
+        "offset": "-10799"
+    },
+    "device": {
+        "id": "android-969afbfad9065c52",
+        "manufacturer": "OnePlus",
+        "model": "ONEPLUS+A3010",
+        "android_version": 25,
+        "android_release": "7.1.1"
+    }
+}[32m]
+<---- END ---->
+[0m
+2025-08-05 16:11:42,035 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a76df40>
+2025-08-05 16:11:42,035 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a76d8b0>
+2025-08-05 16:11:42,035 - INFO - 🔧 Initializing API session: fd2bfd58
+2025-08-05 16:11:42,036 - ERROR - ❌ Unexpected error: 'BotConfig' object has no attribute 'user_agent_rotation'
+2025-08-05 16:11:42,036 - INFO - 🔄 Restarting bot in 30 seconds...
+2025-08-05 16:12:12,039 - INFO - [32m<---- START ---->
+Keyword arguments:
+  [message]: [[0m"ThreadsAPI.__init__ Configurations"[32m]
+  [settings_path]: [[0m".session.json"[32m]
+  [log_level]: [[0m20[32m]
+  [http_session_class]: [[0m"AioHTTPSession"[32m]
+  [settings]: [[0m{
+    "authentication": {
+        "encrypted_token": null
+    },
+    "timezone": {
+        "offset": "-10799"
+    },
+    "device": {
+        "id": "android-969afbfad9065c52",
+        "manufacturer": "OnePlus",
+        "model": "ONEPLUS+A3010",
+        "android_version": 25,
+        "android_release": "7.1.1"
+    }
+}[32m]
+<---- END ---->
+[0m
+2025-08-05 16:12:12,040 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a78a7c0>
+2025-08-05 16:12:12,040 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a78a250>
+2025-08-05 16:12:12,040 - INFO - 🔧 Initializing API session: 90e92c74
+2025-08-05 16:12:12,041 - ERROR - ❌ Unexpected error: 'BotConfig' object has no attribute 'user_agent_rotation'
+2025-08-05 16:12:12,041 - INFO - 🔄 Restarting bot in 30 seconds...
+2025-08-05 16:12:42,053 - INFO - [32m<---- START ---->
+Keyword arguments:
+  [message]: [[0m"ThreadsAPI.__init__ Configurations"[32m]
+  [settings_path]: [[0m".session.json"[32m]
+  [log_level]: [[0m20[32m]
+  [http_session_class]: [[0m"AioHTTPSession"[32m]
+  [settings]: [[0m{
+    "authentication": {
+        "encrypted_token": null
+    },
+    "timezone": {
+        "offset": "-10799"
+    },
+    "device": {
+        "id": "android-969afbfad9065c52",
+        "manufacturer": "OnePlus",
+        "model": "ONEPLUS+A3010",
+        "android_version": 25,
+        "android_release": "7.1.1"
+    }
+}[32m]
+<---- END ---->
+[0m
+2025-08-05 16:12:42,054 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a741c10>
+2025-08-05 16:12:42,054 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a741be0>
+2025-08-05 16:12:42,054 - INFO - 🔧 Initializing API session: d920f69d
+2025-08-05 16:12:42,055 - ERROR - ❌ Unexpected error: 'BotConfig' object has no attribute 'user_agent_rotation'
+2025-08-05 16:12:42,055 - INFO - 🔄 Restarting bot in 30 seconds...
+2025-08-05 16:13:12,061 - INFO - [32m<---- START ---->
+Keyword arguments:
+  [message]: [[0m"ThreadsAPI.__init__ Configurations"[32m]
+  [settings_path]: [[0m".session.json"[32m]
+  [log_level]: [[0m20[32m]
+  [http_session_class]: [[0m"AioHTTPSession"[32m]
+  [settings]: [[0m{
+    "authentication": {
+        "encrypted_token": null
+    },
+    "timezone": {
+        "offset": "-10799"
+    },
+    "device": {
+        "id": "android-969afbfad9065c52",
+        "manufacturer": "OnePlus",
+        "model": "ONEPLUS+A3010",
+        "android_version": 25,
+        "android_release": "7.1.1"
+    }
+}[32m]
+<---- END ---->
+[0m
+2025-08-05 16:13:12,062 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a779070>
+2025-08-05 16:13:12,062 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a779f70>
+2025-08-05 16:13:12,062 - INFO - 🔧 Initializing API session: 6d2d6f0e
+2025-08-05 16:13:12,062 - ERROR - ❌ Unexpected error: 'BotConfig' object has no attribute 'user_agent_rotation'
+2025-08-05 16:13:12,062 - INFO - 🔄 Restarting bot in 30 seconds...
+2025-08-05 16:13:42,066 - INFO - [32m<---- START ---->
+Keyword arguments:
+  [message]: [[0m"ThreadsAPI.__init__ Configurations"[32m]
+  [settings_path]: [[0m".session.json"[32m]
+  [log_level]: [[0m20[32m]
+  [http_session_class]: [[0m"AioHTTPSession"[32m]
+  [settings]: [[0m{
+    "authentication": {
+        "encrypted_token": null
+    },
+    "timezone": {
+        "offset": "-10799"
+    },
+    "device": {
+        "id": "android-969afbfad9065c52",
+        "manufacturer": "OnePlus",
+        "model": "ONEPLUS+A3010",
+        "android_version": 25,
+        "android_release": "7.1.1"
+    }
+}[32m]
+<---- END ---->
+[0m
+2025-08-05 16:13:42,066 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a76da60>
+2025-08-05 16:13:42,066 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a76d0a0>
+2025-08-05 16:13:42,067 - INFO - 🔧 Initializing API session: e9e49c3b
+2025-08-05 16:13:42,067 - ERROR - ❌ Unexpected error: 'BotConfig' object has no attribute 'user_agent_rotation'
+2025-08-05 16:13:42,067 - INFO - 🔄 Restarting bot in 30 seconds...
+2025-08-05 16:14:12,074 - INFO - [32m<---- START ---->
+Keyword arguments:
+  [message]: [[0m"ThreadsAPI.__init__ Configurations"[32m]
+  [settings_path]: [[0m".session.json"[32m]
+  [log_level]: [[0m20[32m]
+  [http_session_class]: [[0m"AioHTTPSession"[32m]
+  [settings]: [[0m{
+    "authentication": {
+        "encrypted_token": null
+    },
+    "timezone": {
+        "offset": "-10799"
+    },
+    "device": {
+        "id": "android-969afbfad9065c52",
+        "manufacturer": "OnePlus",
+        "model": "ONEPLUS+A3010",
+        "android_version": 25,
+        "android_release": "7.1.1"
+    }
+}[32m]
+<---- END ---->
+[0m
+2025-08-05 16:14:12,076 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a78a280>
+2025-08-05 16:14:12,076 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a78a220>
+2025-08-05 16:14:12,076 - INFO - 🔧 Initializing API session: a370e3f9
+2025-08-05 16:14:12,076 - ERROR - ❌ Unexpected error: 'BotConfig' object has no attribute 'user_agent_rotation'
+2025-08-05 16:14:12,077 - INFO - 🔄 Restarting bot in 30 seconds...
+2025-08-05 16:14:42,080 - INFO - [32m<---- START ---->
+Keyword arguments:
+  [message]: [[0m"ThreadsAPI.__init__ Configurations"[32m]
+  [settings_path]: [[0m".session.json"[32m]
+  [log_level]: [[0m20[32m]
+  [http_session_class]: [[0m"AioHTTPSession"[32m]
+  [settings]: [[0m{
+    "authentication": {
+        "encrypted_token": null
+    },
+    "timezone": {
+        "offset": "-10799"
+    },
+    "device": {
+        "id": "android-969afbfad9065c52",
+        "manufacturer": "OnePlus",
+        "model": "ONEPLUS+A3010",
+        "android_version": 25,
+        "android_release": "7.1.1"
+    }
+}[32m]
+<---- END ---->
+[0m
+2025-08-05 16:14:42,082 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a781190>
+2025-08-05 16:14:42,082 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a741550>
+2025-08-05 16:14:42,082 - INFO - 🔧 Initializing API session: 0c366734
+2025-08-05 16:14:42,083 - ERROR - ❌ Unexpected error: 'BotConfig' object has no attribute 'user_agent_rotation'
+2025-08-05 16:14:42,083 - INFO - 🔄 Restarting bot in 30 seconds...
+2025-08-05 16:15:12,088 - INFO - [32m<---- START ---->
+Keyword arguments:
+  [message]: [[0m"ThreadsAPI.__init__ Configurations"[32m]
+  [settings_path]: [[0m".session.json"[32m]
+  [log_level]: [[0m20[32m]
+  [http_session_class]: [[0m"AioHTTPSession"[32m]
+  [settings]: [[0m{
+    "authentication": {
+        "encrypted_token": null
+    },
+    "timezone": {
+        "offset": "-10799"
+    },
+    "device": {
+        "id": "android-969afbfad9065c52",
+        "manufacturer": "OnePlus",
+        "model": "ONEPLUS+A3010",
+        "android_version": 25,
+        "android_release": "7.1.1"
+    }
+}[32m]
+<---- END ---->
+[0m
+2025-08-05 16:15:12,088 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a793cd0>
+2025-08-05 16:15:12,088 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a793220>
+2025-08-05 16:15:12,088 - INFO - 🔧 Initializing API session: 7ae2bc4e
+2025-08-05 16:15:12,089 - ERROR - ❌ Unexpected error: 'BotConfig' object has no attribute 'user_agent_rotation'
+2025-08-05 16:15:12,089 - INFO - 🔄 Restarting bot in 30 seconds...
+2025-08-05 16:15:42,093 - INFO - [32m<---- START ---->
+Keyword arguments:
+  [message]: [[0m"ThreadsAPI.__init__ Configurations"[32m]
+  [settings_path]: [[0m".session.json"[32m]
+  [log_level]: [[0m20[32m]
+  [http_session_class]: [[0m"AioHTTPSession"[32m]
+  [settings]: [[0m{
+    "authentication": {
+        "encrypted_token": null
+    },
+    "timezone": {
+        "offset": "-10799"
+    },
+    "device": {
+        "id": "android-969afbfad9065c52",
+        "manufacturer": "OnePlus",
+        "model": "ONEPLUS+A3010",
+        "android_version": 25,
+        "android_release": "7.1.1"
+    }
+}[32m]
+<---- END ---->
+[0m
+2025-08-05 16:15:42,093 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a7745e0>
+2025-08-05 16:15:42,094 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a76d850>
+2025-08-05 16:15:42,094 - INFO - 🔧 Initializing API session: 616a0dfd
+2025-08-05 16:15:42,094 - ERROR - ❌ Unexpected error: 'BotConfig' object has no attribute 'user_agent_rotation'
+2025-08-05 16:15:42,095 - INFO - 🔄 Restarting bot in 30 seconds...
+2025-08-05 16:16:12,099 - INFO - [32m<---- START ---->
+Keyword arguments:
+  [message]: [[0m"ThreadsAPI.__init__ Configurations"[32m]
+  [settings_path]: [[0m".session.json"[32m]
+  [log_level]: [[0m20[32m]
+  [http_session_class]: [[0m"AioHTTPSession"[32m]
+  [settings]: [[0m{
+    "authentication": {
+        "encrypted_token": null
+    },
+    "timezone": {
+        "offset": "-10799"
+    },
+    "device": {
+        "id": "android-969afbfad9065c52",
+        "manufacturer": "OnePlus",
+        "model": "ONEPLUS+A3010",
+        "android_version": 25,
+        "android_release": "7.1.1"
+    }
+}[32m]
+<---- END ---->
+[0m
+2025-08-05 16:16:12,100 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a7816a0>
+2025-08-05 16:16:12,100 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a7815b0>
+2025-08-05 16:16:12,100 - INFO - 🔧 Initializing API session: e20e84fb
+2025-08-05 16:16:12,101 - ERROR - ❌ Unexpected error: 'BotConfig' object has no attribute 'user_agent_rotation'
+2025-08-05 16:16:12,101 - INFO - 🔄 Restarting bot in 30 seconds...
+2025-08-05 16:16:42,107 - INFO - [32m<---- START ---->
+Keyword arguments:
+  [message]: [[0m"ThreadsAPI.__init__ Configurations"[32m]
+  [settings_path]: [[0m".session.json"[32m]
+  [log_level]: [[0m20[32m]
+  [http_session_class]: [[0m"AioHTTPSession"[32m]
+  [settings]: [[0m{
+    "authentication": {
+        "encrypted_token": null
+    },
+    "timezone": {
+        "offset": "-10799"
+    },
+    "device": {
+        "id": "android-969afbfad9065c52",
+        "manufacturer": "OnePlus",
+        "model": "ONEPLUS+A3010",
+        "android_version": 25,
+        "android_release": "7.1.1"
+    }
+}[32m]
+<---- END ---->
+[0m
+2025-08-05 16:16:42,107 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a741f70>
+2025-08-05 16:16:42,107 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a76dbe0>
+2025-08-05 16:16:42,107 - INFO - 🔧 Initializing API session: f7c12fd8
+2025-08-05 16:16:42,108 - ERROR - ❌ Unexpected error: 'BotConfig' object has no attribute 'user_agent_rotation'
+2025-08-05 16:16:42,108 - INFO - 🔄 Restarting bot in 30 seconds...
+2025-08-05 16:17:12,117 - INFO - [32m<---- START ---->
+Keyword arguments:
+  [message]: [[0m"ThreadsAPI.__init__ Configurations"[32m]
+  [settings_path]: [[0m".session.json"[32m]
+  [log_level]: [[0m20[32m]
+  [http_session_class]: [[0m"AioHTTPSession"[32m]
+  [settings]: [[0m{
+    "authentication": {
+        "encrypted_token": null
+    },
+    "timezone": {
+        "offset": "-10799"
+    },
+    "device": {
+        "id": "android-969afbfad9065c52",
+        "manufacturer": "OnePlus",
+        "model": "ONEPLUS+A3010",
+        "android_version": 25,
+        "android_release": "7.1.1"
+    }
+}[32m]
+<---- END ---->
+[0m
+2025-08-05 16:17:12,118 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a745370>
+2025-08-05 16:17:12,118 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a793580>
+2025-08-05 16:17:12,118 - INFO - 🔧 Initializing API session: dfec5ccb
+2025-08-05 16:17:12,118 - ERROR - ❌ Unexpected error: 'BotConfig' object has no attribute 'user_agent_rotation'
+2025-08-05 16:17:12,118 - INFO - 🔄 Restarting bot in 30 seconds...
+2025-08-05 16:17:42,130 - INFO - [32m<---- START ---->
+Keyword arguments:
+  [message]: [[0m"ThreadsAPI.__init__ Configurations"[32m]
+  [settings_path]: [[0m".session.json"[32m]
+  [log_level]: [[0m20[32m]
+  [http_session_class]: [[0m"AioHTTPSession"[32m]
+  [settings]: [[0m{
+    "authentication": {
+        "encrypted_token": null
+    },
+    "timezone": {
+        "offset": "-10799"
+    },
+    "device": {
+        "id": "android-969afbfad9065c52",
+        "manufacturer": "OnePlus",
+        "model": "ONEPLUS+A3010",
+        "android_version": 25,
+        "android_release": "7.1.1"
+    }
+}[32m]
+<---- END ---->
+[0m
+2025-08-05 16:17:42,131 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a774250>
+2025-08-05 16:17:42,131 - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x10a76d850>
+2025-08-05 16:17:42,131 - INFO - 🔧 Initializing API session: 3a565db2
+2025-08-05 16:17:42,132 - ERROR - ❌ Unexpected error: 'BotConfig' object has no attribute 'user_agent_rotation'
+2025-08-05 16:17:42,132 - INFO - 🔄 Restarting bot in 30 seconds...

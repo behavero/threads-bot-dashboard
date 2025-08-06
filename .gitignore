@@ -1,129 +1,37 @@
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# Virtual environments
+# Next.js
+.next/
+out/
+build/
+
+# Production
+/build
+
+# Misc
+.DS_Store
+*.pem
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Local env files
+.env*.local
 .env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
 
 # IDE
 .vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# OS
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-
-# Logs
-*.log
-logs/
-enhanced_bot.log
-bot.log
-
-# Database
-*.db
-*.sqlite
-*.sqlite3
-
-# Configuration files with sensitive data
-config/accounts.json
-config/legacy_accounts.json
-.env*
-.secrets
-
-# Deployment
-.railway/
-.render/
-.replit/
-# railway.toml (allow server/railway.toml)
-# railway.json (allow server/railway.json)
-# nixpacks.toml (allow server/nixpacks.toml)
-render.yaml
-.replit
-replit.nix
-pyproject.toml
-# nixpacks.toml (allow server/nixpacks.toml)
-Procfile
-runtime.txt
-
-# Node.js (Frontend)
-frontend/node_modules/
-frontend/.next/
-frontend/out/
-frontend/.vercel/
-frontend/.env.local
-frontend/.env.development.local
-frontend/.env.test.local
-frontend/.env.production.local
-frontend/npm-debug.log*
-frontend/yarn-debug.log*
-frontend/yarn-error.log*
-
-# Build outputs
-frontend/dist/
-frontend/build/
-backend/dist/
-backend/build/
-
-# Temporary files
-*.tmp
-*.temp
-.cache/
-.temp/
-
-# Test coverage
-.coverage
-htmlcov/
-.tox/
-.pytest_cache/
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# pyenv
-.python-version
-
-# Backup files
-*.bak
-*.backup
-*.old
-
-# Session files
-.session.json
-*.session
-
-# Threads API cache
-.token_*
-.cache/ 
+.idea/ 
