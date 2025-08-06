@@ -1,0 +1,55 @@
+{
+  "posting": {
+    "min_interval": 3600,
+    "max_interval": 7200,
+    "human_delay_min": 2.0,
+    "human_delay_max": 8.0,
+    "max_posts_per_day": 8,
+    "max_posts_per_account": 3,
+    "cooldown_hours": 6,
+    "retry_attempts": 3,
+    "success_rate_threshold": 0.7
+  },
+  "content": {
+    "image_probability": 0.3,
+    "category_weights": {
+      "general": 1.0,
+      "business": 0.8,
+      "personal": 0.7,
+      "creative": 0.9,
+      "humor": 0.6,
+      "inspiration": 0.8,
+      "tech": 0.7,
+      "lifestyle": 0.8
+    },
+    "max_text_length": 500,
+    "min_text_length": 10
+  },
+  "accounts": {
+    "max_concurrent_logins": 5,
+    "session_timeout_hours": 24,
+    "rotation_enabled": true,
+    "cooldown_multiplier": 1.5
+  },
+  "security": {
+    "user_agent_rotation": true,
+    "proxy_enabled": false,
+    "proxy_list": [],
+    "rate_limit_strict": true,
+    "ban_risk_threshold": 0.3
+  },
+  "monitoring": {
+    "log_level": "INFO",
+    "log_file": "threads_bot.log",
+    "metrics_enabled": true,
+    "alert_on_failure": true,
+    "success_rate_alert": 0.5
+  },
+  "api": {
+    "base_url": "https://www.threads.net/api/v1",
+    "timeout": 30,
+    "max_retries": 3,
+    "retry_delay_base": 2.0,
+    "rate_limit_delay": 1.0
+  }
+} 
