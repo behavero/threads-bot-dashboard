@@ -6,7 +6,7 @@ import { requireAuth } from '@/lib/auth-server'
 export async function POST(request: NextRequest) {
   try {
     // Require authentication
-    await requireAuth(request)
+    const user = await requireAuth(request)
     
     const formData = await request.formData()
     const captions = formData.get('captions') as string
@@ -29,8 +29,8 @@ export async function POST(request: NextRequest) {
       for (const caption of captionList) {
         try {
           const [data] = await sql`
-            INSERT INTO captions (text, created_at)
-            VALUES (${caption.trim()}, ${new Date().toISOString()})
+            INSERT INTO captions (user_id, text, created_at)
+            VALUES (${user.id}, ${caption.trim()}, ${new Date().toISOString()})
             RETURNING *
           `
 
@@ -65,8 +65,8 @@ export async function POST(request: NextRequest) {
         // Insert into images table
         try {
           const [imageData] = await sql`
-            INSERT INTO images (filename, url, size, type, created_at)
-            VALUES (${fileName}, ${urlData.publicUrl}, ${image.size}, ${image.type}, ${new Date().toISOString()})
+            INSERT INTO images (user_id, filename, url, size, type, created_at)
+            VALUES (${user.id}, ${fileName}, ${urlData.publicUrl}, ${image.size}, ${image.type}, ${new Date().toISOString()})
             RETURNING *
           `
 
@@ -98,9 +98,9 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     // Require authentication
-    await requireAuth(request)
+    const user = await requireAuth(request)
     
-    // Fetch existing captions and images
+    // Fetch existing captions and images (RLS will automatically filter by user_id)
     const [captions, images] = await Promise.all([
       sql`SELECT * FROM captions ORDER BY created_at DESC`,
       sql`SELECT * FROM images ORDER BY created_at DESC`

@@ -145,28 +145,40 @@ class DatabaseManager:
         except Exception as e:
             print(f"❌ Error recording posting history: {e}")
     
-    def add_account(self, username: str, password: str) -> bool:
+    def add_account(self, username: str, password: str, user_id: str = None) -> bool:
         """Add a new account"""
         try:
-            response = self.supabase.table("accounts").insert({"username": username, "password": password}).execute()
+            account_data = {"username": username, "password": password}
+            if user_id:
+                account_data["user_id"] = user_id
+                
+            response = self.supabase.table("accounts").insert(account_data).execute()
             return len(response.data) > 0
         except Exception as e:
             print(f"❌ Error adding account: {e}")
             return False
     
-    def add_caption(self, text: str) -> bool:
+    def add_caption(self, text: str, user_id: str = None) -> bool:
         """Add a new caption"""
         try:
-            response = self.supabase.table("captions").insert({"text": text}).execute()
+            caption_data = {"text": text}
+            if user_id:
+                caption_data["user_id"] = user_id
+                
+            response = self.supabase.table("captions").insert(caption_data).execute()
             return len(response.data) > 0
         except Exception as e:
             print(f"❌ Error adding caption: {e}")
             return False
     
-    def add_image(self, url: str) -> bool:
+    def add_image(self, url: str, user_id: str = None) -> bool:
         """Add a new image"""
         try:
-            response = self.supabase.table("images").insert({"url": url}).execute()
+            image_data = {"url": url}
+            if user_id:
+                image_data["user_id"] = user_id
+                
+            response = self.supabase.table("images").insert(image_data).execute()
             return len(response.data) > 0
         except Exception as e:
             print(f"❌ Error adding image: {e}")
