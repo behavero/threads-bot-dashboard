@@ -97,18 +97,27 @@ export default function CaptionsPage() {
 
       const method = editingCaption ? 'PUT' : 'POST'
 
+      const requestData = {
+        ...formData,
+        tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag)
+      }
+
+      console.log('Submitting caption data:', requestData)
+      console.log('Request URL:', url)
+      console.log('Request method:', method)
+
       const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          ...formData,
-          tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag)
-        })
+        body: JSON.stringify(requestData)
       })
 
+      console.log('Response status:', response.status)
+      
       const data = await response.json()
+      console.log('Response data:', data)
 
       if (data.success) {
         setShowModal(false)
@@ -116,9 +125,11 @@ export default function CaptionsPage() {
         resetForm()
         await fetchCaptions()
       } else {
+        console.error('Failed to save caption:', data.error)
         setError(data.error || 'Failed to save caption')
       }
     } catch (err) {
+      console.error('Error saving caption:', err)
       setError('Error saving caption')
     }
   }
