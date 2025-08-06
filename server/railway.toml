@@ -2,5 +2,5 @@
 builder = "NIXPACKS"
 
 [deploy]
-startCommand = "python start.py"
+startCommand = "bash deploy.sh"
 healthcheckPath = "/api/status" 

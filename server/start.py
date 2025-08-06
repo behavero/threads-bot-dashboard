@@ -121,6 +121,18 @@ def schedule_posts():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/api/status', methods=['GET'])
+def get_status():
+    """Health check endpoint"""
+    try:
+        return jsonify({
+            "status": "healthy",
+            "timestamp": datetime.now().isoformat(),
+            "version": "1.0.0"
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/api/stats', methods=['GET'])
 def get_stats():
     """Get comprehensive statistics"""
