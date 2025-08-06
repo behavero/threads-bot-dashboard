@@ -66,10 +66,10 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
                    <Image
                      src="/logo.svg"
                      alt="Threadly Logo"
-                     width={300}
-                     height={75}
+                     width={600}
+                     height={120}
                      priority
-                     className="max-h-20 h-auto w-auto text-white"
+                     className="max-h-32 h-auto w-auto text-white"
                    />
                  </div>
                  <p className="text-lg text-gray-300">

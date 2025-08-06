@@ -89,8 +89,7 @@ export async function POST(request: NextRequest) {
               filename: fileName,
               url: urlData.publicUrl,
               size: image.size,
-              type: image.type,
-              user_id: null // Set to null since we're not using authentication
+              type: image.type
             })
             .select()
             .single()

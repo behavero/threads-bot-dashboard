@@ -45,10 +45,10 @@ export default function DashboardPage() {
                          <Image
                            src="/logo.svg"
                            alt="Threadly Logo"
-                           width={400}
+                           width={500}
                            height={100}
                            priority
-                           className="max-h-24 h-auto w-auto text-white"
+                           className="max-h-20 h-auto w-auto text-white"
                          />
                        </Link>
                      </div>
