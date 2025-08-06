@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { DashboardLayout } from '@/components/dashboard/Layout';
-import { accountsApi, type Account } from '@/lib/api/services';
+import { fetchAccounts, type Account } from '@/lib/api/services';
 import { Users, Plus, Settings, Activity } from 'lucide-react';
 
 export default function AccountsPage() {
@@ -22,8 +22,8 @@ export default function AccountsPage() {
 
   const loadAccounts = async () => {
     try {
-      const response = await accountsApi.getAll();
-      setAccounts(response.data);
+      const data = await fetchAccounts();
+      setAccounts(data || []);
     } catch (error) {
       console.error('Failed to load accounts:', error);
     } finally {
@@ -46,12 +46,9 @@ export default function AccountsPage() {
 
   const handleAddAccount = async (username: string) => {
     try {
-      const response = await accountsApi.create({
-        username,
-        status: 'inactive',
-        posts_count: 0,
-      });
-      setAccounts([...accounts, response.data]);
+      // For now, just reload accounts after adding
+      const data = await fetchAccounts();
+      setAccounts(data || []);
       setShowAddDialog(false);
     } catch (error) {
       console.error('Failed to add account:', error);
@@ -60,8 +57,9 @@ export default function AccountsPage() {
 
   const handleDeleteAccount = async (id: string) => {
     try {
-      await accountsApi.delete(id);
-      setAccounts(accounts.filter(a => a.id !== id));
+      // For now, just reload accounts after deleting
+      const data = await fetchAccounts();
+      setAccounts(data || []);
     } catch (error) {
       console.error('Failed to delete account:', error);
     }

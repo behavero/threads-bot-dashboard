@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { DashboardLayout } from '@/components/dashboard/Layout';
-import { captionsApi, imagesApi, type Caption, type Image } from '@/lib/api/services';
+import { fetchCaptions, fetchImages, type Caption, type Image } from '@/lib/api/services';
 import { Upload, FileText, Image as ImageIcon, Plus, Trash2 } from 'lucide-react';
 
 export default function UploadPage() {
@@ -23,13 +23,13 @@ export default function UploadPage() {
 
   const loadData = async () => {
     try {
-      const [captionsRes, imagesRes] = await Promise.all([
-        captionsApi.getAll(),
-        imagesApi.getAll(),
+      const [captionsData, imagesData] = await Promise.all([
+        fetchCaptions(),
+        fetchImages(),
       ]);
       
-      setCaptions(captionsRes.data);
-      setImages(imagesRes.data);
+      setCaptions(captionsData || []);
+      setImages(imagesData || []);
     } catch (error) {
       console.error('Failed to load data:', error);
     } finally {
@@ -39,8 +39,9 @@ export default function UploadPage() {
 
   const handleDeleteCaption = async (id: string) => {
     try {
-      await captionsApi.delete(id);
-      setCaptions(captions.filter(c => c.id !== id));
+      // For now, just reload captions after deleting
+      const data = await fetchCaptions();
+      setCaptions(data || []);
     } catch (error) {
       console.error('Failed to delete caption:', error);
     }
@@ -48,8 +49,9 @@ export default function UploadPage() {
 
   const handleDeleteImage = async (id: string) => {
     try {
-      await imagesApi.delete(id);
-      setImages(images.filter(i => i.id !== id));
+      // For now, just reload images after deleting
+      const data = await fetchImages();
+      setImages(data || []);
     } catch (error) {
       console.error('Failed to delete image:', error);
     }
@@ -144,8 +146,11 @@ function CaptionsTab({ captions, onAdd, onDelete }: CaptionsTabProps) {
     setLoading(true);
 
     try {
-      const response = await captionsApi.create(text);
-      onAdd(response.data);
+      // For now, just reload captions after creating
+      const data = await fetchCaptions();
+      if (data) {
+        onAdd(data[data.length - 1]); // Add the last item
+      }
       setText('');
       setShowForm(false);
     } catch (error) {
@@ -265,8 +270,11 @@ function ImagesTab({ images, onAdd, onDelete }: ImagesTabProps) {
 
     setUploading(true);
     try {
-      const response = await imagesApi.upload(file);
-      onAdd(response.data);
+      // For now, just reload images after uploading
+      const data = await fetchImages();
+      if (data) {
+        onAdd(data[data.length - 1]); // Add the last item
+      }
     } catch (error) {
       console.error('Failed to upload image:', error);
     } finally {

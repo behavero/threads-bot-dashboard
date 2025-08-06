@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DashboardLayout } from '@/components/dashboard/Layout';
-import { accountsApi, type Account } from '@/lib/api/services';
+import { fetchAccounts, type Account } from '@/lib/api/services';
 import { Users, Clock, TrendingUp, AlertCircle } from 'lucide-react';
 
 export default function DashboardPage() {
@@ -18,8 +18,8 @@ export default function DashboardPage() {
 
   const loadAccounts = async () => {
     try {
-      const response = await accountsApi.getAll();
-      setAccounts(response.data);
+      const data = await fetchAccounts();
+      setAccounts(data || []);
     } catch (error) {
       console.error('Failed to load accounts:', error);
     } finally {
