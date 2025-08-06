@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
-import sql from '@/lib/database'
 import { requireAuth } from '@/lib/auth-server'
 
 export async function GET(request: NextRequest) {
@@ -8,11 +7,23 @@ export async function GET(request: NextRequest) {
     // Temporarily remove authentication to debug
     // const user = await requireAuth(request)
     
-    const images = await sql`
-      SELECT * FROM images 
-      ORDER BY created_at DESC
-    `
-
+    console.log('Attempting to fetch images from Supabase...')
+    
+    const { data: images, error } = await supabase
+      .from('images')
+      .select('*')
+      .order('created_at', { ascending: false })
+    
+    if (error) {
+      console.error('Supabase error:', error)
+      return NextResponse.json(
+        { success: false, error: 'Failed to fetch images' },
+        { status: 500 }
+      )
+    }
+    
+    console.log('Successfully fetched images:', images?.length || 0)
+    
     return NextResponse.json({
       success: true,
       images: images || []
@@ -70,15 +81,24 @@ export async function POST(request: NextRequest) {
 
         console.log('Public URL:', urlData.publicUrl)
 
-        // Insert into images table
+        // Insert into images table using Supabase
         try {
-          const [imageData] = await sql`
-            INSERT INTO images (filename, url, size, type)
-            VALUES (${fileName}, ${urlData.publicUrl}, ${image.size}, ${image.type})
-            RETURNING *
-          `
+          const { data: imageData, error: insertError } = await supabase
+            .from('images')
+            .insert({
+              filename: fileName,
+              url: urlData.publicUrl,
+              size: image.size,
+              type: image.type,
+              user_id: null // Set to null since we're not using authentication
+            })
+            .select()
+            .single()
 
-          if (imageData) {
+          if (insertError) {
+            console.error('Database insert error:', insertError)
+            results.errors.push(`Image insert error: ${insertError.message}`)
+          } else if (imageData) {
             console.log('Image inserted into database:', imageData)
             results.images.push(imageData)
           }

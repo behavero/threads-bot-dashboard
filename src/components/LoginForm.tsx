@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import Image from 'next/image'
 
 interface LoginFormProps {
   onSuccess?: () => void
@@ -61,9 +62,16 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
 
              <div className="modern-card p-12 w-full max-w-lg relative z-10 floating">
                <div className="text-center mb-12">
-                 <h1 className="text-5xl font-bold gradient-text mb-4">
-                   Threads Bot
-                 </h1>
+                 <div className="flex justify-center mb-6">
+                   <Image
+                     src="/logo.svg"
+                     alt="Threadly Logo"
+                     width={300}
+                     height={75}
+                     priority
+                     className="max-h-20 h-auto w-auto text-white"
+                   />
+                 </div>
                  <p className="text-lg text-gray-300">
                    {isSignUp ? 'Create your account' : 'Sign in to your account'}
                  </p>
