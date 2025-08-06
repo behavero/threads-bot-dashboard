@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import EngagementChart from '@/components/EngagementChart';
 
 export default function HomePage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -163,6 +164,13 @@ function DashboardContent() {
               <div className="text-sm text-red-600">Errors</div>
             </div>
           </div>
+        </div>
+      </div>
+      
+      {/* Engagement Analytics */}
+      <div className="bg-white shadow rounded-lg">
+        <div className="px-4 py-5 sm:p-6">
+          <EngagementChart />
         </div>
       </div>
     </div>

@@ -12,4 +12,7 @@ psycopg2-binary==2.9.7
 APScheduler==3.10.4
 
 # Utilities
-python-dateutil==2.8.2 
+python-dateutil==2.8.2
+
+# Async support
+aiohttp==3.9.1 
