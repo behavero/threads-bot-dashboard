@@ -46,21 +46,30 @@ export async function POST(request: NextRequest) {
     // Handle images
     for (const image of images) {
       try {
+        console.log('Processing image:', image.name, 'Size:', image.size)
+        
         // Upload to Supabase Storage
         const fileName = `${Date.now()}-${image.name}`
+        console.log('Uploading to Supabase Storage with filename:', fileName)
+        
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('images')
           .upload(fileName, image)
 
         if (uploadError) {
+          console.error('Supabase Storage upload error:', uploadError)
           results.errors.push(`Image upload error: ${uploadError.message}`)
           continue
         }
 
+        console.log('Upload successful, getting public URL...')
+        
         // Get public URL
         const { data: urlData } = supabase.storage
           .from('images')
           .getPublicUrl(fileName)
+
+        console.log('Public URL:', urlData.publicUrl)
 
         // Insert into images table
         try {
@@ -71,12 +80,15 @@ export async function POST(request: NextRequest) {
           `
 
           if (imageData) {
+            console.log('Image data inserted successfully:', imageData.id)
             results.images.push(imageData)
           }
         } catch (insertError) {
+          console.error('Database insert error:', insertError)
           results.errors.push(`Image insert error: ${insertError}`)
         }
       } catch (error) {
+        console.error('General image processing error:', error)
         results.errors.push(`Image error: ${error}`)
       }
     }
