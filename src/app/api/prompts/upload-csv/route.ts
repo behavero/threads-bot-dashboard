@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/auth-server'
-import sql from '@/lib/database'
+import { supabase } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
   try {
@@ -8,62 +8,45 @@ export async function POST(request: NextRequest) {
     // const user = await requireAuth(request)
     const formData = await request.formData()
     const file = formData.get('file') as File
-
+    
     if (!file) {
       return NextResponse.json(
         { success: false, error: 'No file provided' },
         { status: 400 }
       )
     }
-
-    // Read the file content
+    
     const text = await file.text()
     const lines = text.split('\n').filter(line => line.trim())
-
-    let successCount = 0
-    let errorCount = 0
-    const errors: string[] = []
-
-    // Process each line
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim()
-      if (!line) continue
-
-      try {
-        // Parse CSV line (simple comma-separated)
-        const parts = line.split(',').map(part => part.trim())
-        const text = parts[0] || ''
-        const category = parts[1] || 'general'
-        const tags = parts[2] ? parts[2].split(';').map(tag => tag.trim()).filter(tag => tag) : []
-
-        if (!text) {
-          errorCount++
-          errors.push(`Line ${i + 1}: Empty text`)
-          continue
-        }
-
-        // Insert into database
-        await sql`
-          INSERT INTO captions (
-            text, category, tags, used
-          ) VALUES (
-            ${text}, ${category}, ${tags}, false
-          )
-        `
-
-        successCount++
-      } catch (error) {
-        errorCount++
-        errors.push(`Line ${i + 1}: ${error}`)
+    
+    const captions = lines.map(line => {
+      const [text, category = 'general', tags = ''] = line.split(',').map(s => s.trim())
+      return {
+        text: text,
+        category: category,
+        tags: tags ? tags.split('|').map(t => t.trim()) : []
       }
+    })
+    
+    // Insert into database using Supabase
+    const { data, error } = await supabase
+      .from('captions')
+      .insert(captions)
+      .select()
+    
+    if (error) {
+      console.error('Supabase insert error:', error)
+      return NextResponse.json(
+        { success: false, error: 'Failed to upload captions' },
+        { status: 500 }
+      )
     }
-
+    
     return NextResponse.json({
       success: true,
-      count: successCount,
-      errors: errors.length > 0 ? errors : undefined
+      message: `Successfully uploaded ${captions.length} captions`,
+      captions: data
     })
-
   } catch (error) {
     console.error('Error uploading CSV:', error)
     return NextResponse.json(
