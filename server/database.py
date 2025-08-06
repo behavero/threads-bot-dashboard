@@ -22,8 +22,19 @@ class DatabaseManager:
         
         # Try to initialize Supabase client (optional)
         try:
-            self.supabase: Client = create_client(self.supabase_url, self.supabase_key)
+            # Use minimal client initialization to avoid proxy issues
+            self.supabase: Client = create_client(
+                self.supabase_url, 
+                self.supabase_key,
+                options={
+                    'auth': {
+                        'autoRefreshToken': False,
+                        'persistSession': False
+                    }
+                }
+            )
             self.use_supabase_client = True
+            print("✅ Supabase client initialized successfully")
         except Exception as e:
             print(f"⚠️ Supabase client initialization failed, using HTTP requests: {e}")
             self.use_supabase_client = False
@@ -75,16 +86,17 @@ class DatabaseManager:
     def get_active_accounts(self) -> List[Dict]:
         """Get all active accounts"""
         try:
-            if hasattr(self, 'use_supabase_client') and self.use_supabase_client:
-                response = self.supabase.table("accounts").select("*").eq("status", "enabled").execute()
-                return response.data if response.data else []
+            # Always use HTTP requests for backend operations (more reliable)
+            response = requests.get(
+                f"{self.supabase_url}/rest/v1/accounts",
+                params={"status": "eq.enabled"},
+                headers=self.headers
+            )
+            if response.status_code == 200:
+                return response.json()
             else:
-                response = requests.get(
-                    f"{self.supabase_url}/rest/v1/accounts",
-                    params={"status": "eq.enabled"},
-                    headers=self.headers
-                )
-                return response.json() if response.status_code == 200 else []
+                print(f"❌ HTTP {response.status_code}: {response.text}")
+                return []
         except Exception as e:
             print(f"❌ Error fetching accounts: {e}")
             return []
@@ -152,8 +164,12 @@ class DatabaseManager:
             if user_id:
                 account_data["user_id"] = user_id
                 
-            response = self.supabase.table("accounts").insert(account_data).execute()
-            return len(response.data) > 0
+            response = requests.post(
+                f"{self.supabase_url}/rest/v1/accounts",
+                json=account_data,
+                headers=self.headers
+            )
+            return response.status_code == 201
         except Exception as e:
             print(f"❌ Error adding account: {e}")
             return False
@@ -165,8 +181,12 @@ class DatabaseManager:
             if user_id:
                 caption_data["user_id"] = user_id
                 
-            response = self.supabase.table("captions").insert(caption_data).execute()
-            return len(response.data) > 0
+            response = requests.post(
+                f"{self.supabase_url}/rest/v1/captions",
+                json=caption_data,
+                headers=self.headers
+            )
+            return response.status_code == 201
         except Exception as e:
             print(f"❌ Error adding caption: {e}")
             return False
@@ -178,8 +198,12 @@ class DatabaseManager:
             if user_id:
                 image_data["user_id"] = user_id
                 
-            response = self.supabase.table("images").insert(image_data).execute()
-            return len(response.data) > 0
+            response = requests.post(
+                f"{self.supabase_url}/rest/v1/images",
+                json=image_data,
+                headers=self.headers
+            )
+            return response.status_code == 201
         except Exception as e:
             print(f"❌ Error adding image: {e}")
             return False
@@ -187,15 +211,15 @@ class DatabaseManager:
     def get_all_captions(self) -> List[Dict]:
         """Get all captions"""
         try:
-            if hasattr(self, 'use_supabase_client') and self.use_supabase_client:
-                response = self.supabase.table("captions").select("*").execute()
-                return response.data if response.data else []
+            response = requests.get(
+                f"{self.supabase_url}/rest/v1/captions",
+                headers=self.headers
+            )
+            if response.status_code == 200:
+                return response.json()
             else:
-                response = requests.get(
-                    f"{self.supabase_url}/rest/v1/captions",
-                    headers=self.headers
-                )
-                return response.json() if response.status_code == 200 else []
+                print(f"❌ HTTP {response.status_code}: {response.text}")
+                return []
         except Exception as e:
             print(f"❌ Error fetching captions: {e}")
             return []
@@ -203,15 +227,15 @@ class DatabaseManager:
     def get_all_images(self) -> List[Dict]:
         """Get all images"""
         try:
-            if hasattr(self, 'use_supabase_client') and self.use_supabase_client:
-                response = self.supabase.table("images").select("*").execute()
-                return response.data if response.data else []
+            response = requests.get(
+                f"{self.supabase_url}/rest/v1/images",
+                headers=self.headers
+            )
+            if response.status_code == 200:
+                return response.json()
             else:
-                response = requests.get(
-                    f"{self.supabase_url}/rest/v1/images",
-                    headers=self.headers
-                )
-                return response.json() if response.status_code == 200 else []
+                print(f"❌ HTTP {response.status_code}: {response.text}")
+                return []
         except Exception as e:
             print(f"❌ Error fetching images: {e}")
             return []
@@ -219,16 +243,16 @@ class DatabaseManager:
     def get_posting_history(self) -> List[Dict]:
         """Get posting history"""
         try:
-            if hasattr(self, 'use_supabase_client') and self.use_supabase_client:
-                response = self.supabase.table("posting_history").select("*").order("posted_at", desc=True).execute()
-                return response.data if response.data else []
+            response = requests.get(
+                f"{self.supabase_url}/rest/v1/posting_history",
+                params={"order": "posted_at.desc"},
+                headers=self.headers
+            )
+            if response.status_code == 200:
+                return response.json()
             else:
-                response = requests.get(
-                    f"{self.supabase_url}/rest/v1/posting_history",
-                    params={"order": "posted_at.desc"},
-                    headers=self.headers
-                )
-                return response.json() if response.status_code == 200 else []
+                print(f"❌ HTTP {response.status_code}: {response.text}")
+                return []
         except Exception as e:
             print(f"❌ Error fetching posting history: {e}")
             return []

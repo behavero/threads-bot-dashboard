@@ -26,6 +26,20 @@ def test_supabase_connection():
         db = DatabaseManager()
         print("✅ DatabaseManager initialized successfully")
         
+        # Test HTTP connection
+        print("\n🔗 Testing HTTP Connection...")
+        try:
+            response = requests.get(
+                f"{db.supabase_url}/rest/v1/accounts",
+                headers=db.headers
+            )
+            if response.status_code == 200:
+                print("✅ HTTP connection successful")
+            else:
+                print(f"⚠️ HTTP connection returned {response.status_code}")
+        except Exception as e:
+            print(f"❌ HTTP connection failed: {e}")
+        
         # Test table access
         print("\n📊 Testing Table Access...")
         
