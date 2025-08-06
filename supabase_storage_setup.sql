@@ -1,57 +1,98 @@
 -- Supabase Storage Setup for Threads Bot
--- Run this in your Supabase SQL Editor
+-- This script sets up the storage bucket and policies for image uploads
 
--- =============================================================================
--- STEP 1: CREATE STORAGE BUCKET FOR IMAGES
--- =============================================================================
+-- 1. Create the images bucket (if it doesn't exist)
+-- Note: This needs to be done via Supabase Dashboard or API
+-- Bucket name: 'images'
+-- Public bucket: true
+-- File size limit: 50MB
+-- Allowed MIME types: image/*
 
--- Create the images bucket
-INSERT INTO storage.buckets (id, name, public)
-VALUES ('images', 'images', true)
-ON CONFLICT (id) DO NOTHING;
+-- 2. Create storage policies for the images bucket
 
--- =============================================================================
--- STEP 2: CREATE STORAGE POLICIES
--- =============================================================================
-
--- Allow authenticated users to upload images
+-- Policy: Allow authenticated users to upload images
 CREATE POLICY "Allow authenticated users to upload images" ON storage.objects
-    FOR INSERT WITH CHECK (
-        bucket_id = 'images' 
-        AND auth.role() = 'authenticated'
-    );
+FOR INSERT WITH CHECK (
+  bucket_id = 'images' AND
+  auth.role() = 'authenticated'
+);
 
--- Allow authenticated users to view their own images
-CREATE POLICY "Allow authenticated users to view own images" ON storage.objects
-    FOR SELECT USING (
-        bucket_id = 'images' 
-        AND auth.role() = 'authenticated'
-    );
+-- Policy: Allow users to view their own uploaded images
+CREATE POLICY "Allow users to view their own images" ON storage.objects
+FOR SELECT USING (
+  bucket_id = 'images' AND
+  auth.role() = 'authenticated'
+);
 
--- Allow authenticated users to update their own images
-CREATE POLICY "Allow authenticated users to update own images" ON storage.objects
-    FOR UPDATE USING (
-        bucket_id = 'images' 
-        AND auth.role() = 'authenticated'
-    );
+-- Policy: Allow users to update their own uploaded images
+CREATE POLICY "Allow users to update their own images" ON storage.objects
+FOR UPDATE USING (
+  bucket_id = 'images' AND
+  auth.role() = 'authenticated'
+);
 
--- Allow authenticated users to delete their own images
-CREATE POLICY "Allow authenticated users to delete own images" ON storage.objects
-    FOR DELETE USING (
-        bucket_id = 'images' 
-        AND auth.role() = 'authenticated'
-    );
+-- Policy: Allow users to delete their own uploaded images
+CREATE POLICY "Allow users to delete their own images" ON storage.objects
+FOR DELETE USING (
+  bucket_id = 'images' AND
+  auth.role() = 'authenticated'
+);
 
--- Allow service role to access all images
-CREATE POLICY "Allow service role to access all images" ON storage.objects
-    FOR ALL USING (
-        bucket_id = 'images' 
-        AND auth.role() = 'service_role'
-    );
+-- 3. Enable RLS on storage.objects (if not already enabled)
+ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
 
--- =============================================================================
--- STEP 3: VERIFICATION
--- =============================================================================
+-- 4. Create a function to get user's images
+CREATE OR REPLACE FUNCTION get_user_images(user_uuid UUID)
+RETURNS TABLE (
+  id UUID,
+  name TEXT,
+  bucket_id TEXT,
+  owner UUID,
+  created_at TIMESTAMPTZ,
+  updated_at TIMESTAMPTZ,
+  last_accessed_at TIMESTAMPTZ,
+  metadata JSONB
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    o.id,
+    o.name,
+    o.bucket_id,
+    o.owner,
+    o.created_at,
+    o.updated_at,
+    o.last_accessed_at,
+    o.metadata
+  FROM storage.objects o
+  WHERE o.bucket_id = 'images' 
+    AND o.owner = user_uuid;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Check if bucket was created
-SELECT * FROM storage.buckets WHERE id = 'images'; 
+-- 5. Grant necessary permissions
+GRANT USAGE ON SCHEMA storage TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON storage.objects TO authenticated;
+
+-- 6. Create a trigger to automatically set owner on insert
+CREATE OR REPLACE FUNCTION set_storage_object_owner()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.owner = auth.uid();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Create trigger (only if it doesn't exist)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger 
+    WHERE tgname = 'set_storage_object_owner_trigger'
+  ) THEN
+    CREATE TRIGGER set_storage_object_owner_trigger
+      BEFORE INSERT ON storage.objects
+      FOR EACH ROW
+      EXECUTE FUNCTION set_storage_object_owner();
+  END IF;
+END $$; 

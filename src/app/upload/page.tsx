@@ -27,12 +27,10 @@ export default function UploadPage() {
   const [isUploading, setIsUploading] = useState(false)
   const [message, setMessage] = useState('')
   const [supabaseStatus, setSupabaseStatus] = useState<string>('')
-  const [storageStatus, setStorageStatus] = useState<string>('')
 
   useEffect(() => {
     fetchUploadedContent()
     checkSupabaseConnection()
-    checkStorageConnection()
   }, [])
 
   const checkSupabaseConnection = async () => {
@@ -46,20 +44,6 @@ export default function UploadPage() {
       }
     } catch (error) {
       setSupabaseStatus('Failed')
-    }
-  }
-
-  const checkStorageConnection = async () => {
-    try {
-      const response = await fetch('/api/test-storage')
-      const data = await response.json()
-      if (data.success) {
-        setStorageStatus('Connected')
-      } else {
-        setStorageStatus('Error: ' + data.error)
-      }
-    } catch (error) {
-      setStorageStatus('Failed')
     }
   }
 
@@ -111,11 +95,9 @@ export default function UploadPage() {
         // Refresh the content list
         await fetchUploadedContent()
       } else {
-        console.error('Upload failed:', data)
-        setMessage('Upload failed: ' + (data.error || 'Unknown error'))
+        setMessage('Upload failed: ' + data.error)
       }
     } catch (error) {
-      console.error('Upload error:', error)
       setMessage('Upload failed: ' + error)
     } finally {
       setIsUploading(false)
@@ -159,21 +141,13 @@ export default function UploadPage() {
   return (
     <div className="space-y-8">
       {/* Status Indicators */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="modern-card p-6 text-center hover:scale-105 transition-transform duration-300">
           <div className="text-3xl font-bold gradient-text mb-2">
             {supabaseStatus === 'Connected' ? '✓' : '✗'}
           </div>
           <div className="text-sm text-gray-300">Supabase Status</div>
           <div className="mt-4 w-8 h-8 bg-purple-500 rounded-full mx-auto opacity-60"></div>
-        </div>
-        
-        <div className="modern-card p-6 text-center hover:scale-105 transition-transform duration-300">
-          <div className="text-3xl font-bold gradient-text mb-2">
-            {storageStatus === 'Connected' ? '✓' : '✗'}
-          </div>
-          <div className="text-sm text-gray-300">Storage Status</div>
-          <div className="mt-4 w-8 h-8 bg-blue-500 rounded-full mx-auto opacity-60"></div>
         </div>
         
         <div className="modern-card p-6 text-center hover:scale-105 transition-transform duration-300">

@@ -46,24 +46,24 @@ export async function POST(request: NextRequest) {
     // Handle images
     for (const image of images) {
       try {
-        console.log('Processing image:', image.name, 'Size:', image.size)
+        console.log(`Processing image: ${image.name} (${image.size} bytes, ${image.type})`)
         
         // Upload to Supabase Storage
         const fileName = `${Date.now()}-${image.name}`
-        console.log('Uploading to Supabase Storage with filename:', fileName)
+        console.log(`Uploading to storage with filename: ${fileName}`)
         
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('images')
           .upload(fileName, image)
 
         if (uploadError) {
-          console.error('Supabase Storage upload error:', uploadError)
+          console.error('Storage upload error:', uploadError)
           results.errors.push(`Image upload error: ${uploadError.message}`)
           continue
         }
 
-        console.log('Upload successful, getting public URL...')
-        
+        console.log('Upload successful:', uploadData)
+
         // Get public URL
         const { data: urlData } = supabase.storage
           .from('images')
@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
           `
 
           if (imageData) {
-            console.log('Image data inserted successfully:', imageData.id)
+            console.log('Image inserted into database:', imageData)
             results.images.push(imageData)
           }
         } catch (insertError) {
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
           results.errors.push(`Image insert error: ${insertError}`)
         }
       } catch (error) {
-        console.error('General image processing error:', error)
+        console.error('General image error:', error)
         results.errors.push(`Image error: ${error}`)
       }
     }
