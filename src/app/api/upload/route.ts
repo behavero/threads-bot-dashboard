@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
+import sql from '@/lib/database'
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,20 +24,14 @@ export async function POST(request: NextRequest) {
       
       for (const caption of captionList) {
         try {
-          const { data, error } = await supabase
-            .from('captions')
-            .insert([
-              {
-                text: caption.trim(),
-                created_at: new Date().toISOString()
-              }
-            ])
-            .select()
+          const [data] = await sql`
+            INSERT INTO captions (text, created_at)
+            VALUES (${caption.trim()}, ${new Date().toISOString()})
+            RETURNING *
+          `
 
-          if (error) {
-            results.errors.push(`Caption error: ${error.message}`)
-          } else {
-            results.captions.push(data[0])
+          if (data) {
+            results.captions.push(data)
           }
         } catch (error) {
           results.errors.push(`Caption error: ${error}`)
@@ -64,23 +59,18 @@ export async function POST(request: NextRequest) {
           .getPublicUrl(fileName)
 
         // Insert into images table
-        const { data: imageData, error: insertError } = await supabase
-          .from('images')
-          .insert([
-            {
-              filename: fileName,
-              url: urlData.publicUrl,
-              size: image.size,
-              type: image.type,
-              created_at: new Date().toISOString()
-            }
-          ])
-          .select()
+        try {
+          const [imageData] = await sql`
+            INSERT INTO images (filename, url, size, type, created_at)
+            VALUES (${fileName}, ${urlData.publicUrl}, ${image.size}, ${image.type}, ${new Date().toISOString()})
+            RETURNING *
+          `
 
-        if (insertError) {
-          results.errors.push(`Image insert error: ${insertError.message}`)
-        } else {
-          results.images.push(imageData[0])
+          if (imageData) {
+            results.images.push(imageData)
+          }
+        } catch (insertError) {
+          results.errors.push(`Image insert error: ${insertError}`)
         }
       } catch (error) {
         results.errors.push(`Image error: ${error}`)
@@ -104,16 +94,16 @@ export async function POST(request: NextRequest) {
 export async function GET() {
   try {
     // Fetch existing captions and images
-    const [captionsResult, imagesResult] = await Promise.all([
-      supabase.from('captions').select('*').order('created_at', { ascending: false }),
-      supabase.from('images').select('*').order('created_at', { ascending: false })
+    const [captions, images] = await Promise.all([
+      sql`SELECT * FROM captions ORDER BY created_at DESC`,
+      sql`SELECT * FROM images ORDER BY created_at DESC`
     ])
 
     return NextResponse.json({
       success: true,
       data: {
-        captions: captionsResult.data || [],
-        images: imagesResult.data || []
+        captions: captions || [],
+        images: images || []
       }
     })
   } catch (error) {

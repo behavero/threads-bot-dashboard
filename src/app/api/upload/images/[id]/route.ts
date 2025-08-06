@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
+import sql from '@/lib/database'
 
 export async function DELETE(
   request: NextRequest,
@@ -22,14 +23,14 @@ export async function DELETE(
     }
 
     // Delete from database
-    const { error: dbError } = await supabase
-      .from('images')
-      .delete()
-      .eq('id', params.id)
-
-    if (dbError) {
+    try {
+      await sql`
+        DELETE FROM images 
+        WHERE id = ${params.id}
+      `
+    } catch (dbError) {
       return NextResponse.json(
-        { success: false, error: dbError.message },
+        { success: false, error: dbError },
         { status: 400 }
       )
     }
