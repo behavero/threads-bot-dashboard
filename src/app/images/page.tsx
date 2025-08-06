@@ -41,11 +41,17 @@ export default function ImagesPage() {
 
   const fetchUploadedImages = async () => {
     try {
+      console.log('Fetching uploaded images...')
       const response = await fetch('/api/images')
       const data = await response.json()
       
+      console.log('Images response:', data)
+      
       if (data.success) {
         setUploadedImages(data.images)
+        console.log('Images loaded:', data.images.length)
+      } else {
+        console.error('Failed to fetch images:', data.error)
       }
     } catch (error) {
       console.error('Error fetching images:', error)
@@ -55,6 +61,7 @@ export default function ImagesPage() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const fileArray = Array.from(e.target.files)
+      console.log('Selected images:', fileArray.map(f => ({ name: f.name, size: f.size, type: f.type })))
       setImages(fileArray)
     }
   }
@@ -71,10 +78,14 @@ export default function ImagesPage() {
         formData.append('images', image)
       })
 
+      console.log('Uploading images:', images.map(img => img.name))
+
       const response = await fetch('/api/images', {
         method: 'POST',
         body: formData
       })
+
+      console.log('Upload response status:', response.status)
 
       // Check if response is ok before trying to parse JSON
       if (!response.ok) {
@@ -88,6 +99,7 @@ export default function ImagesPage() {
       let data
       try {
         data = await response.json()
+        console.log('Upload response data:', data)
       } catch (jsonError) {
         const responseText = await response.text()
         console.error('JSON parsing error:', jsonError)

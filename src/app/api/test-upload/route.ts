@@ -42,3 +42,62 @@ export async function GET(request: NextRequest) {
     )
   }
 } 
+
+export async function POST(request: NextRequest) {
+  try {
+    console.log('Testing file upload to Supabase Storage...')
+    
+    const formData = await request.formData()
+    const file = formData.get('file') as File
+    
+    if (!file) {
+      return NextResponse.json({
+        success: false,
+        error: 'No file provided'
+      })
+    }
+    
+    console.log('Test file:', { name: file.name, size: file.size, type: file.type })
+    
+    // Test upload to images bucket
+    const fileName = `test-${Date.now()}-${file.name}`
+    
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('images')
+      .upload(fileName, file, {
+        cacheControl: '3600',
+        upsert: false
+      })
+    
+    console.log('Upload test response:', { uploadData, uploadError })
+    
+    if (uploadError) {
+      return NextResponse.json({
+        success: false,
+        error: uploadError.message,
+        details: uploadError
+      })
+    }
+    
+    // Get public URL
+    const { data: urlData } = supabase.storage
+      .from('images')
+      .getPublicUrl(fileName)
+    
+    console.log('Public URL:', urlData.publicUrl)
+    
+    return NextResponse.json({
+      success: true,
+      message: 'Test upload successful',
+      fileName,
+      publicUrl: urlData.publicUrl,
+      uploadData
+    })
+  } catch (error) {
+    console.error('Test upload error:', error)
+    return NextResponse.json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    })
+  }
+} 

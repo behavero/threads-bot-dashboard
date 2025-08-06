@@ -8,11 +8,15 @@ export async function GET(request: NextRequest) {
     // const user = await requireAuth(request)
     
     console.log('Attempting to fetch images from Supabase...')
+    console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
+    console.log('Supabase Key exists:', !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
     
     const { data: images, error } = await supabase
       .from('images')
       .select('*')
       .order('created_at', { ascending: false })
+    
+    console.log('Supabase images response:', { data: images, error })
     
     if (error) {
       console.error('Supabase error:', error)
@@ -23,6 +27,7 @@ export async function GET(request: NextRequest) {
     }
     
     console.log('Successfully fetched images:', images?.length || 0)
+    console.log('Sample image:', images?.[0])
     
     return NextResponse.json({
       success: true,
@@ -40,6 +45,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     console.log('POST /api/images called')
+    console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
+    console.log('Supabase Key exists:', !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
     
     // Temporarily remove authentication to debug
     // const user = await requireAuth(request)
@@ -66,9 +73,16 @@ export async function POST(request: NextRequest) {
         const fileName = `${Date.now()}-${image.name}`
         console.log(`Uploading to storage with filename: ${fileName}`)
         
+        // Check if storage bucket exists
+        const { data: buckets, error: bucketError } = await supabase.storage.listBuckets()
+        console.log('Available buckets:', buckets?.map(b => b.name))
+        
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('images')
-          .upload(fileName, image)
+          .upload(fileName, image, {
+            cacheControl: '3600',
+            upsert: false
+          })
 
         if (uploadError) {
           console.error('Storage upload error:', uploadError)
