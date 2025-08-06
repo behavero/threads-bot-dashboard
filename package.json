@@ -1,0 +1,13 @@
+{
+  "name": "threads-bot",
+  "version": "1.0.0",
+  "description": "Threads Bot with Frontend Dashboard",
+  "scripts": {
+    "build": "cd frontend && npm install && npm run build",
+    "dev": "cd frontend && npm run dev",
+    "start": "cd frontend && npm run start"
+  },
+  "dependencies": {
+    "next": "14.0.0"
+  }
+} 
