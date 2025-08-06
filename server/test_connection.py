@@ -13,12 +13,12 @@ load_dotenv()
 def test_supabase_connection():
     """Test Supabase connection and table access"""
     print("🔍 Testing Supabase Connection...")
-    
+
     try:
-        # Test environment variables
+        # Test environment variables (using new Supabase-Vercel integration)
         supabase_url = os.getenv("SUPABASE_URL")
-        supabase_key = os.getenv("SUPABASE_KEY")
-        
+        supabase_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_KEY")
+
         print(f"✅ Supabase URL: {supabase_url}")
         print(f"✅ Supabase Key: {'*' * 10}{supabase_key[-4:] if supabase_key else 'NOT SET'}")
         

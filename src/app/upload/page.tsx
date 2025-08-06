@@ -38,9 +38,13 @@ export default function UploadPage() {
 
   const checkSupabaseConnection = async () => {
     try {
-      const response = await fetch('/api/test-supabase')
+      const response = await fetch('/api/test-env')
       const data = await response.json()
-      setSupabaseStatus(data.success ? 'Connected' : 'Failed')
+      if (data.success && data.envVars.hasSupabaseUrl && data.envVars.hasSupabaseAnonKey) {
+        setSupabaseStatus('Connected')
+      } else {
+        setSupabaseStatus('Config Error')
+      }
     } catch (error) {
       setSupabaseStatus('Failed')
     }

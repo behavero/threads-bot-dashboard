@@ -6,8 +6,9 @@ from supabase import create_client, Client
 
 class DatabaseManager:
     def __init__(self):
+        # Use the new Supabase-Vercel integration variables
         self.supabase_url = os.getenv("SUPABASE_URL")
-        self.supabase_key = os.getenv("SUPABASE_KEY")
+        self.supabase_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_KEY")
         
         if not self.supabase_url or not self.supabase_key:
             raise ValueError("Supabase credentials not configured")

@@ -1,6 +1,7 @@
 import postgres from 'postgres'
 
-const connectionString = process.env.DATABASE_URL!
+// Use the new Supabase-Vercel integration variables
+const connectionString = process.env.POSTGRES_URL || process.env.DATABASE_URL!
 const sql = postgres(connectionString, {
   ssl: 'require',
   max: 10,
