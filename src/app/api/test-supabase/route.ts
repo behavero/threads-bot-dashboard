@@ -1,32 +1,38 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
-import sql from '@/lib/database'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    // Test the direct PostgreSQL connection
-    const result = await sql`SELECT 1 as test`
+    console.log('Testing Supabase connection...')
+    console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
+    console.log('Supabase Key exists:', !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
     
-    // Also test Supabase client for storage operations
+    // Test basic connection
     const { data, error } = await supabase
       .from('captions')
       .select('count')
       .limit(1)
-
+    
+    console.log('Supabase test response:', { data, error })
+    
+    if (error) {
+      return NextResponse.json({
+        success: false,
+        error: error.message,
+        details: error
+      })
+    }
+    
     return NextResponse.json({
       success: true,
-      message: 'Both PostgreSQL and Supabase connections successful',
-      postgresTest: result[0]?.test === 1,
-      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
-      hasKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      hasDatabaseUrl: !!process.env.DATABASE_URL
+      message: 'Supabase connection successful',
+      data: data
     })
-
   } catch (error) {
+    console.error('Supabase test error:', error)
     return NextResponse.json({
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-      message: 'Supabase connection test failed'
-    }, { status: 500 })
+      error: error instanceof Error ? error.message : 'Unknown error'
+    })
   }
 } 

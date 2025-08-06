@@ -6,8 +6,12 @@ export async function POST(request: NextRequest) {
   try {
     // Temporarily remove authentication to debug
     // const user = await requireAuth(request)
+    console.log('CSV upload started')
+    
     const formData = await request.formData()
     const file = formData.get('file') as File
+    
+    console.log('File received:', file ? { name: file.name, size: file.size, type: file.type } : 'No file')
     
     if (!file) {
       return NextResponse.json(
@@ -17,7 +21,10 @@ export async function POST(request: NextRequest) {
     }
     
     const text = await file.text()
+    console.log('File content preview:', text.substring(0, 200))
+    
     const lines = text.split('\n').filter(line => line.trim())
+    console.log('Number of lines:', lines.length)
     
     const captions = lines.map(line => {
       const [text, category = 'general', tags = ''] = line.split(',').map(s => s.trim())
@@ -28,11 +35,16 @@ export async function POST(request: NextRequest) {
       }
     })
     
+    console.log('Processed captions:', captions.length)
+    console.log('Sample caption:', captions[0])
+    
     // Insert into database using Supabase
     const { data, error } = await supabase
       .from('captions')
       .insert(captions)
       .select()
+    
+    console.log('Supabase insert response:', { data, error })
     
     if (error) {
       console.error('Supabase insert error:', error)

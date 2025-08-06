@@ -53,8 +53,11 @@ export default function CaptionsPage() {
 
   const fetchCaptions = async () => {
     try {
+      console.log('Fetching captions...')
       const response = await fetch('/api/prompts')
       const data = await response.json()
+
+      console.log('Captions response:', data)
 
       if (data.success) {
         // Ensure all captions have required properties with defaults
@@ -66,13 +69,18 @@ export default function CaptionsPage() {
           used: caption.used || false,
           created_at: caption.created_at || new Date().toISOString()
         }))
+        console.log('Processed captions:', processedCaptions.length)
         setCaptions(processedCaptions)
+        setError('') // Clear any previous errors
       } else {
+        console.error('Failed to fetch captions:', data.error)
         setError(data.error || 'Failed to fetch captions')
+        setCaptions([])
       }
     } catch (err) {
       console.error('Error fetching captions:', err)
       setError('Error fetching captions')
+      setCaptions([])
     } finally {
       setIsLoading(false)
     }
@@ -151,10 +159,13 @@ export default function CaptionsPage() {
 
     setIsUploadingCsv(true)
     setError('')
+    setMessage('')
 
     try {
       const formData = new FormData()
       formData.append('file', csvFile)
+
+      console.log('Uploading CSV file:', csvFile.name)
 
       const response = await fetch('/api/prompts/upload-csv', {
         method: 'POST',
@@ -162,15 +173,17 @@ export default function CaptionsPage() {
       })
 
       const data = await response.json()
+      console.log('CSV upload response:', data)
 
       if (data.success) {
         setCsvFile(null)
         await fetchCaptions()
-        setMessage(`Successfully uploaded ${data.count} captions`)
+        setMessage(data.message || `Successfully uploaded ${data.captions?.length || 0} captions`)
       } else {
         setError(data.error || 'Failed to upload CSV')
       }
     } catch (err) {
+      console.error('CSV upload error:', err)
       setError('Error uploading CSV')
     } finally {
       setIsUploadingCsv(false)

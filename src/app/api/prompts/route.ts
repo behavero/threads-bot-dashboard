@@ -8,11 +8,15 @@ export async function GET(request: NextRequest) {
     // const user = await requireAuth(request)
     
     console.log('Attempting to fetch captions from Supabase...')
+    console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
+    console.log('Supabase Key exists:', !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
     
     const { data: prompts, error } = await supabase
       .from('captions')
       .select('*')
       .order('created_at', { ascending: false })
+    
+    console.log('Supabase response:', { data: prompts, error })
     
     if (error) {
       console.error('Supabase error:', error)
@@ -35,6 +39,7 @@ export async function GET(request: NextRequest) {
     }))
     
     console.log('Successfully fetched captions:', processedPrompts.length)
+    console.log('Sample caption:', processedPrompts[0])
     
     return NextResponse.json({
       success: true,
