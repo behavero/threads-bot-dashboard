@@ -29,10 +29,22 @@ export default function UploadPage() {
   const [uploadedImages, setUploadedImages] = useState<Image[]>([])
   const [isUploading, setIsUploading] = useState(false)
   const [message, setMessage] = useState('')
+  const [supabaseStatus, setSupabaseStatus] = useState<string>('')
 
   useEffect(() => {
     fetchUploadedContent()
+    checkSupabaseConnection()
   }, [])
+
+  const checkSupabaseConnection = async () => {
+    try {
+      const response = await fetch('/api/test-supabase')
+      const data = await response.json()
+      setSupabaseStatus(data.success ? 'Connected' : 'Failed')
+    } catch (error) {
+      setSupabaseStatus('Failed')
+    }
+  }
 
   const fetchUploadedContent = async () => {
     try {
@@ -127,7 +139,16 @@ export default function UploadPage() {
 
   return (
     <div className="container mx-auto p-6 max-w-4xl">
-      <h1 className="text-3xl font-bold mb-6">Upload Content</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Upload Content</h1>
+        <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+          supabaseStatus === 'Connected' 
+            ? 'bg-green-100 text-green-800' 
+            : 'bg-red-100 text-red-800'
+        }`}>
+          Supabase: {supabaseStatus || 'Checking...'}
+        </div>
+      </div>
       
       <Card className="mb-8">
         <CardHeader>

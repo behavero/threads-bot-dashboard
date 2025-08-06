@@ -1,8 +1,9 @@
 {
   "/_not-found": "app/_not-found.js",
+  "/api/test-supabase/route": "app/api/test-supabase/route.js",
   "/api/upload/captions/[id]/route": "app/api/upload/captions/[id]/route.js",
-  "/api/upload/images/[id]/route": "app/api/upload/images/[id]/route.js",
   "/api/upload/route": "app/api/upload/route.js",
-  "/upload/page": "app/upload/page.js",
-  "/page": "app/page.js"
+  "/api/upload/images/[id]/route": "app/api/upload/images/[id]/route.js",
+  "/page": "app/page.js",
+  "/upload/page": "app/upload/page.js"
 }
