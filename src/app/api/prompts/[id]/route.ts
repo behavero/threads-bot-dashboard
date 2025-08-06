@@ -21,7 +21,15 @@ export async function PUT(
         used = ${used || false},
         updated_at = NOW()
       WHERE id = ${params.id}
-      RETURNING *
+      RETURNING 
+        id,
+        user_id,
+        text,
+        COALESCE(category, 'general') as category,
+        COALESCE(tags, '{}') as tags,
+        used,
+        created_at,
+        COALESCE(updated_at, created_at) as updated_at
     `
     
     if (!prompt) {
@@ -60,7 +68,15 @@ export async function DELETE(
     const [prompt] = await sql`
       DELETE FROM captions
       WHERE id = ${params.id}
-      RETURNING *
+      RETURNING 
+        id,
+        user_id,
+        text,
+        COALESCE(category, 'general') as category,
+        COALESCE(tags, '{}') as tags,
+        used,
+        created_at,
+        COALESCE(updated_at, created_at) as updated_at
     `
     
     if (!prompt) {

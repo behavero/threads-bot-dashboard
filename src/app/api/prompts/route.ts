@@ -8,7 +8,16 @@ export async function GET(request: NextRequest) {
     // const user = await requireAuth(request)
     
     const prompts = await sql`
-      SELECT * FROM captions 
+      SELECT 
+        id,
+        user_id,
+        text,
+        COALESCE(category, 'general') as category,
+        COALESCE(tags, '{}') as tags,
+        used,
+        created_at,
+        COALESCE(updated_at, created_at) as updated_at
+      FROM captions 
       ORDER BY created_at DESC
     `
     

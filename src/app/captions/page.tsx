@@ -57,11 +57,21 @@ export default function CaptionsPage() {
       const data = await response.json()
 
       if (data.success) {
-        setCaptions(data.prompts)
+        // Ensure all captions have required properties with defaults
+        const processedCaptions = data.prompts.map((caption: any) => ({
+          id: caption.id,
+          text: caption.text || '',
+          category: caption.category || 'general',
+          tags: Array.isArray(caption.tags) ? caption.tags : [],
+          used: caption.used || false,
+          created_at: caption.created_at || new Date().toISOString()
+        }))
+        setCaptions(processedCaptions)
       } else {
         setError(data.error || 'Failed to fetch captions')
       }
     } catch (err) {
+      console.error('Error fetching captions:', err)
       setError('Error fetching captions')
     } finally {
       setIsLoading(false)
@@ -108,9 +118,9 @@ export default function CaptionsPage() {
   const handleEdit = (caption: Caption) => {
     setEditingCaption(caption)
     setFormData({
-      text: caption.text,
-      category: caption.category,
-      tags: caption.tags.join(', ')
+      text: caption.text || '',
+      category: caption.category || 'general',
+      tags: Array.isArray(caption.tags) ? caption.tags.join(', ') : ''
     })
     setShowModal(true)
   }
