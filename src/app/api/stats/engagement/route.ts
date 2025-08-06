@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requireAuth } from '@/lib/auth-server'
 
 export async function GET(request: NextRequest) {
   try {
+    // Require authentication
+    await requireAuth(request)
+    
     const { searchParams } = new URL(request.url)
     const days = searchParams.get('days') || '7'
     
@@ -17,6 +21,14 @@ export async function GET(request: NextRequest) {
     
   } catch (error) {
     console.error('Error fetching engagement stats:', error)
+    
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+    
     return NextResponse.json(
       { 
         success: false, 

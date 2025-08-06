@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import sql from '@/lib/database'
+import { requireAuth } from '@/lib/auth-server'
 
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
+    // Require authentication
+    await requireAuth(request)
+    
     const body = await request.json()
     const { filename } = body
 

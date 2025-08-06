@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import sql from '@/lib/database'
+import { requireAuth } from '@/lib/auth-server'
 
 export async function POST(request: NextRequest) {
   try {
+    // Require authentication
+    await requireAuth(request)
+    
     const formData = await request.formData()
     const captions = formData.get('captions') as string
     const images = formData.getAll('images') as File[]
@@ -91,8 +95,11 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    // Require authentication
+    await requireAuth(request)
+    
     // Fetch existing captions and images
     const [captions, images] = await Promise.all([
       sql`SELECT * FROM captions ORDER BY created_at DESC`,

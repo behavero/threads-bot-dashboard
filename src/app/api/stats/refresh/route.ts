@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { requireAuth } from '@/lib/auth-server'
 
 export async function POST(request: NextRequest) {
   try {
+    // Require authentication
+    await requireAuth(request)
+    
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://threads-bot-dashboard-3.onrender.com'
     const response = await fetch(`${backendUrl}/api/stats/refresh`, {
       method: 'POST',
@@ -19,6 +23,14 @@ export async function POST(request: NextRequest) {
     
   } catch (error) {
     console.error('Error refreshing engagement data:', error)
+    
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+    
     return NextResponse.json(
       { 
         success: false, 
