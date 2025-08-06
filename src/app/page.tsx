@@ -11,8 +11,10 @@ export default function HomePage() {
   useEffect(() => {
     if (!loading) {
       if (user) {
+        console.log('User authenticated, redirecting to dashboard');
         router.push('/dashboard');
       } else {
+        console.log('No user, redirecting to login');
         router.push('/login');
       }
     }
@@ -22,14 +24,21 @@ export default function HomePage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto"></div>
+          <p className="mt-4 text-gray-300">Loading authentication...</p>
         </div>
       </div>
     );
   }
 
-  return null;
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto"></div>
+        <p className="mt-4 text-gray-300">Redirecting...</p>
+      </div>
+    </div>
+  );
 }
 
 
