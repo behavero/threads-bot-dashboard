@@ -40,23 +40,17 @@ export default function DashboardPage() {
                <header className="modern-nav relative z-10">
                  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                    <div className="flex justify-between items-center h-20">
-                     <div className="flex items-center space-x-8">
+                     <div className="flex items-center">
                        <Link href="/" className="flex items-center">
                          <Image
                            src="/logo.svg"
                            alt="Threadly Logo"
-                           width={160}
-                           height={40}
+                           width={200}
+                           height={50}
                            priority
-                           className="max-h-10 h-auto w-auto text-black dark:text-white"
+                           className="max-h-16 h-auto w-auto text-black dark:text-white"
                          />
                        </Link>
-                       <div className="hidden md:flex items-center space-x-8 text-sm">
-                         <span className="text-gray-300">DASHBOARD</span>
-                         <span className="text-gray-300">ACCOUNTS</span>
-                         <span className="text-gray-300">CAPTIONS</span>
-                         <span className="text-gray-300">SCHEDULE</span>
-                       </div>
                      </div>
                      <div className="flex items-center space-x-6">
                        <span className="text-sm text-gray-300">
