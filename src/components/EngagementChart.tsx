@@ -20,6 +20,7 @@ interface EngagementStats {
   success: boolean
   data: EngagementData[]
   total_days: number
+  error?: string
 }
 
 export default function EngagementChart() {
@@ -62,7 +63,7 @@ export default function EngagementChart() {
         }
       })
       
-      const result = await response.json()
+      const result: { success: boolean; error?: string } = await response.json()
       
       if (result.success) {
         // Fetch updated data
