@@ -76,7 +76,25 @@ export default function ImagesPage() {
         body: formData
       })
 
-      const data = await response.json()
+      // Check if response is ok before trying to parse JSON
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('Server error response:', errorText)
+        setMessage(`Upload failed: Server returned ${response.status} - ${errorText.substring(0, 100)}`)
+        return
+      }
+
+      // Try to parse JSON response
+      let data
+      try {
+        data = await response.json()
+      } catch (jsonError) {
+        const responseText = await response.text()
+        console.error('JSON parsing error:', jsonError)
+        console.error('Response text:', responseText)
+        setMessage(`Upload failed: Invalid JSON response - ${responseText.substring(0, 100)}`)
+        return
+      }
 
       if (data.success) {
         setMessage('Upload successful!')
@@ -84,10 +102,11 @@ export default function ImagesPage() {
         // Refresh the content list
         await fetchUploadedImages()
       } else {
-        setMessage('Upload failed: ' + data.error)
+        setMessage('Upload failed: ' + (data.error || 'Unknown error'))
       }
     } catch (error) {
-      setMessage('Upload failed: ' + error)
+      console.error('Upload error:', error)
+      setMessage('Upload failed: ' + (error instanceof Error ? error.message : String(error)))
     } finally {
       setIsUploading(false)
     }

@@ -39,11 +39,15 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('POST /api/images called')
+    
     // Temporarily remove authentication to debug
     // const user = await requireAuth(request)
     
     const formData = await request.formData()
     const images = formData.getAll('images') as File[]
+
+    console.log(`Processing ${images.length} images`)
 
     const results: {
       images: any[];
@@ -111,6 +115,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    console.log('Returning results:', results)
+
     return NextResponse.json({
       success: true,
       data: results
@@ -119,7 +125,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Upload error:', error)
     return NextResponse.json(
-      { success: false, error: 'Upload failed' },
+      { success: false, error: `Upload failed: ${error instanceof Error ? error.message : String(error)}` },
       { status: 500 }
     )
   }
