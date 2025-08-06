@@ -132,31 +132,31 @@ export default function ImagesPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       {/* Status Indicators */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="modern-card p-6 text-center hover:scale-105 transition-transform duration-300">
-          <div className="text-3xl font-bold gradient-text mb-2">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+        <div className="modern-card p-4 sm:p-6 text-center hover:scale-105 transition-transform duration-300">
+          <div className="text-2xl sm:text-3xl font-bold gradient-text mb-2">
             {supabaseStatus === 'Connected' ? '✓' : '✗'}
           </div>
-          <div className="text-sm text-gray-300">Supabase Status</div>
+          <div className="text-xs sm:text-sm text-gray-300">Supabase Status</div>
         </div>
         
-        <div className="modern-card p-6 text-center hover:scale-105 transition-transform duration-300">
-          <div className="text-3xl font-bold gradient-text mb-2">{uploadedImages.length}</div>
-          <div className="text-sm text-gray-300">Uploaded Images</div>
+        <div className="modern-card p-4 sm:p-6 text-center hover:scale-105 transition-transform duration-300">
+          <div className="text-2xl sm:text-3xl font-bold gradient-text mb-2">{uploadedImages.length}</div>
+          <div className="text-xs sm:text-sm text-gray-300">Uploaded Images</div>
         </div>
         
-        <div className="modern-card p-6 text-center hover:scale-105 transition-transform duration-300">
-          <div className="text-3xl font-bold gradient-text mb-2">{images.length}</div>
-          <div className="text-sm text-gray-300">Selected Images</div>
+        <div className="modern-card p-4 sm:p-6 text-center hover:scale-105 transition-transform duration-300">
+          <div className="text-2xl sm:text-3xl font-bold gradient-text mb-2">{images.length}</div>
+          <div className="text-xs sm:text-sm text-gray-300">Selected Images</div>
         </div>
       </div>
 
       {/* Upload Form */}
-      <div className="modern-card p-8">
-        <h3 className="text-2xl font-bold text-white mb-6">Upload Images</h3>
-        <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="modern-card p-6 sm:p-8">
+        <h3 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">Upload Images</h3>
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
           <div className="space-y-2">
             <label htmlFor="images" className="text-sm font-medium text-gray-300">
               Select Images
@@ -167,17 +167,17 @@ export default function ImagesPage() {
               multiple
               accept=".png,.jpg,.jpeg,.gif,.webp"
               onChange={handleImageChange}
-              className="w-full px-4 py-3 bg-transparent border border-gray-600 rounded-lg text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-purple-600 file:text-white hover:file:bg-purple-700 transition-colors"
+              className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-transparent border border-gray-600 rounded-lg text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs sm:file:text-sm file:font-medium file:bg-purple-600 file:text-white hover:file:bg-purple-700 transition-colors"
             />
             {images.length > 0 && (
-              <div className="mt-2 text-sm text-gray-400">
+              <div className="mt-2 text-xs sm:text-sm text-gray-400">
                 Selected {images.length} file(s): {images.map(img => img.name).join(', ')}
               </div>
             )}
           </div>
           
           {message && (
-            <div className={`p-3 rounded-lg ${
+            <div className={`p-3 rounded-lg text-sm sm:text-base ${
               message.includes('successful') 
                 ? 'bg-green-500/10 text-green-400 border border-green-500/30' 
                 : 'bg-red-500/10 text-red-400 border border-red-500/30'
@@ -188,7 +188,7 @@ export default function ImagesPage() {
           
           <button 
             type="submit" 
-            className="modern-button px-6 py-3 glow-on-hover" 
+            className="modern-button px-4 sm:px-6 py-2 sm:py-3 glow-on-hover w-full sm:w-auto" 
             disabled={isUploading || images.length === 0}
           >
             {isUploading ? 'Uploading...' : 'Upload Images'}
@@ -198,25 +198,25 @@ export default function ImagesPage() {
 
       {/* Uploaded Images */}
       {uploadedImages.length > 0 && (
-        <div className="modern-card p-8">
-          <h3 className="text-2xl font-bold text-white mb-6">Uploaded Images</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="modern-card p-6 sm:p-8">
+          <h3 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">Uploaded Images</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
             {uploadedImages.map((image) => (
               <div key={image.id} className="relative group">
                 <img
                   src={image.url}
                   alt={image.filename}
-                  className="w-full h-48 object-cover rounded-lg border border-gray-700"
+                  className="w-full h-32 sm:h-48 object-cover rounded-lg border border-gray-700"
                 />
                 <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 flex items-center justify-center rounded-lg">
                   <button
                     onClick={() => handleDeleteImage(image.id, image.filename)}
-                    className="modern-button px-3 py-1 text-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="modern-button px-3 py-1 text-xs sm:text-sm opacity-0 group-hover:opacity-100 transition-opacity"
                   >
                     Delete
                   </button>
                 </div>
-                <div className="mt-2 text-xs text-gray-400">
+                <div className="mt-2 text-xs text-gray-400 truncate">
                   {image.filename}
                 </div>
               </div>
@@ -226,10 +226,10 @@ export default function ImagesPage() {
       )}
 
       {uploadedImages.length === 0 && (
-        <div className="modern-card p-12 text-center">
-          <div className="text-6xl mb-4">🖼️</div>
-          <h3 className="text-xl font-semibold text-white mb-2">No Images Yet</h3>
-          <p className="text-gray-300 mb-6">Upload your first image to start building your content library</p>
+        <div className="modern-card p-8 sm:p-12 text-center">
+          <div className="text-4xl sm:text-6xl mb-4">🖼️</div>
+          <h3 className="text-lg sm:text-xl font-semibold text-white mb-2">No Images Yet</h3>
+          <p className="text-gray-300 mb-6 text-sm sm:text-base">Upload your first image to start building your content library</p>
         </div>
       )}
     </div>

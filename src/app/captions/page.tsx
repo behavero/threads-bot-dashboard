@@ -235,29 +235,29 @@ export default function CaptionsPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-3xl font-bold text-white mb-2">Content Captions</h2>
-          <p className="text-gray-300">Manage your posting captions and content</p>
+          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">Content Captions</h2>
+          <p className="text-gray-300 text-sm sm:text-base">Manage your posting captions and content</p>
         </div>
         <button
           onClick={openAddModal}
-          className="modern-button px-6 py-3 glow-on-hover"
+          className="modern-button px-4 sm:px-6 py-2 sm:py-3 glow-on-hover w-full sm:w-auto"
         >
           Add Caption
         </button>
       </div>
 
       {/* Category Filter */}
-      <div className="modern-card p-6">
+      <div className="modern-card p-4 sm:p-6">
         <div className="flex flex-wrap gap-2">
           {categories.map((category) => (
             <button
               key={category}
               onClick={() => setSelectedCategory(category)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
                 selectedCategory === category
                   ? 'bg-purple-600 text-white'
                   : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
@@ -272,19 +272,19 @@ export default function CaptionsPage() {
       {/* Messages */}
       {error && (
         <div className="modern-card p-4 border border-red-500/30">
-          <div className="text-red-400">{error}</div>
+          <div className="text-red-400 text-sm sm:text-base">{error}</div>
         </div>
       )}
       
       {message && (
         <div className="modern-card p-4 border border-green-500/30">
-          <div className="text-green-400">{message}</div>
+          <div className="text-green-400 text-sm sm:text-base">{message}</div>
         </div>
       )}
 
       {/* CSV Upload */}
-      <div className="modern-card p-6">
-        <h3 className="text-xl font-bold text-white mb-4">Bulk Upload Captions</h3>
+      <div className="modern-card p-4 sm:p-6">
+        <h3 className="text-lg sm:text-xl font-bold text-white mb-4">Bulk Upload Captions</h3>
         <form onSubmit={handleCsvUpload} className="space-y-4">
           <div className="space-y-2">
             <label htmlFor="csvFile" className="text-sm font-medium text-gray-300">
@@ -295,7 +295,7 @@ export default function CaptionsPage() {
               type="file"
               accept=".csv,.txt"
               onChange={handleCsvChange}
-              className="w-full px-4 py-3 bg-transparent border border-gray-600 rounded-lg text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-purple-600 file:text-white hover:file:bg-purple-700 transition-colors"
+              className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-transparent border border-gray-600 rounded-lg text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs sm:file:text-sm file:font-medium file:bg-purple-600 file:text-white hover:file:bg-purple-700 transition-colors"
             />
             <p className="text-xs text-gray-400">
               CSV format: text,category,tags (one caption per line)
@@ -311,7 +311,7 @@ export default function CaptionsPage() {
           <button
             type="submit"
             disabled={!csvFile || isUploadingCsv}
-            className="modern-button px-6 py-3 glow-on-hover"
+            className="modern-button px-4 sm:px-6 py-2 sm:py-3 glow-on-hover w-full sm:w-auto"
           >
             {isUploadingCsv ? 'Uploading...' : 'Upload CSV'}
           </button>
@@ -320,10 +320,10 @@ export default function CaptionsPage() {
 
       {/* Captions Grid */}
       {filteredCaptions.length === 0 ? (
-        <div className="modern-card p-12 text-center">
-          <div className="text-6xl mb-4">💬</div>
-          <h3 className="text-xl font-semibold text-white mb-2">No Captions Yet</h3>
-          <p className="text-gray-300 mb-6">Add your first caption to start creating content</p>
+        <div className="modern-card p-8 sm:p-12 text-center">
+          <div className="text-4xl sm:text-6xl mb-4">💬</div>
+          <h3 className="text-lg sm:text-xl font-semibold text-white mb-2">No Captions Yet</h3>
+          <p className="text-gray-300 mb-6 text-sm sm:text-base">Add your first caption to start creating content</p>
           <button
             onClick={openAddModal}
             className="modern-button px-6 py-3 glow-on-hover"
@@ -332,25 +332,25 @@ export default function CaptionsPage() {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
           {filteredCaptions.map((caption) => (
-            <div key={caption.id} className="modern-card p-6 hover:scale-105 transition-transform duration-300">
+            <div key={caption.id} className="modern-card p-4 sm:p-6 hover:scale-105 transition-transform duration-300">
               <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="text-lg font-bold text-white mb-2">{caption.text.substring(0, 50)}...</h3>
-                  <p className="text-gray-400 text-sm">{caption.category}</p>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-base sm:text-lg font-bold text-white mb-2 truncate">{caption.text.substring(0, 50)}...</h3>
+                  <p className="text-gray-400 text-xs sm:text-sm">{caption.category}</p>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 ml-2">
                   <button
                     onClick={() => handleToggleUsed(caption)}
-                    className={`w-12 h-6 rounded-full transition-colors ${
+                    className={`w-10 sm:w-12 h-6 rounded-full transition-colors ${
                       caption.used
                         ? 'bg-green-500'
                         : 'bg-gray-600'
                     }`}
                   >
-                    <div className={`w-4 h-4 bg-white rounded-full transition-transform ${
-                      caption.used ? 'translate-x-6' : 'translate-x-1'
+                    <div className={`w-3 sm:w-4 h-3 sm:h-4 bg-white rounded-full transition-transform ${
+                      caption.used ? 'translate-x-4 sm:translate-x-6' : 'translate-x-1'
                     }`}></div>
                   </button>
                 </div>
@@ -370,7 +370,7 @@ export default function CaptionsPage() {
               )}
 
               <div className="space-y-2 mb-4">
-                <div className="flex justify-between text-sm">
+                <div className="flex justify-between text-xs sm:text-sm">
                   <span className="text-gray-400">Status:</span>
                   <span className={`font-medium ${
                     caption.used ? 'text-green-400' : 'text-red-400'
@@ -378,7 +378,7 @@ export default function CaptionsPage() {
                     {caption.used ? 'Used' : 'Unused'}
                   </span>
                 </div>
-                <div className="flex justify-between text-sm">
+                <div className="flex justify-between text-xs sm:text-sm">
                   <span className="text-gray-400">Created:</span>
                   <span className="text-gray-300">
                     {new Date(caption.created_at).toLocaleDateString()}
@@ -389,13 +389,13 @@ export default function CaptionsPage() {
               <div className="flex space-x-2">
                 <button
                   onClick={() => handleEdit(caption)}
-                  className="modern-button px-3 py-1 text-sm flex-1"
+                  className="modern-button px-3 py-1 text-xs sm:text-sm flex-1"
                 >
                   Edit
                 </button>
                 <button
                   onClick={() => handleDelete(caption.id)}
-                  className="modern-button px-3 py-1 text-sm bg-red-600 hover:bg-red-700"
+                  className="modern-button px-3 py-1 text-xs sm:text-sm bg-red-600 hover:bg-red-700"
                 >
                   Delete
                 </button>
@@ -407,15 +407,15 @@ export default function CaptionsPage() {
 
       {/* Add/Edit Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="modern-card p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="modern-card p-6 sm:p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-bold text-white">
+              <h3 className="text-xl sm:text-2xl font-bold text-white">
                 {editingCaption ? 'Edit Caption' : 'Add New Caption'}
               </h3>
               <button
                 onClick={() => setShowModal(false)}
-                className="text-gray-400 hover:text-white"
+                className="text-gray-400 hover:text-white text-xl"
               >
                 ✕
               </button>
@@ -431,12 +431,12 @@ export default function CaptionsPage() {
                   onChange={(e) => setFormData({...formData, text: e.target.value})}
                   required
                   rows={4}
-                  className="w-full px-4 py-3 bg-transparent border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 transition-colors resize-none"
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-transparent border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 transition-colors resize-none text-sm sm:text-base"
                   placeholder="Enter your caption text..."
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-300">
                     Category
@@ -444,7 +444,7 @@ export default function CaptionsPage() {
                   <select
                     value={formData.category}
                     onChange={(e) => setFormData({...formData, category: e.target.value})}
-                    className="w-full px-4 py-3 bg-transparent border border-gray-600 rounded-lg text-white focus:outline-none focus:border-purple-500 transition-colors"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-transparent border border-gray-600 rounded-lg text-white focus:outline-none focus:border-purple-500 transition-colors text-sm sm:text-base"
                   >
                     <option value="general">General</option>
                     <option value="business">Business</option>
@@ -465,13 +465,13 @@ export default function CaptionsPage() {
                     type="text"
                     value={formData.tags}
                     onChange={(e) => setFormData({...formData, tags: e.target.value})}
-                    className="w-full px-4 py-3 bg-transparent border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 transition-colors"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-transparent border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 transition-colors text-sm sm:text-base"
                     placeholder="tag1, tag2, tag3"
                   />
                 </div>
               </div>
 
-              <div className="flex space-x-4 pt-4">
+              <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 pt-4">
                 <button
                   type="submit"
                   className="modern-button px-6 py-3 glow-on-hover flex-1"
