@@ -128,25 +128,21 @@ export default function EngagementChart() {
         <div className="modern-card p-6 text-center hover:scale-105 transition-transform duration-300">
           <div className="text-3xl font-bold gradient-text mb-2">{totalEngagement.toLocaleString()}</div>
           <div className="text-sm text-gray-300">Total Engagement</div>
-          <div className="mt-4 w-8 h-8 bg-purple-500 rounded-full mx-auto opacity-60"></div>
         </div>
         
         <div className="modern-card p-6 text-center hover:scale-105 transition-transform duration-300">
           <div className="text-3xl font-bold gradient-text mb-2">{totalPosts}</div>
           <div className="text-sm text-gray-300">Total Posts</div>
-          <div className="mt-4 w-8 h-8 bg-green-500 rounded-full mx-auto opacity-60"></div>
         </div>
         
         <div className="modern-card p-6 text-center hover:scale-105 transition-transform duration-300">
           <div className="text-3xl font-bold gradient-text mb-2">{avgEngagement}</div>
           <div className="text-sm text-gray-300">Avg Engagement</div>
-          <div className="mt-4 w-8 h-8 bg-yellow-500 rounded-full mx-auto opacity-60"></div>
         </div>
         
         <div className="modern-card p-6 text-center hover:scale-105 transition-transform duration-300">
           <div className="text-3xl font-bold gradient-text mb-2">{engagementData.length}</div>
           <div className="text-sm text-gray-300">Days Tracked</div>
-          <div className="mt-4 w-8 h-8 bg-red-500 rounded-full mx-auto opacity-60"></div>
         </div>
       </div>
 

@@ -121,19 +121,16 @@ export default function ImagesPage() {
             {supabaseStatus === 'Connected' ? '✓' : '✗'}
           </div>
           <div className="text-sm text-gray-300">Supabase Status</div>
-          <div className="mt-4 w-8 h-8 bg-purple-500 rounded-full mx-auto opacity-60"></div>
         </div>
         
         <div className="modern-card p-6 text-center hover:scale-105 transition-transform duration-300">
           <div className="text-3xl font-bold gradient-text mb-2">{uploadedImages.length}</div>
           <div className="text-sm text-gray-300">Uploaded Images</div>
-          <div className="mt-4 w-8 h-8 bg-green-500 rounded-full mx-auto opacity-60"></div>
         </div>
         
         <div className="modern-card p-6 text-center hover:scale-105 transition-transform duration-300">
           <div className="text-3xl font-bold gradient-text mb-2">{images.length}</div>
           <div className="text-sm text-gray-300">Selected Images</div>
-          <div className="mt-4 w-8 h-8 bg-yellow-500 rounded-full mx-auto opacity-60"></div>
         </div>
       </div>
 

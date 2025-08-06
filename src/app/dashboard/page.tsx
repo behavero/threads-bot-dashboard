@@ -129,12 +129,10 @@ export default function DashboardPage() {
                      <div className="modern-card p-6 text-center">
                        <div className="text-5xl font-bold gradient-text mb-2">192k</div>
                        <div className="text-sm text-gray-300">Total Posts</div>
-                       <div className="mt-4 w-8 h-8 bg-purple-500 rounded-full mx-auto opacity-60"></div>
                      </div>
                      <div className="modern-card p-6 text-center">
                        <div className="text-5xl font-bold gradient-text mb-2">34</div>
                        <div className="text-sm text-gray-300">Active Accounts</div>
-                       <div className="mt-4 w-8 h-8 bg-green-500 rounded-full mx-auto opacity-60"></div>
                      </div>
                    </div>
                    
@@ -154,22 +152,18 @@ export default function DashboardPage() {
                  <div className="modern-card p-6 text-center hover:scale-105 transition-transform duration-300">
                    <div className="text-4xl font-bold gradient-text mb-2">0</div>
                    <div className="text-sm text-gray-300">Total Accounts</div>
-                   <div className="mt-4 w-8 h-8 bg-purple-500 rounded-full mx-auto opacity-60"></div>
                  </div>
                  <div className="modern-card p-6 text-center hover:scale-105 transition-transform duration-300">
                    <div className="text-4xl font-bold gradient-text mb-2">0</div>
                    <div className="text-sm text-gray-300">Active</div>
-                   <div className="mt-4 w-8 h-8 bg-green-500 rounded-full mx-auto opacity-60"></div>
                  </div>
                  <div className="modern-card p-6 text-center hover:scale-105 transition-transform duration-300">
                    <div className="text-4xl font-bold gradient-text mb-2">0</div>
                    <div className="text-sm text-gray-300">Scheduled</div>
-                   <div className="mt-4 w-8 h-8 bg-yellow-500 rounded-full mx-auto opacity-60"></div>
                  </div>
                  <div className="modern-card p-6 text-center hover:scale-105 transition-transform duration-300">
                    <div className="text-4xl font-bold gradient-text mb-2">0</div>
                    <div className="text-sm text-gray-300">Errors</div>
-                   <div className="mt-4 w-8 h-8 bg-red-500 rounded-full mx-auto opacity-60"></div>
                  </div>
                </div>
              </div>
