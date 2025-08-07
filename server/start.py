@@ -1640,6 +1640,20 @@ if __name__ == '__main__':
     print(f"🌐 Port: {port}")
     print(f"🔗 Supabase URL: {os.getenv('SUPABASE_URL', 'NOT SET')}")
     
+    # Check Pydantic compatibility
+    try:
+        from check_pydantic_compatibility import check_pydantic_version, check_instagrapi_import
+        pydantic_ok = check_pydantic_version()
+        instagrapi_ok = check_instagrapi_import()
+        
+        if not pydantic_ok or not instagrapi_ok:
+            print("⚠️ Pydantic/Instagrapi compatibility issues detected")
+            print("🔧 This may cause ForwardRef._evaluate() errors")
+        else:
+            print("✅ Pydantic/Instagrapi compatibility verified")
+    except Exception as e:
+        print(f"⚠️ Could not verify Pydantic compatibility: {e}")
+    
     # Start session cleanup scheduler
     try:
         from session_cleanup import start_cleanup_scheduler

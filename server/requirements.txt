@@ -4,6 +4,9 @@ Flask-CORS==4.0.0
 requests==2.31.0
 python-dotenv==1.0.0
 
+# Pydantic v1.x for instagrapi compatibility
+pydantic>=1.10.7,<2.0
+
 # Production server
 gunicorn==21.2.0
 
