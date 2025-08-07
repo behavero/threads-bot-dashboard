@@ -171,11 +171,32 @@ def refresh_engagement_stats():
 @app.route('/api/accounts', methods=['GET'])
 def get_accounts():
     try:
+        print("🔍 Starting get_accounts request...")
+        
+        # Test database connection
         db = DatabaseManager()
+        print(f"✅ DatabaseManager initialized")
+        print(f"📊 Supabase URL: {db.supabase_url}")
+        print(f"📊 Headers configured: {list(db.headers.keys())}")
+        
+        # Get accounts
+        print("📋 Fetching accounts from database...")
         accounts = db.get_active_accounts()
-        return jsonify({"accounts": accounts})
+        print(f"📋 Retrieved {len(accounts)} accounts")
+        
+        if accounts:
+            print(f"📋 Sample account: {accounts[0]}")
+        
+        # Return response
+        response_data = {"success": True, "accounts": accounts}
+        print(f"✅ Returning {len(accounts)} accounts")
+        return jsonify(response_data)
+        
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print(f"❌ Error in get_accounts: {e}")
+        import traceback
+        print(f"❌ Traceback: {traceback.format_exc()}")
+        return jsonify({"success": False, "error": str(e)}), 500
 
 @app.route('/api/accounts', methods=['POST'])
 def add_account():
@@ -185,19 +206,19 @@ def add_account():
         password = data.get('password')
         
         if not username or not password:
-            return jsonify({"error": "Username and password required"}), 400
+            return jsonify({"success": False, "error": "Username and password required"}), 400
         
         db = DatabaseManager()
         success = db.add_account(username, password)
         
         if success:
-            return jsonify({"message": "Account added successfully"}), 201
+            return jsonify({"success": True, "message": "Account added successfully"}), 201
         else:
-            return jsonify({"error": "Failed to add account"}), 500
+            return jsonify({"success": False, "error": "Failed to add account"}), 500
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"success": False, "error": str(e)}), 500
 
-@app.route('/api/accounts/<account_id>/toggle', methods=['PATCH'])
+@app.route('/api/accounts/<int:account_id>/toggle', methods=['PATCH'])
 def toggle_account(account_id):
     try:
         data = request.json
@@ -210,15 +231,38 @@ def toggle_account(account_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/api/accounts/<account_id>', methods=['DELETE'])
+@app.route('/api/accounts/<int:account_id>', methods=['PUT'])
+def update_account(account_id):
+    try:
+        data = request.json
+        print(f"🔍 Updating account {account_id} with data: {data}")
+        
+        db = DatabaseManager()
+        success = db.update_account(account_id, data)
+        
+        if success:
+            return jsonify({"success": True, "message": "Account updated successfully"})
+        else:
+            return jsonify({"success": False, "error": "Failed to update account"}), 500
+    except Exception as e:
+        print(f"❌ Error updating account: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/accounts/<int:account_id>', methods=['DELETE'])
 def delete_account(account_id):
     try:
+        print(f"🔍 Deleting account {account_id}")
+        
         db = DatabaseManager()
-        # This would need to be implemented in DatabaseManager
-        # For now, return success
-        return jsonify({"message": "Account deleted successfully"})
+        success = db.delete_account(account_id)
+        
+        if success:
+            return jsonify({"success": True, "message": "Account deleted successfully"})
+        else:
+            return jsonify({"success": False, "error": "Failed to delete account"}), 500
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print(f"❌ Error deleting account: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
 
 @app.route('/api/statistics')
 def get_statistics():

@@ -35,18 +35,47 @@ class DatabaseManager:
     def get_active_accounts(self) -> List[Dict]:
         """Get all active accounts"""
         try:
+            print("🔍 get_active_accounts: Starting request...")
+            print(f"🔍 get_active_accounts: Supabase URL: {self.supabase_url}")
+            print(f"🔍 get_active_accounts: Headers: {self.headers}")
+            
+            # First try without filter to see all accounts
+            print("🔍 get_active_accounts: Fetching all accounts (no filter)...")
             response = requests.get(
                 f"{self.supabase_url}/rest/v1/accounts",
-                headers=self.headers,
-                params={'status': 'eq.enabled'}
+                headers=self.headers
             )
+            
+            print(f"🔍 get_active_accounts: Response status: {response.status_code}")
+            print(f"🔍 get_active_accounts: Response headers: {dict(response.headers)}")
+            print(f"🔍 get_active_accounts: Response text: {response.text[:500]}...")
+            
             if response.status_code == 200:
-                return response.json()
+                accounts = response.json()
+                print(f"🔍 get_active_accounts: Retrieved {len(accounts)} total accounts")
+                
+                if accounts:
+                    print(f"🔍 get_active_accounts: Sample account: {accounts[0]}")
+                    # Check if accounts have status field
+                    if 'status' in accounts[0]:
+                        print(f"🔍 get_active_accounts: Accounts have status field")
+                        # Filter for enabled accounts
+                        enabled_accounts = [a for a in accounts if a.get('status') == 'enabled']
+                        print(f"🔍 get_active_accounts: Found {len(enabled_accounts)} enabled accounts")
+                        return enabled_accounts
+                    else:
+                        print(f"🔍 get_active_accounts: Accounts don't have status field, returning all")
+                        return accounts
+                else:
+                    print(f"🔍 get_active_accounts: No accounts found")
+                    return []
             else:
-                print(f"❌ HTTP {response.status_code}: {response.text}")
+                print(f"❌ get_active_accounts: HTTP {response.status_code}: {response.text}")
                 return []
         except Exception as e:
-            print(f"❌ Error fetching accounts: {e}")
+            print(f"❌ get_active_accounts: Error fetching accounts: {e}")
+            import traceback
+            print(f"❌ get_active_accounts: Traceback: {traceback.format_exc()}")
             return []
     
     def add_account(self, username: str, password: str, user_id: str = None) -> bool:
@@ -68,6 +97,43 @@ class DatabaseManager:
             return response.status_code == 201
         except Exception as e:
             print(f"❌ Error adding account: {e}")
+            return False
+    
+    def update_account(self, account_id: int, data: dict) -> bool:
+        """Update an existing account"""
+        try:
+            print(f"🔍 update_account: Updating account {account_id} with data: {data}")
+            
+            response = requests.patch(
+                f"{self.supabase_url}/rest/v1/accounts?id=eq.{account_id}",
+                json=data,
+                headers=self.headers
+            )
+            
+            print(f"🔍 update_account: Response status: {response.status_code}")
+            print(f"🔍 update_account: Response text: {response.text}")
+            
+            return response.status_code == 204
+        except Exception as e:
+            print(f"❌ Error updating account: {e}")
+            return False
+    
+    def delete_account(self, account_id: int) -> bool:
+        """Delete an account"""
+        try:
+            print(f"🔍 delete_account: Deleting account {account_id}")
+            
+            response = requests.delete(
+                f"{self.supabase_url}/rest/v1/accounts?id=eq.{account_id}",
+                headers=self.headers
+            )
+            
+            print(f"🔍 delete_account: Response status: {response.status_code}")
+            print(f"🔍 delete_account: Response text: {response.text}")
+            
+            return response.status_code == 204
+        except Exception as e:
+            print(f"❌ Error deleting account: {e}")
             return False
     
     def get_all_captions(self) -> List[Dict]:
