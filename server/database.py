@@ -106,7 +106,7 @@ class DatabaseManager:
             print(f"❌ get_account_by_username: Error: {e}")
             return None
     
-    def add_account(self, username: str, password: str, user_id: str = None) -> bool:
+    def add_account(self, username: str, password: str, user_id: str = None, session_data: dict = None) -> bool:
         """Add a new account"""
         try:
             account_data = {
@@ -116,6 +116,8 @@ class DatabaseManager:
             }
             if user_id:
                 account_data["user_id"] = user_id
+            if session_data:
+                account_data["session_data"] = session_data
                 
             response = requests.post(
                 f"{self.supabase_url}/rest/v1/accounts",
@@ -126,6 +128,49 @@ class DatabaseManager:
         except Exception as e:
             print(f"❌ Error adding account: {e}")
             return False
+    
+    def save_session_data(self, account_id: int, session_data: dict) -> bool:
+        """Save session data for an account"""
+        try:
+            print(f"🔍 save_session_data: Saving session for account {account_id}")
+            
+            response = requests.patch(
+                f"{self.supabase_url}/rest/v1/accounts?id=eq.{account_id}",
+                json={"session_data": session_data},
+                headers=self.headers
+            )
+            
+            print(f"🔍 save_session_data: Response status: {response.status_code}")
+            return response.status_code == 204
+        except Exception as e:
+            print(f"❌ Error saving session data: {e}")
+            return False
+    
+    def get_session_data(self, account_id: int) -> Optional[dict]:
+        """Get session data for an account"""
+        try:
+            print(f"🔍 get_session_data: Getting session for account {account_id}")
+            
+            response = requests.get(
+                f"{self.supabase_url}/rest/v1/accounts",
+                headers=self.headers,
+                params={'id': f'eq.{account_id}'}
+            )
+            
+            if response.status_code == 200:
+                accounts = response.json()
+                if accounts and accounts[0].get('session_data'):
+                    print(f"🔍 get_session_data: Found session data for account {account_id}")
+                    return accounts[0]['session_data']
+                else:
+                    print(f"🔍 get_session_data: No session data found for account {account_id}")
+                    return None
+            else:
+                print(f"❌ get_session_data: HTTP {response.status_code}: {response.text}")
+                return None
+        except Exception as e:
+            print(f"❌ Error getting session data: {e}")
+            return None
     
     def update_account(self, account_id: int, data: dict) -> bool:
         """Update an existing account"""

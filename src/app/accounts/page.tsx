@@ -236,6 +236,35 @@ export default function AccountsPage() {
     }
   }
 
+  const testSession = async (username: string) => {
+    try {
+      setError('')
+      console.log(`Testing session for ${username}...`)
+      
+      const response = await fetch(`https://threads-bot-dashboard-3.onrender.com/api/accounts/${username}/test-session`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          password: 'test_password' // This would need to be provided by user
+        })
+      })
+      
+      const data = await response.json()
+      console.log('Session test response:', data)
+      
+      if (data.success) {
+        setMessage(`Session test successful for ${username}! ${data.user_info?.followers || 0} followers`)
+      } else {
+        setError(data.error || 'Session test failed')
+      }
+    } catch (err) {
+      console.error('Session test error:', err)
+      setError('Session test failed')
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -349,6 +378,12 @@ export default function AccountsPage() {
                   className="modern-button px-3 py-1 text-sm flex-1"
                 >
                   Edit
+                </button>
+                <button
+                  onClick={() => testSession(account.username)}
+                  className="modern-button px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700"
+                >
+                  Test Session
                 </button>
                 <button
                   onClick={() => handleDelete(account.id)}

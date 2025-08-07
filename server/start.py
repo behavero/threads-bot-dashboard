@@ -697,7 +697,46 @@ def login_account():
             client = Client()
             client.delay_range = [1, 3]  # Random delay between requests
             
-            # Attempt login
+            # Check if account exists and has session data
+            db = DatabaseManager()
+            existing_account = db.get_account_by_username(username)
+            
+            if existing_account and existing_account.get('session_data'):
+                print(f"🔐 Found existing session for {username}, attempting to reuse...")
+                try:
+                    # Try to use existing session
+                    client.set_settings(existing_account['session_data'])
+                    client.login(username, password)
+                    print(f"✅ Successfully logged in with saved session for {username}")
+                    
+                    # Get user info
+                    user_info = client.user_info_by_username(username)
+                    
+                    # Get account statistics
+                    stats = {
+                        "followers": user_info.follower_count,
+                        "following": user_info.following_count,
+                        "posts": user_info.media_count,
+                        "username": user_info.username,
+                        "full_name": user_info.full_name,
+                        "biography": user_info.biography,
+                        "is_private": user_info.is_private,
+                        "is_verified": user_info.is_verified
+                    }
+                    
+                    return jsonify({
+                        "success": True,
+                        "message": "Login successful (reused session)",
+                        "user_info": stats,
+                        "session_reused": True
+                    })
+                    
+                except Exception as session_error:
+                    print(f"⚠️ Failed to reuse session for {username}: {session_error}")
+                    print(f"🔐 Falling back to fresh login...")
+                    # Continue with fresh login below
+            
+            # Attempt fresh login
             try:
                 client.login(username, password)
                 print(f"✅ Login successful for {username}")
@@ -717,22 +756,25 @@ def login_account():
                     "is_verified": user_info.is_verified
                 }
                 
-                # Save session (optional)
+                # Save session data
                 session_data = client.get_settings()
+                print(f"💾 Saving session data for {username}...")
                 
                 # Save account to database if not exists
-                db = DatabaseManager()
-                existing_account = db.get_account_by_username(username)
-                
                 if not existing_account:
                     print(f"📝 Saving new account {username} to database...")
-                    success = db.add_account(username, password)
+                    success = db.add_account(username, password, session_data=session_data)
                     if success:
-                        print(f"✅ Account {username} saved to database")
+                        print(f"✅ Account {username} saved to database with session")
                     else:
                         print(f"⚠️ Failed to save account {username} to database")
                 else:
-                    print(f"📝 Account {username} already exists in database")
+                    print(f"📝 Updating existing account {username} with new session...")
+                    success = db.save_session_data(existing_account['id'], session_data)
+                    if success:
+                        print(f"✅ Session data saved for {username}")
+                    else:
+                        print(f"⚠️ Failed to save session data for {username}")
                 
                 return jsonify({
                     "success": True,
@@ -797,6 +839,89 @@ def login_account():
         print(f"❌ Error in login_account: {e}")
         import traceback
         print(f"❌ Traceback: {traceback.format_exc()}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+@app.route('/api/accounts/<username>/test-session', methods=['POST'])
+def test_session(username):
+    """Test session reuse for an account"""
+    try:
+        data = request.json
+        password = data.get('password')
+        
+        if not password:
+            return jsonify({
+                "success": False, 
+                "error": "Password required"
+            }), 400
+        
+        print(f"🧪 Testing session for {username}...")
+        
+        try:
+            from instagrapi import Client
+            from instagrapi.exceptions import ClientLoginRequired, ClientError
+            
+            # Initialize client
+            client = Client()
+            client.delay_range = [1, 3]
+            
+            # Get account and session data
+            db = DatabaseManager()
+            account = db.get_account_by_username(username)
+            
+            if not account:
+                return jsonify({
+                    "success": False,
+                    "error": "Account not found"
+                }), 404
+            
+            if not account.get('session_data'):
+                return jsonify({
+                    "success": False,
+                    "error": "No session data found for this account"
+                }), 404
+            
+            print(f"🧪 Found session data for {username}, testing reuse...")
+            
+            # Try to use existing session
+            client.set_settings(account['session_data'])
+            client.login(username, password)
+            
+            # Get user info to verify login worked
+            user_info = client.user_info_by_username(username)
+            
+            return jsonify({
+                "success": True,
+                "message": "Session test successful",
+                "user_info": {
+                    "followers": user_info.follower_count,
+                    "following": user_info.following_count,
+                    "posts": user_info.media_count,
+                    "username": user_info.username,
+                    "full_name": user_info.full_name,
+                    "is_verified": user_info.is_verified
+                },
+                "session_reused": True
+            })
+            
+        except ClientLoginRequired as e:
+            print(f"❌ Session test failed for {username}: {e}")
+            return jsonify({
+                "success": False,
+                "error": "Session expired, fresh login required"
+            }), 401
+            
+        except Exception as e:
+            print(f"❌ Session test error for {username}: {e}")
+            return jsonify({
+                "success": False,
+                "error": f"Session test failed: {str(e)}"
+            }), 500
+            
+    except Exception as e:
+        print(f"❌ Error in test_session: {e}")
         return jsonify({
             "success": False,
             "error": str(e)
