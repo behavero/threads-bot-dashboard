@@ -30,6 +30,7 @@ export default function AccountsPage() {
   const [accounts, setAccounts] = useState<Account[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
+  const [message, setMessage] = useState('')
   const [showModal, setShowModal] = useState(false)
   const [editingAccount, setEditingAccount] = useState<Account | null>(null)
   const [formData, setFormData] = useState<AccountFormData>({
@@ -190,6 +191,36 @@ export default function AccountsPage() {
     setShowModal(true)
   }
 
+  const testLogin = async () => {
+    try {
+      setError('')
+      console.log('Testing login...')
+      
+      const response = await fetch('https://threads-bot-dashboard-3.onrender.com/api/accounts/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          username: 'test_user',
+          password: 'test_pass'
+        })
+      })
+      
+      const data = await response.json()
+      console.log('Login test response:', data)
+      
+      if (data.success) {
+        setMessage('Login test successful!')
+      } else {
+        setError(data.error || 'Login test failed')
+      }
+    } catch (err) {
+      console.error('Login test error:', err)
+      setError('Login test failed')
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -206,18 +237,33 @@ export default function AccountsPage() {
           <h2 className="text-3xl font-bold text-white mb-2">Threads Accounts</h2>
           <p className="text-gray-300">Manage your Threads accounts and posting settings</p>
         </div>
-        <button
-          onClick={openAddModal}
-          className="modern-button px-6 py-3 glow-on-hover"
-        >
-          Add Account
-        </button>
+        <div className="flex space-x-4">
+          <button
+            onClick={testLogin}
+            className="modern-button px-4 py-2 text-sm"
+          >
+            Test Login
+          </button>
+          <button
+            onClick={openAddModal}
+            className="modern-button px-6 py-3 glow-on-hover"
+          >
+            Add Account
+          </button>
+        </div>
       </div>
 
       {/* Error Message */}
       {error && (
         <div className="modern-card p-4 border border-red-500/30">
           <div className="text-red-400">{error}</div>
+        </div>
+      )}
+
+      {/* Success Message */}
+      {message && (
+        <div className="modern-card p-4 border border-green-500/30">
+          <div className="text-green-400">{message}</div>
         </div>
       )}
 
