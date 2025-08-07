@@ -325,17 +325,44 @@ def add_caption():
         print(f"📝 Adding caption: text='{text[:50]}...', category='{category}', tags={tags}")
         
         try:
-            db = DatabaseManager()
-            success = db.add_caption(text, category, tags)
+            # Use direct Supabase approach like the working test
+            import requests
             
-            print(f"📝 Database operation result: {success}")
+            supabase_url = "https://perwbmtwutwzsvlirwik.supabase.co"
+            service_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlcndibXR3dXR3enN2bGlyd2lrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NDQwNTU4MiwiZXhwIjoyMDY5OTgxNTgyfQ.fpTpKFrK0Eg60rN7jpWPKKQFTmIrxVlcHY2MMeKx2AE"
             
-            if success:
+            headers = {
+                'apikey': service_key,
+                'Authorization': f'Bearer {service_key}',
+                'Content-Type': 'application/json',
+                'Prefer': 'return=representation'
+            }
+            
+            caption_data = {
+                "text": text,
+                "category": category,
+                "tags": tags,
+                "used": False
+            }
+            
+            print(f"📝 Direct Supabase request: {caption_data}")
+            
+            response = requests.post(
+                f"{supabase_url}/rest/v1/captions",
+                json=caption_data,
+                headers=headers
+            )
+            
+            print(f"📝 Direct response: {response.status_code}")
+            print(f"📝 Direct response text: {response.text}")
+            
+            if response.status_code == 201:
                 return jsonify({"message": "Caption added successfully"}), 201
             else:
-                return jsonify({"error": "Failed to add caption"}), 500
+                return jsonify({"error": f"Failed to add caption: {response.text}"}), 500
+                
         except Exception as e:
-            print(f"❌ Database manager error: {e}")
+            print(f"❌ Direct Supabase error: {e}")
             return jsonify({"error": f"Database error: {str(e)}"}), 500
     except Exception as e:
         print(f"❌ Error adding caption: {e}")
