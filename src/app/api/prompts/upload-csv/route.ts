@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
   try {
-    // Temporarily remove authentication to debug
+    // Temporarily disable authentication to debug
     // const user = await requireAuth(request)
     console.log('CSV upload started')
     
@@ -26,17 +26,55 @@ export async function POST(request: NextRequest) {
     const lines = text.split('\n').filter(line => line.trim())
     console.log('Number of lines:', lines.length)
     
-    const captions = lines.map(line => {
-      const [text, category = 'general', tags = ''] = line.split(',').map(s => s.trim())
+    const captions = lines.map((line, index) => {
+      const parts = line.split(',').map(part => part.trim())
+      
+      // Handle different CSV formats
+      let text, category, tags
+      
+      if (parts.length === 1) {
+        // Just text
+        text = parts[0]
+        category = 'general'
+        tags = []
+      } else if (parts.length === 2) {
+        // text, category
+        text = parts[0]
+        category = parts[1] || 'general'
+        tags = []
+      } else if (parts.length >= 3) {
+        // text, category, tags
+        text = parts[0]
+        category = parts[1] || 'general'
+        tags = parts[2] ? parts[2].split('|').map(t => t.trim()).filter(t => t) : []
+      } else {
+        // Invalid format
+        console.warn(`Invalid line ${index + 1}: ${line}`)
+        return null
+      }
+      
+      // Validate text
+      if (!text || text.length === 0) {
+        console.warn(`Empty text in line ${index + 1}`)
+        return null
+      }
+      
       return {
         text: text,
         category: category,
-        tags: tags ? tags.split('|').map(t => t.trim()) : []
+        tags: tags
       }
-    })
+    }).filter(caption => caption !== null)
     
     console.log('Processed captions:', captions.length)
     console.log('Sample caption:', captions[0])
+    
+    if (captions.length === 0) {
+      return NextResponse.json(
+        { success: false, error: 'No valid captions found in CSV' },
+        { status: 400 }
+      )
+    }
     
     // Insert into database using Supabase
     const { data, error } = await supabase
@@ -44,7 +82,7 @@ export async function POST(request: NextRequest) {
       .insert(captions)
       .select()
     
-    console.log('Supabase insert response:', { data, error })
+    console.log('Supabase insert response:', { data: data?.length, error })
     
     if (error) {
       console.error('Supabase insert error:', error)
@@ -60,9 +98,9 @@ export async function POST(request: NextRequest) {
       captions: data
     })
   } catch (error) {
-    console.error('Error uploading CSV:', error)
+    console.error('CSV upload error:', error)
     return NextResponse.json(
-      { success: false, error: 'Failed to upload CSV' },
+      { success: false, error: 'Internal server error' },
       { status: 500 }
     )
   }

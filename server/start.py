@@ -270,8 +270,25 @@ def get_captions():
     try:
         db = DatabaseManager()
         captions = db.get_all_captions()
-        return jsonify({"captions": captions})
+        
+        # Process captions to ensure all fields have default values
+        processed_captions = []
+        for caption in captions:
+            processed_caption = {
+                'id': caption.get('id'),
+                'user_id': caption.get('user_id'),
+                'text': caption.get('text', ''),
+                'category': caption.get('category', 'general'),
+                'tags': caption.get('tags', []),
+                'used': caption.get('used', False),
+                'created_at': caption.get('created_at'),
+                'updated_at': caption.get('updated_at', caption.get('created_at'))
+            }
+            processed_captions.append(processed_caption)
+        
+        return jsonify({"captions": processed_captions})
     except Exception as e:
+        print(f"❌ Error fetching captions: {e}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/api/captions', methods=['POST'])
@@ -282,8 +299,30 @@ def add_caption():
         category = data.get('category', 'general')
         tags = data.get('tags', [])
         
+        # Validate required fields
         if not text:
-            return jsonify({"error": "Caption text required"}), 400
+            return jsonify({"error": "Caption text is required"}), 400
+        
+        if not isinstance(text, str) or len(text.strip()) == 0:
+            return jsonify({"error": "Caption text must be a non-empty string"}), 400
+        
+        # Validate category
+        if category and not isinstance(category, str):
+            return jsonify({"error": "Category must be a string"}), 400
+        
+        # Validate tags
+        if tags and not isinstance(tags, list):
+            return jsonify({"error": "Tags must be an array"}), 400
+        
+        # Clean and validate tags
+        if tags:
+            cleaned_tags = []
+            for tag in tags:
+                if isinstance(tag, str) and tag.strip():
+                    cleaned_tags.append(tag.strip())
+            tags = cleaned_tags
+        
+        print(f"📝 Adding caption: text='{text[:50]}...', category='{category}', tags={tags}")
         
         db = DatabaseManager()
         success = db.add_caption(text, category, tags)
@@ -293,6 +332,7 @@ def add_caption():
         else:
             return jsonify({"error": "Failed to add caption"}), 500
     except Exception as e:
+        print(f"❌ Error adding caption: {e}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/api/images', methods=['GET'])

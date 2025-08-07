@@ -54,8 +54,6 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     console.log('POST /api/prompts called')
-    console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
-    console.log('Supabase Key exists:', !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
     
     // Temporarily disable authentication to fix data flow
     // const user = await requireAuth(request)
@@ -65,6 +63,7 @@ export async function POST(request: NextRequest) {
     
     const { text, category, tags } = body
     
+    // Validate required fields
     if (!text) {
       console.error('Missing required text field')
       return NextResponse.json(
@@ -73,10 +72,44 @@ export async function POST(request: NextRequest) {
       )
     }
     
+    if (typeof text !== 'string' || text.trim().length === 0) {
+      console.error('Invalid text field')
+      return NextResponse.json(
+        { success: false, error: 'Caption text must be a non-empty string' },
+        { status: 400 }
+      )
+    }
+    
+    // Validate category
+    if (category && typeof category !== 'string') {
+      console.error('Invalid category field')
+      return NextResponse.json(
+        { success: false, error: 'Category must be a string' },
+        { status: 400 }
+      )
+    }
+    
+    // Validate tags
+    if (tags && !Array.isArray(tags)) {
+      console.error('Invalid tags field')
+      return NextResponse.json(
+        { success: false, error: 'Tags must be an array' },
+        { status: 400 }
+      )
+    }
+    
+    // Clean and validate tags
+    let cleanedTags: string[] = []
+    if (tags && Array.isArray(tags)) {
+      cleanedTags = tags
+        .filter(tag => typeof tag === 'string' && tag.trim().length > 0)
+        .map(tag => tag.trim())
+    }
+    
     const captionData = {
-      text: text,
+      text: text.trim(),
       category: category || 'general',
-      tags: Array.isArray(tags) ? tags : (tags ? tags.split(',').map((t: string) => t.trim()) : []),
+      tags: cleanedTags,
       used: false
     }
     
@@ -93,7 +126,7 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error('Supabase insert error:', error)
       return NextResponse.json(
-        { success: false, error: `Failed to create prompt: ${error.message}` },
+        { success: false, error: `Failed to create caption: ${error.message}` },
         { status: 500 }
       )
     }

@@ -97,12 +97,20 @@ export default function CaptionsPage() {
 
       const method = editingCaption ? 'PUT' : 'POST'
 
-      const requestData = {
-        ...formData,
+      // Clean and validate form data
+      const cleanedFormData = {
+        text: formData.text.trim(),
+        category: formData.category || 'general',
         tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag)
       }
 
-      console.log('Submitting caption data:', requestData)
+      // Validate required fields
+      if (!cleanedFormData.text) {
+        setError('Caption text is required')
+        return
+      }
+
+      console.log('Submitting caption data:', cleanedFormData)
       console.log('Request URL:', url)
       console.log('Request method:', method)
 
@@ -111,7 +119,7 @@ export default function CaptionsPage() {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(requestData)
+        body: JSON.stringify(cleanedFormData)
       })
 
       console.log('Response status:', response.status)
@@ -124,6 +132,7 @@ export default function CaptionsPage() {
         setEditingCaption(null)
         resetForm()
         await fetchCaptions()
+        setMessage(editingCaption ? 'Caption updated successfully!' : 'Caption added successfully!')
       } else {
         console.error('Failed to save caption:', data.error)
         setError(data.error || 'Failed to save caption')
