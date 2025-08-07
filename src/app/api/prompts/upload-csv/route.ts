@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
       const parts = line.split(',').map(part => part.trim())
       
       // Handle different CSV formats
-      let text, category, tags
+      let text: string, category: string, tags: string[]
       
       if (parts.length === 1) {
         // Just text
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
         // text, category, tags
         text = parts[0]
         category = parts[1] || 'general'
-        tags = parts[2] ? parts[2].split('|').map(t => t.trim()).filter(t => t) : []
+        tags = parts[2] ? parts[2].split('|').map((t: string) => t.trim()).filter((t: string) => t) : []
       } else {
         // Invalid format
         console.warn(`Invalid line ${index + 1}: ${line}`)
