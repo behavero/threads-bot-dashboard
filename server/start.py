@@ -1062,8 +1062,9 @@ def login_account():
                     print(f"❌ Threads API login failed for {username}")
                     return jsonify({
                         "success": False,
-                        "error": "Threads API login failed",
-                        "api_used": "threads_api"
+                        "error": "Account security check required. Please log in to Instagram/Threads manually first, then try again.",
+                        "api_used": "threads_api",
+                        "requires_manual_login": True
                     }), 401
                     
             except ImportError as threads_error:

@@ -103,6 +103,9 @@ export default function AccountsPage() {
     if (errorLower.includes('pillow') || errorLower.includes('pil')) {
       return 'Missing image processing dependency. Please contact support.'
     }
+    if (errorLower.includes('account security check required') || errorLower.includes('requires_manual_login')) {
+      return 'Account security check required. Please log in to Instagram/Threads manually first, then try again.'
+    }
     
     return error || 'An unexpected error occurred. Please try again.'
   }

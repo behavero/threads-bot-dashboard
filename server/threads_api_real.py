@@ -70,8 +70,25 @@ class RealThreadsAPI:
                 return False
                 
         except Exception as e:
-            print(f"❌ Login error for {username}: {str(e)}")
-            return False
+            error_msg = str(e)
+            print(f"❌ Login error for {username}: {error_msg}")
+            
+            # Handle specific Instagram security errors
+            if "You've Been Logged Out" in error_msg or "login_required" in error_msg:
+                print(f"🔒 Account security check required for {username}")
+                return False
+            elif "ChallengeChoice.EMAIL" in error_msg or "Enter code" in error_msg:
+                print(f"📧 Email verification required for {username}")
+                return False
+            elif "checkpoint" in error_msg.lower():
+                print(f"🛡️ Account checkpoint required for {username}")
+                return False
+            elif "2FA" in error_msg or "two-factor" in error_msg.lower():
+                print(f"🔐 Two-factor authentication required for {username}")
+                return False
+            else:
+                print(f"❌ Unknown login error for {username}")
+                return False
     
     async def get_me(self) -> Optional[Dict[str, Any]]:
         """Get current user information"""
