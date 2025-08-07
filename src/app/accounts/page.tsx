@@ -398,6 +398,36 @@ export default function AccountsPage() {
     }
   }
 
+  const testVerificationModal = async () => {
+    console.log('🧪 Testing verification modal...')
+    setRequiresVerification(true)
+    setVerificationUsername('test_user')
+    setMessage('Test: Verification modal should appear')
+  }
+
+  const testBackendVerificationResponse = async () => {
+    console.log('🧪 Testing backend verification response...')
+    
+    // Simulate the backend response that should trigger verification
+    const mockResponse = {
+      success: false,
+      requires_verification: true,
+      verification_type: "email",
+      message: "Email verification required",
+      error: "Please check your email for a 6-digit verification code"
+    }
+    
+    console.log('📧 Mock response:', mockResponse)
+    
+    if (mockResponse.requires_verification) {
+      console.log('📧 Verification required - showing modal')
+      setRequiresVerification(true)
+      setVerificationUsername('Lanavalentine.official')
+      setMessage('Please check your email for a 6-digit verification code and enter it below.')
+      console.log('✅ Modal state set to true')
+    }
+  }
+
   const submitVerificationCode = async (code: string) => {
     try {
       setError('')
@@ -462,13 +492,16 @@ export default function AccountsPage() {
             Test Threads API
           </button>
           <button
-            onClick={() => {
-              setRequiresVerification(true)
-              setVerificationUsername('test_user')
-            }}
+            onClick={testVerificationModal}
             className="modern-button px-4 py-2 text-sm bg-purple-600 hover:bg-purple-700"
           >
             Test Verification Modal
+          </button>
+          <button
+            onClick={testBackendVerificationResponse}
+            className="modern-button px-4 py-2 text-sm bg-orange-600 hover:bg-orange-700"
+          >
+            Test Backend Response
           </button>
           <button
             onClick={openAddModal}

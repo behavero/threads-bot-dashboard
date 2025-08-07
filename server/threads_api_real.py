@@ -160,6 +160,17 @@ class RealThreadsAPI:
                     "requires_verification": True,
                     "verification_type": "email"
                 }
+            elif "manual_login" in error_msg.lower() or "login_required" in error_msg.lower():
+                print(f"📧 Forcing verification flow for {username} (testing)")
+                # Force verification for testing
+                self.requires_verification = True
+                return {
+                    "success": False,
+                    "message": "Email verification required",
+                    "error": "Please check your email for a 6-digit verification code and enter it below",
+                    "requires_verification": True,
+                    "verification_type": "email"
+                }
             else:
                 print(f"❌ Unknown login error for {username}")
                 return {
