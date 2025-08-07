@@ -1124,6 +1124,116 @@ def test_session(username):
             "error": str(e)
         }), 500
 
+@app.route('/api/accounts/test-threads-login', methods=['POST'])
+def test_threads_login():
+    """Test Threads API login with real threads-api library"""
+    try:
+        data = request.json
+        username = data.get('username')
+        password = data.get('password')
+        
+        if not username or not password:
+            return jsonify({
+                "success": False,
+                "error": "Username and password required"
+            }), 400
+        
+        print(f"🧪 Testing Threads API login for {username}...")
+        
+        try:
+            from threads_api_real import RealThreadsAPI
+            
+            # Test Threads API login
+            api = RealThreadsAPI(use_instagrapi=True)
+            success = api.login(username, password)
+            
+            if success:
+                # Get user info
+                user_info = api.get_me()
+                
+                print(f"✅ Threads API login successful for {username}")
+                return jsonify({
+                    "success": True,
+                    "message": "Threads API login successful",
+                    "user_info": user_info,
+                    "api_available": True
+                })
+            else:
+                print(f"❌ Threads API login failed for {username}")
+                return jsonify({
+                    "success": False,
+                    "error": "Threads API login failed",
+                    "api_available": True
+                }), 401
+                
+        except ImportError as e:
+            print(f"❌ Threads API not available: {e}")
+            return jsonify({
+                "success": False,
+                "error": "Threads API not available",
+                "api_available": False,
+                "details": str(e)
+            }), 500
+        except Exception as e:
+            print(f"❌ Threads API login error: {e}")
+            return jsonify({
+                "success": False,
+                "error": f"Threads API login error: {str(e)}",
+                "api_available": True
+            }), 500
+            
+    except Exception as e:
+        print(f"❌ Error in test_threads_login: {e}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+@app.route('/api/debug/threads-api-status', methods=['GET'])
+def debug_threads_api_status():
+    """Debug endpoint to check Threads API availability"""
+    try:
+        status = {
+            "threads_api_available": False,
+            "instagrapi_available": False,
+            "pillow_available": False,
+            "error_details": None
+        }
+        
+        # Test Threads API
+        try:
+            from threads import ThreadsAPI
+            status["threads_api_available"] = True
+            print("✅ Threads API available")
+        except ImportError as e:
+            status["error_details"] = f"Threads API: {str(e)}"
+            print(f"❌ Threads API not available: {e}")
+        
+        # Test instagrapi
+        try:
+            from instagrapi import Client
+            status["instagrapi_available"] = True
+            print("✅ instagrapi available")
+        except ImportError as e:
+            status["error_details"] = f"instagrapi: {str(e)}"
+            print(f"❌ instagrapi not available: {e}")
+        
+        # Test Pillow
+        try:
+            from PIL import Image
+            status["pillow_available"] = True
+            print("✅ Pillow available")
+        except ImportError as e:
+            status["error_details"] = f"Pillow: {str(e)}"
+            print(f"❌ Pillow not available: {e}")
+        
+        return jsonify(status)
+        
+    except Exception as e:
+        return jsonify({
+            "error": str(e)
+        }), 500
+
 @app.route('/api/accounts/<int:account_id>/post', methods=['POST'])
 def trigger_post(account_id):
     """Trigger a post for a specific account"""

@@ -264,6 +264,40 @@ export default function AccountsPage() {
     }
   }
 
+  const testThreadsAPI = async () => {
+    try {
+      setError('')
+      console.log('Testing Threads API...')
+      
+      const response = await fetch('https://threads-bot-dashboard-3.onrender.com/api/accounts/test-threads-login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          username: 'test_user',
+          password: 'test_pass'
+        })
+      })
+      
+      const data = await response.json()
+      console.log('Threads API test response:', data)
+      
+      if (data.success) {
+        setMessage('Threads API test successful! API is available and working.')
+      } else {
+        if (data.api_available === false) {
+          setError('Threads API not available. Check backend dependencies.')
+        } else {
+          setError(getUserFriendlyError(data.error || 'Threads API test failed'))
+        }
+      }
+    } catch (err) {
+      console.error('Threads API test error:', err)
+      setError('Network error. Please check your connection and try again.')
+    }
+  }
+
   const testSession = async (username: string) => {
     try {
       setError('')
@@ -344,6 +378,12 @@ export default function AccountsPage() {
             className="modern-button px-4 py-2 text-sm"
           >
             Test Login
+          </button>
+          <button
+            onClick={testThreadsAPI}
+            className="modern-button px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700"
+          >
+            Test Threads API
           </button>
           <button
             onClick={openAddModal}

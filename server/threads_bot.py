@@ -6,11 +6,18 @@ from typing import Optional, Dict
 from database import DatabaseManager
 
 try:
-    from threads_api_mock import ThreadsAPI
-    print("✅ Using mock Threads API for development")
-except ImportError:
-    print("⚠️ Threads API not available, using mock mode")
-    ThreadsAPI = None
+    from threads_api_real import RealThreadsAPI
+    print("✅ Using real Threads API with instagrapi")
+    ThreadsAPI = RealThreadsAPI
+except ImportError as e:
+    print(f"⚠️ Real Threads API not available: {e}")
+    print("💡 Falling back to mock mode")
+    try:
+        from threads_api_mock import ThreadsAPI
+        print("✅ Using mock Threads API for development")
+    except ImportError:
+        print("❌ No Threads API available")
+        ThreadsAPI = None
 
 class ThreadsBot:
     def __init__(self):
@@ -36,14 +43,21 @@ class ThreadsBot:
     def login_account(self, username: str, password: str) -> Optional[ThreadsAPI]:
         """Login to a Threads account"""
         if not ThreadsAPI:
-            print(f"⚠️ Mock login for {username}")
+            print(f"⚠️ No Threads API available for {username}")
             return None
         
         try:
-            api = ThreadsAPI()
-            api.login(username, password)
-            print(f"✅ Logged in to {username}")
-            return api
+            # Use real Threads API with instagrapi
+            api = ThreadsAPI(use_instagrapi=True)
+            success = api.login(username, password)
+            
+            if success:
+                print(f"✅ Successfully logged in to {username}")
+                return api
+            else:
+                print(f"❌ Login failed for {username}")
+                return None
+                
         except Exception as e:
             print(f"❌ Failed to login {username}: {e}")
             return None
