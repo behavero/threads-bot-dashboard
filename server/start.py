@@ -927,6 +927,186 @@ def test_session(username):
             "error": str(e)
         }), 500
 
+@app.route('/api/accounts/<int:account_id>/post', methods=['POST'])
+def trigger_post(account_id):
+    """Trigger a post for a specific account"""
+    try:
+        print(f"🚀 Triggering post for account {account_id}...")
+        
+        # Get account details
+        db = DatabaseManager()
+        accounts = db.get_active_accounts()
+        account = next((a for a in accounts if a['id'] == account_id), None)
+        
+        if not account:
+            return jsonify({
+                "success": False,
+                "error": "Account not found or not active"
+            }), 404
+        
+        print(f"📝 Found account: {account['username']}")
+        
+        # Get unused content
+        caption = db.get_unused_caption()
+        image = db.get_unused_image()
+        
+        if not caption:
+            return jsonify({
+                "success": False,
+                "error": "No unused captions available"
+            }), 400
+        
+        print(f"📝 Selected caption: {caption['text'][:50]}...")
+        if image:
+            print(f"🖼️ Selected image: {image['filename']}")
+        else:
+            print("📝 No image selected, posting text only")
+        
+        try:
+            from instagrapi import Client
+            from instagrapi.exceptions import (
+                ClientLoginRequired, 
+                ClientError,
+                ClientLoginTwoFactorRequired,
+                ClientChallengeRequired,
+                ClientCheckpointRequired
+            )
+            
+            # Initialize client
+            client = Client()
+            client.delay_range = [1, 3]
+            
+            # Try to use saved session first
+            session_data = db.get_session_data(account_id)
+            login_success = False
+            
+            if session_data:
+                print(f"🔐 Attempting to use saved session for {account['username']}...")
+                try:
+                    client.set_settings(session_data)
+                    client.login(account['username'], account['password'])
+                    print(f"✅ Successfully logged in with saved session")
+                    login_success = True
+                except Exception as session_error:
+                    print(f"⚠️ Failed to use saved session: {session_error}")
+                    print(f"🔐 Falling back to fresh login...")
+            
+            # Fresh login if session failed or doesn't exist
+            if not login_success:
+                print(f"🔐 Performing fresh login for {account['username']}...")
+                client.login(account['username'], account['password'])
+                print(f"✅ Successfully logged in")
+                
+                # Save new session
+                new_session = client.get_settings()
+                db.save_session_data(account_id, new_session)
+                print(f"💾 Saved new session data")
+            
+            # Post content
+            print(f"📝 Posting content...")
+            if image:
+                # Post with image
+                result = client.photo_upload(
+                    path=image['url'],  # This might need to be a local file path
+                    caption=caption['text']
+                )
+            else:
+                # Post text only
+                result = client.direct_answer(
+                    text=caption['text']
+                )
+            
+            if result:
+                print(f"✅ Posted successfully!")
+                
+                # Mark content as used
+                db.mark_caption_used(caption['id'])
+                if image:
+                    db.mark_image_used(image['id'])
+                
+                # Update account last_posted
+                db.update_account_last_posted(account_id)
+                
+                # Record success in posting history
+                db.add_posting_record(
+                    account_id, 
+                    caption['id'], 
+                    image['id'] if image else None,
+                    "success"
+                )
+                
+                return jsonify({
+                    "success": True,
+                    "message": "Post published successfully",
+                    "account": account['username'],
+                    "caption": caption['text'],
+                    "image": image['filename'] if image else None,
+                    "session_reused": login_success
+                })
+            else:
+                print(f"❌ Failed to post")
+                db.add_posting_record(
+                    account_id, 
+                    caption['id'], 
+                    image['id'] if image else None,
+                    "error"
+                )
+                return jsonify({
+                    "success": False,
+                    "error": "Failed to publish post"
+                }), 500
+                
+        except ClientLoginTwoFactorRequired:
+            print(f"❌ 2FA required for {account['username']}")
+            return jsonify({
+                "success": False,
+                "error": "Two-factor authentication required"
+            }), 401
+            
+        except ClientChallengeRequired:
+            print(f"❌ Challenge required for {account['username']}")
+            return jsonify({
+                "success": False,
+                "error": "Account verification required"
+            }), 401
+            
+        except ClientCheckpointRequired:
+            print(f"❌ Checkpoint required for {account['username']}")
+            return jsonify({
+                "success": False,
+                "error": "Account checkpoint required"
+            }), 401
+            
+        except ClientLoginRequired as e:
+            print(f"❌ Login failed for {account['username']}: {e}")
+            return jsonify({
+                "success": False,
+                "error": "Authentication failed"
+            }), 401
+            
+        except Exception as e:
+            print(f"❌ Error posting for {account['username']}: {e}")
+            db.add_posting_record(
+                account_id, 
+                caption['id'], 
+                image['id'] if image else None,
+                "error",
+                str(e)
+            )
+            return jsonify({
+                "success": False,
+                "error": f"Posting failed: {str(e)}"
+            }), 500
+            
+    except Exception as e:
+        print(f"❌ Error in trigger_post: {e}")
+        import traceback
+        print(f"❌ Traceback: {traceback.format_exc()}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
 def run_bot():
     """Run the bot in a separate thread"""
     global bot, bot_running

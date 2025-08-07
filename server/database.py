@@ -172,6 +172,116 @@ class DatabaseManager:
             print(f"❌ Error getting session data: {e}")
             return None
     
+    def get_unused_caption(self) -> Optional[Dict]:
+        """Get a random unused caption"""
+        try:
+            print("🔍 get_unused_caption: Fetching unused caption...")
+            
+            response = requests.get(
+                f"{self.supabase_url}/rest/v1/captions",
+                headers=self.headers,
+                params={'used': 'eq.false'}
+            )
+            
+            if response.status_code == 200:
+                captions = response.json()
+                if captions:
+                    # Pick a random caption
+                    import random
+                    caption = random.choice(captions)
+                    print(f"🔍 get_unused_caption: Selected caption: {caption['id']}")
+                    return caption
+                else:
+                    print("🔍 get_unused_caption: No unused captions found")
+                    return None
+            else:
+                print(f"❌ get_unused_caption: HTTP {response.status_code}: {response.text}")
+                return None
+        except Exception as e:
+            print(f"❌ Error getting unused caption: {e}")
+            return None
+    
+    def get_unused_image(self) -> Optional[Dict]:
+        """Get a random unused image"""
+        try:
+            print("🔍 get_unused_image: Fetching unused image...")
+            
+            response = requests.get(
+                f"{self.supabase_url}/rest/v1/images",
+                headers=self.headers,
+                params={'used': 'eq.false'}
+            )
+            
+            if response.status_code == 200:
+                images = response.json()
+                if images:
+                    # Pick a random image
+                    import random
+                    image = random.choice(images)
+                    print(f"🔍 get_unused_image: Selected image: {image['id']}")
+                    return image
+                else:
+                    print("🔍 get_unused_image: No unused images found")
+                    return None
+            else:
+                print(f"❌ get_unused_image: HTTP {response.status_code}: {response.text}")
+                return None
+        except Exception as e:
+            print(f"❌ Error getting unused image: {e}")
+            return None
+    
+    def mark_caption_used(self, caption_id: int) -> bool:
+        """Mark a caption as used"""
+        try:
+            print(f"🔍 mark_caption_used: Marking caption {caption_id} as used")
+            
+            response = requests.patch(
+                f"{self.supabase_url}/rest/v1/captions?id=eq.{caption_id}",
+                json={"used": True},
+                headers=self.headers
+            )
+            
+            print(f"🔍 mark_caption_used: Response status: {response.status_code}")
+            return response.status_code == 204
+        except Exception as e:
+            print(f"❌ Error marking caption as used: {e}")
+            return False
+    
+    def mark_image_used(self, image_id: int) -> bool:
+        """Mark an image as used"""
+        try:
+            print(f"🔍 mark_image_used: Marking image {image_id} as used")
+            
+            response = requests.patch(
+                f"{self.supabase_url}/rest/v1/images?id=eq.{image_id}",
+                json={"used": True},
+                headers=self.headers
+            )
+            
+            print(f"🔍 mark_image_used: Response status: {response.status_code}")
+            return response.status_code == 204
+        except Exception as e:
+            print(f"❌ Error marking image as used: {e}")
+            return False
+    
+    def update_account_last_posted(self, account_id: int) -> bool:
+        """Update account's last_posted timestamp"""
+        try:
+            print(f"🔍 update_account_last_posted: Updating account {account_id}")
+            
+            from datetime import datetime
+            response = requests.patch(
+                f"{self.supabase_url}/rest/v1/accounts?id=eq.{account_id}",
+                json={"last_posted": datetime.now().isoformat()},
+                headers=self.headers
+            )
+            
+            print(f"🔍 update_account_last_posted: Response status: {response.status_code}")
+            return response.status_code == 204
+        except Exception as e:
+            print(f"❌ Error updating account last_posted: {e}")
+            return False
+    
     def update_account(self, account_id: int, data: dict) -> bool:
         """Update an existing account"""
         try:

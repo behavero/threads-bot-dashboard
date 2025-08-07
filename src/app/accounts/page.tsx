@@ -265,6 +265,35 @@ export default function AccountsPage() {
     }
   }
 
+  const postNow = async (accountId: number, username: string) => {
+    try {
+      setError('')
+      setMessage('')
+      console.log(`Triggering post for account ${username}...`)
+      
+      const response = await fetch(`https://threads-bot-dashboard-3.onrender.com/api/accounts/${accountId}/post`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      const data = await response.json()
+      console.log('Post response:', data)
+      
+      if (data.success) {
+        setMessage(`Post published successfully for ${username}! ${data.session_reused ? '(Session reused)' : '(Fresh login)'}`)
+        // Refresh accounts to update last_posted
+        await fetchAccounts()
+      } else {
+        setError(data.error || 'Failed to publish post')
+      }
+    } catch (err) {
+      console.error('Post error:', err)
+      setError('Failed to publish post')
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -384,6 +413,12 @@ export default function AccountsPage() {
                   className="modern-button px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700"
                 >
                   Test Session
+                </button>
+                <button
+                  onClick={() => postNow(account.id, account.username)}
+                  className="modern-button px-3 py-1 text-sm bg-green-600 hover:bg-green-700"
+                >
+                  Post Now
                 </button>
                 <button
                   onClick={() => handleDelete(account.id)}
