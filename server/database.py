@@ -12,10 +12,12 @@ from datetime import datetime
 class DatabaseManager:
     def __init__(self):
         self.supabase_url = os.getenv('SUPABASE_URL')
-        self.supabase_key = os.getenv('SUPABASE_KEY')
+        self.supabase_key = os.getenv('SUPABASE_KEY') or os.getenv('SUPABASE_SERVICE_ROLE_KEY')
         
         if not self.supabase_url or not self.supabase_key:
             print("❌ Supabase credentials not configured")
+            print(f"SUPABASE_URL: {self.supabase_url}")
+            print(f"SUPABASE_KEY exists: {bool(self.supabase_key)}")
             raise ValueError("Missing Supabase credentials")
         
         self.headers = {
@@ -26,6 +28,8 @@ class DatabaseManager:
         }
         
         print("✅ Database manager initialized")
+        print(f"✅ Supabase URL: {self.supabase_url}")
+        print(f"✅ Using service role key: {bool(self.supabase_key)}")
     
     def get_active_accounts(self) -> List[Dict]:
         """Get all active accounts"""
@@ -94,6 +98,8 @@ class DatabaseManager:
                 caption_data["user_id"] = user_id
                 
             print(f"📝 Adding caption: {caption_data}")
+            print(f"📝 Supabase URL: {self.supabase_url}")
+            print(f"📝 Headers: {self.headers}")
                 
             response = requests.post(
                 f"{self.supabase_url}/rest/v1/captions",
@@ -104,9 +110,17 @@ class DatabaseManager:
             print(f"📝 Response status: {response.status_code}")
             print(f"📝 Response text: {response.text}")
             
-            return response.status_code == 201
+            if response.status_code != 201:
+                print(f"❌ HTTP Error: {response.status_code}")
+                print(f"❌ Response: {response.text}")
+                return False
+            
+            return True
         except Exception as e:
             print(f"❌ Error adding caption: {e}")
+            print(f"❌ Exception type: {type(e)}")
+            import traceback
+            print(f"❌ Traceback: {traceback.format_exc()}")
             return False
     
     def add_image(self, url: str, filename: str = None, size: int = None, type: str = None, user_id: str = None) -> bool:
