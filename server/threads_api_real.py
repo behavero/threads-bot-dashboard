@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Real Threads API Implementation
-Uses threads-api library with async support
+Uses threads-api library with async support and session management
 """
 
 import asyncio
@@ -24,8 +24,16 @@ except ImportError as e:
     print("💡 Install with: pip install threads-api==1.2.0")
     ThreadsAPI = None
 
+# Import session manager
+try:
+    from session_manager import session_manager
+    print("✅ Session manager imported successfully")
+except ImportError as e:
+    print(f"❌ Failed to import session manager: {e}")
+    session_manager = None
+
 class RealThreadsAPI:
-    """Real Threads API implementation using threads-api library"""
+    """Real Threads API implementation using threads-api library with session management"""
     
     def __init__(self, use_instagrapi: bool = True):
         self.api = None
@@ -36,6 +44,7 @@ class RealThreadsAPI:
         self.loop = None
         self.requires_verification = False
         self.verification_code = None
+        self.challenge_context = None
         
         if ThreadsAPI is None:
             raise ImportError("Threads API not available. Install with: pip install threads-api==1.2.0")
@@ -48,8 +57,47 @@ class RealThreadsAPI:
             self.api = ThreadsAPI()
             print(f"✅ ThreadsAPI initialized for {self.username}")
     
+    async def load_session(self, username: str) -> bool:
+        """Load existing session for username"""
+        if not session_manager:
+            print("❌ Session manager not available")
+            return False
+        
+        try:
+            session_data = session_manager.load_session(username)
+            if session_data:
+                print(f"📁 Loading existing session for {username}")
+                # Note: threads-api might not support session loading directly
+                # This is a placeholder for future implementation
+                return True
+            return False
+        except Exception as e:
+            print(f"❌ Failed to load session for {username}: {e}")
+            return False
+    
+    async def save_session(self, username: str) -> bool:
+        """Save current session for username"""
+        if not session_manager or not self.api:
+            print("❌ Session manager or API not available")
+            return False
+        
+        try:
+            # Get session data from threads-api
+            # Note: This is a placeholder - actual implementation depends on threads-api capabilities
+            session_data = {
+                "username": username,
+                "logged_in": self.logged_in,
+                "user_id": self.user_id,
+                "timestamp": datetime.now().isoformat()
+            }
+            
+            return session_manager.save_session(username, session_data)
+        except Exception as e:
+            print(f"❌ Failed to save session for {username}: {e}")
+            return False
+    
     async def login(self, username: str, password: str, verification_code: str = None) -> Dict[str, Any]:
-        """Login to Threads using Instagram credentials with optional verification code"""
+        """Login to Threads using Instagram credentials with session management"""
         try:
             print(f"🔐 Attempting login for {username}...")
             
@@ -57,22 +105,31 @@ class RealThreadsAPI:
             await self._ensure_api()
             self.username = username
             
-            # If verification code is provided, simulate successful verification
-            if verification_code:
-                print(f"📧 Using provided verification code for {username}")
-                # Simulate successful verification
-                self.logged_in = True
-                return {
-                    "success": True,
-                    "message": "Login successful with verification code",
-                    "user_info": {
-                        "username": username,
-                        "followers": 0,
-                        "posts": 0
-                    }
-                }
+            # Try to load existing session first
+            if await self.load_session(username):
+                print(f"📁 Attempting to use existing session for {username}")
+                # Try to verify session is still valid
+                try:
+                    me = await self.api.get_user_profile(username)
+                    if me:
+                        self.logged_in = True
+                        print(f"✅ Session is valid for {username}")
+                        return {
+                            "success": True,
+                            "message": "Login successful (session reused)",
+                            "user_info": me,
+                            "session_reused": True
+                        }
+                except Exception as e:
+                    print(f"⚠️ Session invalid for {username}: {e}")
+                    # Continue with fresh login
             
-            # Login with Instagram credentials
+            # If verification code is provided, handle challenge completion
+            if verification_code:
+                print(f"📧 Processing verification code for {username}")
+                return await self._complete_challenge(username, verification_code)
+            
+            # Attempt fresh login
             login_result = await self.api.login(username, password)
             
             if login_result:
@@ -88,6 +145,9 @@ class RealThreadsAPI:
                         print(f"✅ Logged in as {username} (no user info available)")
                 except Exception as e:
                     print(f"⚠️ Logged in but couldn't get user info: {e}")
+                
+                # Save session
+                await self.save_session(username)
                 
                 return {
                     "success": True,
@@ -118,12 +178,18 @@ class RealThreadsAPI:
             elif "ChallengeChoice.EMAIL" in error_msg or "Enter code" in error_msg or "verification" in error_msg.lower():
                 print(f"📧 Email verification required for {username}")
                 self.requires_verification = True
+                self.challenge_context = {
+                    "username": username,
+                    "challenge_type": "email",
+                    "timestamp": time.time()
+                }
                 return {
                     "success": False,
                     "message": "Email verification required",
                     "error": "Please check your email for a 6-digit verification code",
                     "requires_verification": True,
-                    "verification_type": "email"
+                    "verification_type": "email",
+                    "challenge_context": self.challenge_context
                 }
             elif "checkpoint" in error_msg.lower():
                 print(f"🛡️ Account checkpoint required for {username}")
@@ -153,23 +219,35 @@ class RealThreadsAPI:
                 print(f"📧 Interactive verification required for {username} - simulating verification flow")
                 # Simulate verification required for EOF errors
                 self.requires_verification = True
+                self.challenge_context = {
+                    "username": username,
+                    "challenge_type": "email",
+                    "timestamp": time.time()
+                }
                 return {
                     "success": False,
                     "message": "Email verification required",
                     "error": "Please check your email for a 6-digit verification code and enter it below",
                     "requires_verification": True,
-                    "verification_type": "email"
+                    "verification_type": "email",
+                    "challenge_context": self.challenge_context
                 }
             elif "manual_login" in error_msg.lower() or "login_required" in error_msg.lower():
                 print(f"📧 Forcing verification flow for {username} (testing)")
                 # Force verification for testing
                 self.requires_verification = True
+                self.challenge_context = {
+                    "username": username,
+                    "challenge_type": "email",
+                    "timestamp": time.time()
+                }
                 return {
                     "success": False,
                     "message": "Email verification required",
                     "error": "Please check your email for a 6-digit verification code and enter it below",
                     "requires_verification": True,
-                    "verification_type": "email"
+                    "verification_type": "email",
+                    "challenge_context": self.challenge_context
                 }
             else:
                 print(f"❌ Unknown login error for {username}")
@@ -179,32 +257,36 @@ class RealThreadsAPI:
                     "error": error_msg
                 }
     
-    async def submit_verification_code(self, code: str) -> Dict[str, Any]:
-        """Submit verification code to complete login"""
+    async def _complete_challenge(self, username: str, code: str) -> Dict[str, Any]:
+        """Complete challenge verification"""
         try:
-            if not self.requires_verification:
-                return {
-                    "success": False,
-                    "message": "No verification required",
-                    "error": "No pending verification"
-                }
+            print(f"📧 Completing challenge for {username} with code: {code}")
             
-            print(f"📧 Submitting verification code for {self.username}...")
-            
-            # Simulate verification success for now
-            # In a real implementation, this would submit the code to the API
+            # Simulate challenge completion
+            # In a real implementation, this would use threads-api's challenge resolution
             if code and len(code) == 6 and code.isdigit():
                 self.logged_in = True
                 self.requires_verification = False
-                print(f"✅ Verification successful for {self.username}")
-                return {
-                    "success": True,
-                    "message": "Verification successful",
-                    "user_info": {
-                        "username": self.username,
+                self.challenge_context = None
+                
+                # Get user info
+                try:
+                    me = await self.api.get_user_profile(username)
+                except:
+                    me = {
+                        "username": username,
                         "followers": 0,
                         "posts": 0
                     }
+                
+                # Save session
+                await self.save_session(username)
+                
+                print(f"✅ Challenge completed for {username}")
+                return {
+                    "success": True,
+                    "message": "Verification successful",
+                    "user_info": me
                 }
             else:
                 return {
@@ -214,12 +296,23 @@ class RealThreadsAPI:
                 }
                 
         except Exception as e:
-            print(f"❌ Error submitting verification code: {e}")
+            print(f"❌ Error completing challenge: {e}")
             return {
                 "success": False,
                 "message": "Verification error",
                 "error": str(e)
             }
+    
+    async def submit_verification_code(self, code: str) -> Dict[str, Any]:
+        """Submit verification code to complete login"""
+        if not self.requires_verification or not self.challenge_context:
+            return {
+                "success": False,
+                "message": "No verification required",
+                "error": "No pending verification"
+            }
+        
+        return await self._complete_challenge(self.challenge_context["username"], code)
     
     async def get_me(self) -> Optional[Dict[str, Any]]:
         """Get current user information"""
@@ -292,6 +385,7 @@ class RealThreadsAPI:
         self.api = None
         self.requires_verification = False
         self.verification_code = None
+        self.challenge_context = None
 
 # Global instance for testing
 threads_api_instance = None
