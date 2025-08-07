@@ -30,6 +30,7 @@ class DatabaseManager:
         print("✅ Database manager initialized")
         print(f"✅ Supabase URL: {self.supabase_url}")
         print(f"✅ Using service role key: {bool(self.supabase_key)}")
+        print(f"✅ Headers configured: {list(self.headers.keys())}")
     
     def get_active_accounts(self) -> List[Dict]:
         """Get all active accounts"""
@@ -100,6 +101,7 @@ class DatabaseManager:
             print(f"📝 Adding caption: {caption_data}")
             print(f"📝 Supabase URL: {self.supabase_url}")
             print(f"📝 Headers: {self.headers}")
+            print(f"📝 Request URL: {self.supabase_url}/rest/v1/captions")
                 
             response = requests.post(
                 f"{self.supabase_url}/rest/v1/captions",
@@ -109,12 +111,14 @@ class DatabaseManager:
             
             print(f"📝 Response status: {response.status_code}")
             print(f"📝 Response text: {response.text}")
+            print(f"📝 Response headers: {dict(response.headers)}")
             
             if response.status_code != 201:
                 print(f"❌ HTTP Error: {response.status_code}")
                 print(f"❌ Response: {response.text}")
                 return False
             
+            print("✅ Caption added successfully")
             return True
         except Exception as e:
             print(f"❌ Error adding caption: {e}")
