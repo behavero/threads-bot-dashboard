@@ -18,12 +18,8 @@ interface Account {
 
 interface AccountFormData {
   username: string
-  email: string
   password: string
   description: string
-  posting_config: string
-  fingerprint_config: string
-  status: 'enabled' | 'disabled'
 }
 
 export default function AccountsPage() {
@@ -33,14 +29,11 @@ export default function AccountsPage() {
   const [message, setMessage] = useState('')
   const [showModal, setShowModal] = useState(false)
   const [editingAccount, setEditingAccount] = useState<Account | null>(null)
+  const [hidePassword, setHidePassword] = useState(false)
   const [formData, setFormData] = useState<AccountFormData>({
     username: '',
-    email: '',
     password: '',
-    description: '',
-    posting_config: '{}',
-    fingerprint_config: '{}',
-    status: 'enabled'
+    description: ''
   })
 
   useEffect(() => {
@@ -77,37 +70,66 @@ export default function AccountsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    setMessage('')
 
     try {
-      const url = editingAccount 
-        ? `https://threads-bot-dashboard-3.onrender.com/api/accounts/${editingAccount.id}`
-        : 'https://threads-bot-dashboard-3.onrender.com/api/accounts'
-      
-      const method = editingAccount ? 'PUT' : 'POST'
-      
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          ...formData,
-          posting_config: JSON.parse(formData.posting_config),
-          fingerprint_config: JSON.parse(formData.fingerprint_config)
+      if (editingAccount) {
+        // Handle editing existing account
+        const url = `https://threads-bot-dashboard-3.onrender.com/api/accounts/${editingAccount.id}`
+        
+        const response = await fetch(url, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            username: formData.username,
+            password: formData.password,
+            description: formData.description
+          })
         })
-      })
 
-      const data = await response.json()
+        const data = await response.json()
 
-      if (data.success) {
-        setShowModal(false)
-        setEditingAccount(null)
-        resetForm()
-        await fetchAccounts()
+        if (data.success) {
+          setShowModal(false)
+          setEditingAccount(null)
+          resetForm()
+          await fetchAccounts()
+          setMessage('Account updated successfully!')
+        } else {
+          setError(data.error || 'Failed to update account')
+        }
       } else {
-        setError(data.error || 'Failed to save account')
+        // Handle creating new account via login
+        console.log('Creating account via login...')
+        
+        const response = await fetch('https://threads-bot-dashboard-3.onrender.com/api/accounts/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            username: formData.username,
+            password: formData.password
+          })
+        })
+
+        const data = await response.json()
+        console.log('Login response:', data)
+
+        if (data.success) {
+          setShowModal(false)
+          resetForm()
+          await fetchAccounts()
+          setMessage(`Account created successfully! ${data.user_info?.followers || 0} followers, ${data.user_info?.posts || 0} posts`)
+          setHidePassword(true) // Hide password for security
+        } else {
+          setError(data.error || 'Failed to create account')
+        }
       }
     } catch (err) {
+      console.error('Error saving account:', err)
       setError('Error saving account')
     }
   }
@@ -116,12 +138,8 @@ export default function AccountsPage() {
     setEditingAccount(account)
     setFormData({
       username: account.username,
-      email: account.email || '',
       password: account.password || '',
-      description: account.description || '',
-      posting_config: JSON.stringify(account.posting_config || {}, null, 2),
-      fingerprint_config: JSON.stringify(account.fingerprint_config || {}, null, 2),
-      status: account.status
+      description: account.description || ''
     })
     setShowModal(true)
   }
@@ -176,13 +194,10 @@ export default function AccountsPage() {
   const resetForm = () => {
     setFormData({
       username: '',
-      email: '',
       password: '',
-      description: '',
-      posting_config: '{}',
-      fingerprint_config: '{}',
-      status: 'enabled'
+      description: ''
     })
+    setHidePassword(false)
   }
 
   const openAddModal = () => {
@@ -364,45 +379,32 @@ export default function AccountsPage() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-300">
-                    Username *
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.username}
-                    onChange={(e) => setFormData({...formData, username: e.target.value})}
-                    required
-                    className="w-full px-4 py-3 bg-transparent border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 transition-colors"
-                    placeholder="Enter Threads username"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-300">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    className="w-full px-4 py-3 bg-transparent border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 transition-colors"
-                    placeholder="Enter email"
-                  />
-                </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">
+                  Username *
+                </label>
+                <input
+                  type="text"
+                  value={formData.username}
+                  onChange={(e) => setFormData({...formData, username: e.target.value})}
+                  required
+                  className="w-full px-4 py-3 bg-transparent border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 transition-colors"
+                  placeholder="Enter Threads username"
+                />
               </div>
 
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-300">
-                  Password
+                  Password *
                 </label>
                 <input
                   type="password"
-                  value={formData.password}
+                  value={hidePassword ? '' : formData.password}
                   onChange={(e) => setFormData({...formData, password: e.target.value})}
-                  className="w-full px-4 py-3 bg-transparent border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 transition-colors"
-                  placeholder="Enter password"
+                  required={!editingAccount}
+                  disabled={hidePassword}
+                  className="w-full px-4 py-3 bg-transparent border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 transition-colors disabled:opacity-50"
+                  placeholder={hidePassword ? "Password hidden for security" : (editingAccount ? "Leave blank to keep current password" : "Enter Threads password")}
                 />
               </div>
 
@@ -419,61 +421,19 @@ export default function AccountsPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-300">
-                    Posting Config (JSON)
-                  </label>
-                  <textarea
-                    value={formData.posting_config}
-                    onChange={(e) => setFormData({...formData, posting_config: e.target.value})}
-                    rows={6}
-                    className="w-full px-4 py-3 bg-transparent border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 transition-colors resize-none font-mono text-sm"
-                    placeholder='{"posting_interval": 3600, "max_posts_per_day": 5}'
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-300">
-                    Fingerprint Config (JSON)
-                  </label>
-                  <textarea
-                    value={formData.fingerprint_config}
-                    onChange={(e) => setFormData({...formData, fingerprint_config: e.target.value})}
-                    rows={6}
-                    className="w-full px-4 py-3 bg-transparent border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 transition-colors resize-none font-mono text-sm"
-                    placeholder='{"user_agent": "custom", "proxy": null}'
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300">
-                  Status
-                </label>
-                <select
-                  value={formData.status}
-                  onChange={(e) => setFormData({...formData, status: e.target.value as 'enabled' | 'disabled'})}
-                  className="w-full px-4 py-3 bg-transparent border border-gray-600 rounded-lg text-white focus:outline-none focus:border-purple-500 transition-colors"
-                >
-                  <option value="enabled">Enabled</option>
-                  <option value="disabled">Disabled</option>
-                </select>
-              </div>
-
-              <div className="flex space-x-4 pt-4">
-                <button
-                  type="submit"
-                  className="modern-button px-6 py-3 glow-on-hover flex-1"
-                >
-                  {editingAccount ? 'Update Account' : 'Add Account'}
-                </button>
+              <div className="flex justify-end space-x-4 pt-4">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="modern-button px-6 py-3 bg-gray-600 hover:bg-gray-700"
+                  className="px-6 py-3 text-gray-300 hover:text-white transition-colors"
                 >
                   Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="modern-button px-6 py-3 glow-on-hover"
+                >
+                  {editingAccount ? 'Update Account' : 'Add Account'}
                 </button>
               </div>
             </form>
