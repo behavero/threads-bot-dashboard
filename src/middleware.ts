@@ -1,11 +1,7 @@
-import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
-  // Temporarily disable middleware to debug authentication
-  console.log('Middleware called for:', request.nextUrl.pathname)
-  
-  // Allow all requests for now
+  // Completely disabled - allow all requests
   return NextResponse.next()
 }
 

@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import './globals.css'
-import { AuthProvider } from '@/lib/auth'
 
 export const metadata: Metadata = {
   title: 'Threadly - Threads Bot Dashboard',
@@ -15,9 +14,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="bg-gray-50">
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+        {children}
       </body>
     </html>
   )

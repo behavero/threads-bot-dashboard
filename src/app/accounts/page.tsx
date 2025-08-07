@@ -13,6 +13,7 @@ interface Account {
   status: 'enabled' | 'disabled'
   is_active: boolean
   created_at: string
+  last_posted?: string
 }
 
 interface AccountFormData {
@@ -48,7 +49,7 @@ export default function AccountsPage() {
   const fetchAccounts = async () => {
     try {
       console.log('Fetching accounts...')
-      const response = await fetch('/api/accounts')
+      const response = await fetch('https://threads-bot-dashboard-3.onrender.com/api/accounts')
       const data = await response.json()
       
       console.log('Accounts response:', data)
@@ -77,8 +78,8 @@ export default function AccountsPage() {
 
     try {
       const url = editingAccount 
-        ? `/api/accounts/${editingAccount.id}`
-        : '/api/accounts'
+        ? `https://threads-bot-dashboard-3.onrender.com/api/accounts/${editingAccount.id}`
+        : 'https://threads-bot-dashboard-3.onrender.com/api/accounts'
       
       const method = editingAccount ? 'PUT' : 'POST'
       
@@ -127,7 +128,7 @@ export default function AccountsPage() {
     if (!confirm('Are you sure you want to delete this account?')) return
 
     try {
-      const response = await fetch(`/api/accounts/${id}`, {
+      const response = await fetch(`https://threads-bot-dashboard-3.onrender.com/api/accounts/${id}`, {
         method: 'DELETE'
       })
 
@@ -145,14 +146,16 @@ export default function AccountsPage() {
 
   const handleToggleStatus = async (account: Account) => {
     try {
-      const response = await fetch(`/api/accounts/${account.id}`, {
+      const newStatus = account.status === 'enabled' ? 'disabled' : 'enabled'
+      
+      const response = await fetch(`https://threads-bot-dashboard-3.onrender.com/api/accounts/${account.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           ...account,
-          status: account.status === 'enabled' ? 'disabled' : 'enabled'
+          status: newStatus
         })
       })
 

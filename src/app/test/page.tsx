@@ -11,15 +11,9 @@ export default function TestPage() {
     const results: any = {}
 
     try {
-      // Test 1: Authentication
-      results.auth = {
-        user: user ? '✅ Logged in' : '❌ Not logged in',
-        email: user?.email || 'N/A'
-      }
-
-      // Test 2: Backend connection
+      // Test 1: Backend connection
       try {
-        const backendResponse = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/status`)
+        const backendResponse = await fetch('https://threads-bot-dashboard-3.onrender.com/api/status')
         const backendData = await backendResponse.json()
         results.backend = {
           status: backendResponse.ok ? '✅ Connected' : '❌ Failed',
@@ -32,24 +26,24 @@ export default function TestPage() {
         }
       }
 
-      // Test 3: Supabase connection
+      // Test 2: Captions API
       try {
-        const supabaseResponse = await fetch('/api/test-env')
-        const supabaseData = await supabaseResponse.json()
-        results.supabase = {
-          status: supabaseResponse.ok ? '✅ Connected' : '❌ Failed',
-          data: supabaseData
+        const captionsResponse = await fetch('https://threads-bot-dashboard-3.onrender.com/api/captions')
+        const captionsData = await captionsResponse.json()
+        results.captions = {
+          status: captionsResponse.ok ? '✅ Working' : '❌ Failed',
+          data: captionsData
         }
       } catch (error) {
-        results.supabase = {
+        results.captions = {
           status: '❌ Error',
           error: error instanceof Error ? error.message : 'Unknown error'
         }
       }
 
-      // Test 4: Accounts API
+      // Test 3: Accounts API
       try {
-        const accountsResponse = await fetch('/api/accounts')
+        const accountsResponse = await fetch('https://threads-bot-dashboard-3.onrender.com/api/accounts')
         const accountsData = await accountsResponse.json()
         results.accounts = {
           status: accountsResponse.ok ? '✅ Working' : '❌ Failed',
@@ -62,16 +56,16 @@ export default function TestPage() {
         }
       }
 
-      // Test 5: Prompts API
+      // Test 4: Images API
       try {
-        const promptsResponse = await fetch('/api/prompts')
-        const promptsData = await promptsResponse.json()
-        results.prompts = {
-          status: promptsResponse.ok ? '✅ Working' : '❌ Failed',
-          data: promptsData
+        const imagesResponse = await fetch('https://threads-bot-dashboard-3.onrender.com/api/images')
+        const imagesData = await imagesResponse.json()
+        results.images = {
+          status: imagesResponse.ok ? '✅ Working' : '❌ Failed',
+          data: imagesData
         }
       } catch (error) {
-        results.prompts = {
+        results.images = {
           status: '❌ Error',
           error: error instanceof Error ? error.message : 'Unknown error'
         }
@@ -85,7 +79,7 @@ export default function TestPage() {
     setIsLoading(false)
   }
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
@@ -98,7 +92,7 @@ export default function TestPage() {
       <div className="max-w-4xl mx-auto space-y-8">
         <div className="text-center">
           <h1 className="text-4xl font-bold gradient-text mb-4">System Test Page</h1>
-          <p className="text-gray-300">Testing authentication and API connections</p>
+          <p className="text-gray-300">Testing backend API connections</p>
         </div>
 
         <div className="modern-card p-8">
@@ -106,10 +100,10 @@ export default function TestPage() {
             <h2 className="text-2xl font-bold text-white">Test Results</h2>
             <button
               onClick={runTests}
-              disabled={isTesting}
+              disabled={isLoading}
               className="modern-button px-6 py-3 glow-on-hover"
             >
-              {isTesting ? 'Running Tests...' : 'Run Tests'}
+              {isLoading ? 'Running Tests...' : 'Run Tests'}
             </button>
           </div>
 
@@ -136,26 +130,6 @@ export default function TestPage() {
               ))}
             </div>
           )}
-        </div>
-
-        <div className="modern-card p-8">
-          <h2 className="text-2xl font-bold text-white mb-4">Current Status</h2>
-          <div className="space-y-4">
-            <div className="flex justify-between">
-              <span className="text-gray-300">Authentication:</span>
-              <span className={user ? 'text-green-400' : 'text-red-400'}>
-                {user ? '✅ Logged In' : '❌ Not Logged In'}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-300">User Email:</span>
-              <span className="text-white">{user?.email || 'N/A'}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-300">User ID:</span>
-              <span className="text-white">{user?.id || 'N/A'}</span>
-            </div>
-          </div>
         </div>
       </div>
     </div>
