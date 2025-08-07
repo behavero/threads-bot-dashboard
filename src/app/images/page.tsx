@@ -1,9 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAuth } from '@/lib/auth'
+import Image from 'next/image'
 
-interface Image {
+interface ImageFile {
   id: number
   filename: string
   url: string
@@ -13,12 +13,11 @@ interface Image {
 }
 
 export default function ImagesPage() {
-  const { user } = useAuth()
-  const [images, setImages] = useState<File[]>([])
-  const [uploadedImages, setUploadedImages] = useState<Image[]>([])
-  const [isUploading, setIsUploading] = useState(false)
-  const [message, setMessage] = useState('')
-  const [supabaseStatus, setSupabaseStatus] = useState<string>('')
+  const [images, setImages] = useState<ImageFile[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [uploading, setUploading] = useState(false)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
   useEffect(() => {
     fetchUploadedImages()

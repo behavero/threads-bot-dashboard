@@ -1,8 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useAuth } from '@/lib/auth'
-import ProtectedRoute from '@/components/ProtectedRoute'
 import EngagementChart from '@/components/EngagementChart'
 import AccountsPage from '@/app/accounts/page'
 import CaptionsPage from '@/app/captions/page'
@@ -11,13 +9,8 @@ import Link from 'next/link'
 import Image from 'next/image'
 
 export default function DashboardPage() {
-  const { user, signOut } = useAuth()
   const [activeTab, setActiveTab] = useState('dashboard')
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-
-  const handleSignOut = async () => {
-    await signOut()
-  }
 
   const navigationItems = [
     { id: 'dashboard', name: 'Dashboard' },
@@ -28,157 +21,142 @@ export default function DashboardPage() {
   ]
 
   return (
-    <ProtectedRoute>
-      <div className="min-h-screen relative">
-        {/* Background decorative elements */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-pulse"></div>
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-600 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-pulse"></div>
-          
-          {/* Decorative lines */}
-          <div className="absolute top-1/4 left-0 w-full h-px bg-gradient-to-r from-transparent via-purple-500/30 to-transparent"></div>
-          <div className="absolute top-3/4 left-0 w-full h-px bg-gradient-to-r from-transparent via-purple-500/20 to-transparent"></div>
-          
-          {/* Decorative circles */}
-          <div className="absolute top-1/3 right-1/4 w-32 h-32 border border-purple-500/20 rounded-full"></div>
-          <div className="absolute bottom-1/3 left-1/4 w-24 h-24 border border-purple-500/15 rounded-full"></div>
-          <div className="absolute top-2/3 right-1/3 w-16 h-16 border border-purple-500/25 rounded-full"></div>
+    <div className="min-h-screen relative">
+      {/* Background decorative elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-600 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-pulse"></div>
+        
+        {/* Decorative lines */}
+        <div className="absolute top-1/4 left-0 w-full h-px bg-gradient-to-r from-transparent via-purple-500/30 to-transparent"></div>
+        <div className="absolute top-3/4 left-0 w-full h-px bg-gradient-to-r from-transparent via-purple-500/20 to-transparent"></div>
+        
+        {/* Decorative circles */}
+        <div className="absolute top-1/3 right-1/4 w-32 h-32 border border-purple-500/20 rounded-full"></div>
+        <div className="absolute bottom-1/3 left-1/4 w-24 h-24 border border-purple-500/15 rounded-full"></div>
+        <div className="absolute top-2/3 right-1/3 w-16 h-16 border border-purple-500/25 rounded-full"></div>
+      </div>
+
+      {/* Header */}
+      <header className="modern-nav relative z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16 sm:h-20">
+            <div className="flex items-center">
+              <Link href="/" className="flex items-center">
+                <Image
+                  src="/logo.svg"
+                  alt="Threadly Logo"
+                  width={400}
+                  height={80}
+                  priority
+                  className="max-h-8 sm:max-h-12 md:max-h-16 h-auto w-auto text-white hover:opacity-90 transition-opacity duration-200 [&_path]:fill-white [&_path]:dark:fill-white"
+                  onError={(e) => {
+                    console.error('Logo failed to load:', e)
+                  }}
+                  onLoad={() => {
+                    console.log('Logo loaded successfully')
+                  }}
+                />
+              </Link>
+            </div>
+            
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center space-x-6">
+              <button
+                className="modern-button px-4 py-2 text-sm"
+              >
+                Dashboard
+              </button>
+            </div>
+
+            {/* Mobile Burger Menu Button */}
+            <div className="md:hidden">
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="text-white p-2 rounded-lg hover:bg-purple-600/20 transition-colors"
+                aria-label="Toggle menu"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  {isMobileMenuOpen ? (
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  ) : (
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 6h16M4 12h16M4 18h16"
+                    />
+                  )}
+                </svg>
+              </button>
+            </div>
+          </div>
         </div>
+      </header>
 
-        {/* Header */}
-        <header className="modern-nav relative z-10">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16 sm:h-20">
-              <div className="flex items-center">
-                <Link href="/" className="flex items-center">
-                  <Image
-                    src="/logo.svg"
-                    alt="Threadly Logo"
-                    width={400}
-                    height={80}
-                    priority
-                    className="max-h-8 sm:max-h-12 md:max-h-16 h-auto w-auto text-white hover:opacity-90 transition-opacity duration-200 [&_path]:fill-white [&_path]:dark:fill-white"
-                    onError={(e) => {
-                      console.error('Logo failed to load:', e)
-                    }}
-                    onLoad={() => {
-                      console.log('Logo loaded successfully')
-                    }}
-                  />
-                </Link>
-              </div>
-              
-              {/* Desktop Navigation */}
-              <div className="hidden md:flex items-center space-x-6">
-                <button
-                  onClick={handleSignOut}
-                  className="modern-button px-4 py-2 text-sm"
-                >
-                  Sign Out
-                </button>
-              </div>
-
-              {/* Mobile Burger Menu Button */}
-              <div className="md:hidden">
-                <button
-                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                  className="text-white p-2 rounded-lg hover:bg-purple-600/20 transition-colors"
-                  aria-label="Toggle menu"
-                >
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    {isMobileMenuOpen ? (
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    ) : (
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4 6h16M4 12h16M4 18h16"
-                      />
-                    )}
-                  </svg>
-                </button>
-              </div>
-            </div>
+      {/* Mobile Menu */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden modern-card absolute top-full left-0 right-0 z-20 mt-2 mx-4">
+          <div className="px-4 py-2 space-y-2">
+            {navigationItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => {
+                  setActiveTab(item.id)
+                  setIsMobileMenuOpen(false)
+                }}
+                className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
+                  activeTab === item.id
+                    ? 'bg-purple-600 text-white'
+                    : 'text-gray-300 hover:bg-purple-600/20'
+                }`}
+              >
+                {item.name}
+              </button>
+            ))}
           </div>
-        </header>
+        </div>
+      )}
 
-        {/* Mobile Navigation Menu */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden modern-nav relative z-10 border-t border-gray-700">
-            <div className="px-4 py-2 space-y-1">
-              {navigationItems.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    setActiveTab(item.id)
-                    setIsMobileMenuOpen(false)
-                  }}
-                  className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${
-                    activeTab === item.id
-                      ? 'bg-purple-600/20 text-white'
-                      : 'text-gray-300 hover:text-white hover:bg-gray-700/50'
-                  }`}
-                >
-                  {item.name}
-                </button>
-              ))}
-              <div className="border-t border-gray-700 mt-2 pt-2">
-                <button
-                  onClick={() => {
-                    handleSignOut()
-                    setIsMobileMenuOpen(false)
-                  }}
-                  className="w-full text-left px-4 py-3 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-600/20 transition-colors"
-                >
-                  Sign Out
-                </button>
-              </div>
-            </div>
+      {/* Main Content */}
+      <main className="relative z-10 pt-8 pb-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Desktop Navigation Tabs */}
+          <div className="hidden md:flex items-center space-x-8 mb-8">
+            {navigationItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  activeTab === item.id
+                    ? 'bg-purple-600 text-white'
+                    : 'text-gray-300 hover:bg-purple-600/20'
+                }`}
+              >
+                {item.name}
+              </button>
+            ))}
           </div>
-        )}
 
-        {/* Desktop Navigation */}
-        <nav className="hidden md:block modern-nav relative z-10">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex space-x-8">
-              {navigationItems.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`nav-link py-6 px-1 font-medium text-sm transition-all duration-300 ${
-                    activeTab === tab.id
-                      ? 'text-white'
-                      : 'text-gray-400 hover:text-white'
-                  }`}
-                >
-                  {tab.name}
-                </button>
-              ))}
-            </div>
-          </div>
-        </nav>
-
-        {/* Content */}
-        <main className="relative z-10 max-w-7xl mx-auto py-4 sm:py-8 px-4 sm:px-6 lg:px-8">
+          {/* Content Sections */}
           {activeTab === 'dashboard' && <DashboardContent />}
           {activeTab === 'accounts' && <AccountsContent />}
           {activeTab === 'captions' && <CaptionsContent />}
           {activeTab === 'schedule' && <ScheduleContent />}
           {activeTab === 'images' && <ImagesContent />}
-        </main>
-      </div>
-    </ProtectedRoute>
+        </div>
+      </main>
+    </div>
   )
 }
 

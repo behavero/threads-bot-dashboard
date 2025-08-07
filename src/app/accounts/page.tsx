@@ -1,18 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAuth } from '@/lib/auth'
 
 interface Account {
   id: number
   username: string
   email: string
   password: string
-  description: string
-  posting_config: any
-  fingerprint_config: any
-  status: 'enabled' | 'disabled'
-  last_posted: string | null
+  is_active: boolean
   created_at: string
 }
 
@@ -27,7 +22,6 @@ interface AccountFormData {
 }
 
 export default function AccountsPage() {
-  const { user } = useAuth()
   const [accounts, setAccounts] = useState<Account[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')

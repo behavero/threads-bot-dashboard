@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAuth } from '@/lib/auth'
 
 interface Caption {
   id: number
@@ -14,7 +13,6 @@ interface Caption {
 }
 
 export default function CaptionsPage() {
-  const { user } = useAuth()
   const [captions, setCaptions] = useState<Caption[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
