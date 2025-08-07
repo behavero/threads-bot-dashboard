@@ -184,7 +184,7 @@ export default function AccountsPage() {
           await fetchAccounts()
           setMessage(`Account created successfully! ${data.user_info?.followers || 0} followers, ${data.user_info?.posts || 0} posts`)
           setHidePassword(true) // Hide password for security
-        } else if (data.requires_verification) {
+        } else if (data.requires_verification || data.status === 'challenge_required') {
           // Handle verification required
           console.log('📧 Verification required - showing modal')
           setRequiresVerification(true)
@@ -434,13 +434,15 @@ export default function AccountsPage() {
       setMessage('')
       console.log(`Submitting verification code for ${verificationUsername}...`)
       
-      const response = await fetch('https://threads-bot-dashboard-3.onrender.com/api/accounts/verify-code', {
+      // Try the new challenge verification endpoint first
+      const response = await fetch('https://threads-bot-dashboard-3.onrender.com/api/accounts/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           username: verificationUsername,
+          password: '', // Password not needed for verification
           verification_code: code
         })
       })
@@ -454,7 +456,29 @@ export default function AccountsPage() {
         setMessage(`Account verified successfully! ${data.user_info?.followers || 0} followers, ${data.user_info?.posts || 0} posts`)
         await fetchAccounts()
       } else {
-        setError(getUserFriendlyError(data.error || 'Verification failed'))
+        // Fallback to old verification endpoint
+        const fallbackResponse = await fetch('https://threads-bot-dashboard-3.onrender.com/api/accounts/verify-code', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            username: verificationUsername,
+            verification_code: code
+          })
+        })
+        
+        const fallbackData = await fallbackResponse.json()
+        console.log('Fallback verification response:', fallbackData)
+        
+        if (fallbackData.success) {
+          setRequiresVerification(false)
+          setVerificationUsername('')
+          setMessage(`Account verified successfully! ${fallbackData.user_info?.followers || 0} followers, ${fallbackData.user_info?.posts || 0} posts`)
+          await fetchAccounts()
+        } else {
+          setError(getUserFriendlyError(fallbackData.error || 'Verification failed'))
+        }
       }
     } catch (err) {
       console.error('Verification error:', err)

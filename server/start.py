@@ -128,6 +128,9 @@ bot = None
 bot_thread = None
 bot_running = False
 
+# Global challenge sessions storage (in production, use Redis or database)
+challenge_sessions = {}
+
 @app.route('/')
 def home():
     return jsonify({
@@ -868,10 +871,14 @@ def login_account():
         
         print(f"🔐 Attempting login for {username}...")
         
+        # Check if this is a verification attempt
+        if verification_code:
+            print(f"📧 Processing verification code for {username}")
+            return process_verification_code(username, verification_code)
+        
         try:
             from instagrapi import Client
             from instagrapi.exceptions import (
-                LoginRequired, 
                 ClientLoginRequired, 
                 ClientError,
                 ClientChallengeRequired,
@@ -880,148 +887,84 @@ def login_account():
             
             # Initialize client
             client = Client()
-            client.delay_range = [1, 3]  # Random delay between requests
+            client.delay_range = [1, 3]
             
-            # Check if account exists and has session data
-            db = DatabaseManager()
-            existing_account = db.get_account_by_username(username)
-            
-            if existing_account and existing_account.get('session_data'):
-                print(f"🔐 Found existing session for {username}, attempting to reuse...")
-                try:
-                    # Try to use existing session
-                    client.set_settings(existing_account['session_data'])
-                    client.login(username, password)
-                    print(f"✅ Successfully logged in with saved session for {username}")
-                    
-                    # Get user info
-                    user_info = client.user_info_by_username(username)
-                    
-                    # Get account statistics
-                    stats = {
-                        "followers": user_info.follower_count,
-                        "following": user_info.following_count,
-                        "posts": user_info.media_count,
-                        "username": user_info.username,
-                        "full_name": user_info.full_name,
-                        "biography": user_info.biography,
-                        "is_private": user_info.is_private,
-                        "is_verified": user_info.is_verified
-                    }
-                    
-                    # Update last_login timestamp
-                    db.update_account_last_login(existing_account['id'])
-                    
-                    return jsonify({
-                        "success": True,
-                        "message": "Login successful (reused session)",
-                        "user_info": stats,
-                        "session_reused": True
-                    })
-                    
-                except Exception as session_error:
-                    print(f"⚠️ Failed to reuse session for {username}: {session_error}")
-                    print(f"🔐 Falling back to fresh login...")
-                    # Continue with fresh login below
-            
-            # Attempt fresh login
+            # Try to login
             try:
                 client.login(username, password)
-                print(f"✅ Login successful for {username}")
+                print(f"✅ Successfully logged in as {username}")
                 
                 # Get user info
                 user_info = client.user_info_by_username(username)
                 
-                # Get account statistics
-                stats = {
-                    "followers": user_info.follower_count,
-                    "following": user_info.following_count,
-                    "posts": user_info.media_count,
-                    "username": user_info.username,
-                    "full_name": user_info.full_name,
-                    "biography": user_info.biography,
-                    "is_private": user_info.is_private,
-                    "is_verified": user_info.is_verified
-                }
+                # Save account to database
+                db = DatabaseManager()
+                account_id = db.add_account({
+                    "username": username,
+                    "password": password,
+                    "description": data.get('description', ''),
+                    "status": "enabled"
+                })
                 
                 # Save session data
                 session_data = client.get_settings()
-                print(f"💾 Saving session data for {username}...")
-                
-                # Save account to database if not exists
-                if not existing_account:
-                    print(f"📝 Saving new account {username} to database...")
-                    success = db.add_account(username, password, session_data=session_data)
-                    if success:
-                        print(f"✅ Account {username} saved to database with session")
-                        # For new accounts, we need to get the account ID to update last_login
-                        new_account = db.get_account_by_username(username)
-                        if new_account:
-                            db.update_account_last_login(new_account['id'])
-                    else:
-                        print(f"⚠️ Failed to save account {username} to database")
-                else:
-                    print(f"📝 Updating existing account {username} with new session...")
-                    success = db.save_session_data(existing_account['id'], session_data)
-                    if success:
-                        print(f"✅ Session data saved for {username}")
-                        # Update last_login for existing account
-                        db.update_account_last_login(existing_account['id'])
-                    else:
-                        print(f"⚠️ Failed to save session data for {username}")
+                db.save_session_data(account_id, session_data)
+                db.update_account_last_login(account_id)
                 
                 return jsonify({
                     "success": True,
                     "message": "Login successful",
-                    "user_info": stats,
-                    "session_saved": True
+                    "user_info": {
+                        "username": user_info.username,
+                        "followers": user_info.follower_count,
+                        "posts": user_info.media_count
+                    },
+                    "account_id": account_id,
+                    "api_used": "instagrapi"
                 })
                 
-            except Exception as e:
-                if "2FA" in str(e) or "two-factor" in str(e).lower():
-                    print(f"❌ 2FA required for {username}")
-                    return jsonify({
-                        "success": False,
-                        "error": "Two-factor authentication required",
-                        "requires_2fa": True
-                    }), 401
+            except ClientChallengeRequired as e:
+                print(f"📧 Challenge required for {username}: {e}")
                 
-            except ClientChallengeRequired:
-                print(f"❌ Challenge required for {username}")
+                # Store challenge session
+                challenge_id = f"{username}_{int(time.time())}"
+                challenge_sessions[challenge_id] = {
+                    "username": username,
+                    "password": password,
+                    "client": client,
+                    "challenge_type": "email",  # Default to email
+                    "created_at": time.time()
+                }
+                
                 return jsonify({
                     "success": False,
-                    "error": "Account verification required (checkpoint)",
-                    "requires_verification": True
+                    "status": "challenge_required",
+                    "message": "Verification code required",
+                    "challenge_context": {
+                        "username": username,
+                        "challenge_id": challenge_id,
+                        "challenge_type": "email"
+                    },
+                    "api_used": "instagrapi"
                 }), 401
                 
-            except ClientCheckpointRequired:
-                print(f"❌ Checkpoint required for {username}")
+            except ClientCheckpointRequired as e:
+                print(f"🛡️ Checkpoint required for {username}: {e}")
                 return jsonify({
                     "success": False,
-                    "error": "Account checkpoint required",
-                    "requires_checkpoint": True
+                    "message": "Account checkpoint required",
+                    "error": "Account needs manual verification",
+                    "requires_checkpoint": True,
+                    "api_used": "instagrapi"
                 }), 401
-                
-            except ClientLoginRequired as e:
-                print(f"❌ Login failed for {username}: {e}")
-                return jsonify({
-                    "success": False,
-                    "error": "Invalid username or password"
-                }), 401
-                
-            except ClientError as e:
-                print(f"❌ Client error for {username}: {e}")
-                return jsonify({
-                    "success": False,
-                    "error": f"Login error: {str(e)}"
-                }), 500
                 
             except Exception as e:
-                print(f"❌ Unexpected error for {username}: {e}")
+                print(f"❌ Login error for {username}: {e}")
                 return jsonify({
                     "success": False,
-                    "error": f"Login failed: {str(e)}"
-                }), 500
+                    "error": str(e),
+                    "api_used": "instagrapi"
+                }), 401
                 
         except ImportError as e:
             print(f"❌ instagrapi not available: {e}")
@@ -1095,6 +1038,78 @@ def login_account():
         print(f"❌ Error in login_account: {e}")
         import traceback
         print(f"❌ Traceback: {traceback.format_exc()}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+def process_verification_code(username: str, code: str):
+    """Process verification code for challenge completion"""
+    try:
+        print(f"📧 Processing verification code for {username}")
+        
+        # Find the challenge session
+        challenge_id = None
+        for cid, session in challenge_sessions.items():
+            if session["username"] == username:
+                challenge_id = cid
+                break
+        
+        if not challenge_id:
+            return jsonify({
+                "success": False,
+                "error": "No pending verification found for this username"
+            }), 400
+        
+        session_data = challenge_sessions[challenge_id]
+        client = session_data["client"]
+        
+        try:
+            # Complete the challenge
+            client.challenge_resolve(code)
+            print(f"✅ Challenge completed for {username}")
+            
+            # Get user info
+            user_info = client.user_info_by_username(username)
+            
+            # Save account to database
+            db = DatabaseManager()
+            account_id = db.add_account({
+                "username": username,
+                "password": session_data["password"],
+                "description": "",
+                "status": "enabled"
+            })
+            
+            # Save session data
+            session_data_settings = client.get_settings()
+            db.save_session_data(account_id, session_data_settings)
+            db.update_account_last_login(account_id)
+            
+            # Clean up challenge session
+            del challenge_sessions[challenge_id]
+            
+            return jsonify({
+                "success": True,
+                "message": "Verification successful",
+                "user_info": {
+                    "username": user_info.username,
+                    "followers": user_info.follower_count,
+                    "posts": user_info.media_count
+                },
+                "account_id": account_id,
+                "api_used": "instagrapi"
+            })
+            
+        except Exception as e:
+            print(f"❌ Challenge resolution failed: {e}")
+            return jsonify({
+                "success": False,
+                "error": f"Invalid verification code: {str(e)}"
+            }), 400
+            
+    except Exception as e:
+        print(f"❌ Error processing verification code: {e}")
         return jsonify({
             "success": False,
             "error": str(e)
