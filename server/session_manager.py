@@ -1,21 +1,23 @@
 #!/usr/bin/env python3
 """
 Session Manager for Threads API
-Handles secure session storage and retrieval
+Handles secure session storage and retrieval with instagrapi compatibility
 """
 
 import os
 import json
 import time
+import shutil
 from typing import Optional, Dict, Any
-from datetime import datetime
+from datetime import datetime, timedelta
 import tempfile
 
 class SessionManager:
-    """Manages Threads API sessions securely"""
+    """Manages Threads API sessions securely with instagrapi compatibility"""
     
     def __init__(self, sessions_dir: str = None):
-        self.sessions_dir = sessions_dir or os.path.join(os.getcwd(), 'server', 'sessions')
+        # Use root sessions directory for instagrapi compatibility
+        self.sessions_dir = sessions_dir or os.path.join(os.getcwd(), 'sessions')
         self._ensure_sessions_dir()
     
     def _ensure_sessions_dir(self):
@@ -25,60 +27,48 @@ class SessionManager:
             print(f"✅ Created sessions directory: {self.sessions_dir}")
     
     def get_session_path(self, username: str) -> str:
-        """Get session file path for username"""
+        """Get session file path for username (instagrapi format)"""
         safe_username = username.replace('/', '_').replace('\\', '_')
         return os.path.join(self.sessions_dir, f"{safe_username}.json")
     
-    def save_session(self, username: str, session_data: Dict[str, Any]) -> bool:
-        """Save session data to file"""
+    def save_instagrapi_session(self, username: str, client) -> bool:
+        """Save instagrapi session to file"""
         try:
             session_path = self.get_session_path(username)
             
-            # Add metadata
-            session_with_meta = {
-                "username": username,
-                "session_data": session_data,
-                "created_at": datetime.now().isoformat(),
-                "last_used": datetime.now().isoformat()
-            }
+            # Use instagrapi's built-in session saving
+            client.dump_settings(session_path)
             
-            # Save to temporary file first, then move (atomic operation)
-            with tempfile.NamedTemporaryFile(mode='w', delete=False, dir=self.sessions_dir) as temp_file:
-                json.dump(session_with_meta, temp_file, indent=2)
-                temp_path = temp_file.name
-            
-            # Move to final location
-            os.replace(temp_path, session_path)
-            
-            print(f"✅ Session saved for {username}")
+            print(f"✅ Instagrapi session saved for {username}")
             return True
             
         except Exception as e:
-            print(f"❌ Failed to save session for {username}: {e}")
+            print(f"❌ Failed to save instagrapi session for {username}: {e}")
             return False
     
-    def load_session(self, username: str) -> Optional[Dict[str, Any]]:
-        """Load session data from file"""
+    def load_instagrapi_session(self, username: str, client) -> bool:
+        """Load instagrapi session from file"""
         try:
             session_path = self.get_session_path(username)
             
             if not os.path.exists(session_path):
                 print(f"📁 No session file found for {username}")
-                return None
+                return False
             
-            with open(session_path, 'r') as f:
-                session_data = json.load(f)
+            # Use instagrapi's built-in session loading
+            client.load_settings(session_path)
             
-            # Update last_used timestamp
-            session_data["last_used"] = datetime.now().isoformat()
-            self.save_session(username, session_data["session_data"])
-            
-            print(f"✅ Session loaded for {username}")
-            return session_data["session_data"]
+            print(f"✅ Instagrapi session loaded for {username}")
+            return True
             
         except Exception as e:
-            print(f"❌ Failed to load session for {username}: {e}")
-            return None
+            print(f"❌ Failed to load instagrapi session for {username}: {e}")
+            return False
+    
+    def session_exists(self, username: str) -> bool:
+        """Check if session file exists"""
+        session_path = self.get_session_path(username)
+        return os.path.exists(session_path)
     
     def delete_session(self, username: str) -> bool:
         """Delete session file"""
@@ -93,25 +83,21 @@ class SessionManager:
             print(f"❌ Failed to delete session for {username}: {e}")
             return False
     
-    def session_exists(self, username: str) -> bool:
-        """Check if session file exists"""
-        session_path = self.get_session_path(username)
-        return os.path.exists(session_path)
-    
     def get_session_info(self, username: str) -> Optional[Dict[str, Any]]:
-        """Get session metadata without loading full session"""
+        """Get session metadata"""
         try:
             session_path = self.get_session_path(username)
             if not os.path.exists(session_path):
                 return None
             
-            with open(session_path, 'r') as f:
-                session_data = json.load(f)
+            # Get file stats
+            stat = os.stat(session_path)
             
             return {
-                "username": session_data.get("username"),
-                "created_at": session_data.get("created_at"),
-                "last_used": session_data.get("last_used"),
+                "username": username,
+                "created_at": datetime.fromtimestamp(stat.st_ctime).isoformat(),
+                "modified_at": datetime.fromtimestamp(stat.st_mtime).isoformat(),
+                "size": stat.st_size,
                 "exists": True
             }
             
@@ -133,6 +119,59 @@ class SessionManager:
             print(f"❌ Failed to list sessions: {e}")
         
         return sessions
+    
+    def cleanup_expired_sessions(self, max_age_days: int = 30) -> int:
+        """Clean up sessions older than max_age_days"""
+        try:
+            cleaned_count = 0
+            cutoff_time = time.time() - (max_age_days * 24 * 60 * 60)
+            
+            for filename in os.listdir(self.sessions_dir):
+                if filename.endswith('.json'):
+                    file_path = os.path.join(self.sessions_dir, filename)
+                    file_time = os.path.getmtime(file_path)
+                    
+                    if file_time < cutoff_time:
+                        try:
+                            os.remove(file_path)
+                            username = filename[:-5]
+                            print(f"🧹 Cleaned up expired session for {username}")
+                            cleaned_count += 1
+                        except Exception as e:
+                            print(f"❌ Failed to clean up {filename}: {e}")
+            
+            print(f"✅ Cleaned up {cleaned_count} expired sessions")
+            return cleaned_count
+            
+        except Exception as e:
+            print(f"❌ Failed to cleanup sessions: {e}")
+            return 0
+    
+    def validate_session(self, username: str, client) -> bool:
+        """Validate if a session is still working"""
+        try:
+            if not self.session_exists(username):
+                return False
+            
+            # Try to load and use the session
+            if self.load_instagrapi_session(username, client):
+                # Try to get user info to validate session
+                try:
+                    user_info = client.user_info_by_username(username)
+                    if user_info:
+                        print(f"✅ Session validated for {username}")
+                        return True
+                except Exception as e:
+                    print(f"❌ Session validation failed for {username}: {e}")
+                    # Delete invalid session
+                    self.delete_session(username)
+                    return False
+            
+            return False
+            
+        except Exception as e:
+            print(f"❌ Error validating session for {username}: {e}")
+            return False
 
 # Global session manager instance
 session_manager = SessionManager()

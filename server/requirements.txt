@@ -25,6 +25,7 @@ Pillow>=8.1.1
 
 # Instagram/Threads API
 instagrapi==1.19.8
+schedule>=1.2.0
 threads-api==1.2.0
 cryptography>=41.0.0
 colorama>=0.4.6 

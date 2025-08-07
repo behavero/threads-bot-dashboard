@@ -856,7 +856,7 @@ def debug_info():
 
 @app.route('/api/accounts/login', methods=['POST'])
 def login_account():
-    """Login to a Threads account with session management and challenge handling"""
+    """Login to a Threads account with persistent session management"""
     try:
         data = request.json
         username = data.get('username')
@@ -871,84 +871,97 @@ def login_account():
         
         print(f"🔐 Attempting login for {username}...")
         
-        # Check if this is a verification attempt
-        if verification_code:
-            print(f"📧 Processing verification code for {username}")
-            return process_verification_code(username, verification_code)
-        
+        # Try instagrapi login with session management first
         try:
-            from threads_api_real import RealThreadsAPI
-            import asyncio
+            from instagrapi_login import login_with_session
             
-            # Create Threads API instance
-            api = RealThreadsAPI(use_instagrapi=True)
+            login_result = login_with_session(username, password, verification_code)
             
-            # Run async login
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            login_result = loop.run_until_complete(api.login(username, password, verification_code))
+            # Handle tuple response (result, status_code)
+            if isinstance(login_result, tuple):
+                result, status_code = login_result
+                return jsonify(result), status_code
             
-            # Clean up
-            loop.run_until_complete(api.logout())
-            loop.close()
+            return jsonify(login_result)
             
-            if login_result.get("success"):
-                print(f"✅ Login successful for {username}")
-                
-                # Save account to database if not session reuse
-                if not login_result.get("session_reused"):
-                    db = DatabaseManager()
-                    account_id = db.add_account({
-                        "username": username,
-                        "password": password,
-                        "description": data.get('description', ''),
-                        "status": "enabled"
-                    })
-                    
-                    # Update last_login
-                    db.update_account_last_login(account_id)
-                
-                return jsonify({
-                    "success": True,
-                    "message": login_result.get("message", "Login successful"),
-                    "user_info": login_result.get("user_info"),
-                    "session_reused": login_result.get("session_reused", False),
-                    "api_used": "threads_api"
-                })
-            else:
-                # Check if verification is required
-                if login_result.get("requires_verification") or login_result.get("status") == "challenge_required":
-                    print(f"📧 Verification required for {username}")
-                    return jsonify({
-                        "success": False,
-                        "message": login_result.get("message", "Email verification required"),
-                        "error": login_result.get("error", "Please check your email for a 6-digit verification code"),
-                        "api_used": "threads_api",
-                        "requires_verification": True,
-                        "verification_type": login_result.get("verification_type", "email"),
-                        "challenge_context": login_result.get("challenge_context")
-                    }), 401
-                else:
-                    print(f"❌ Login failed for {username}")
-                    return jsonify({
-                        "success": False,
-                        "error": login_result.get("error", "Login failed"),
-                        "api_used": "threads_api",
-                        "requires_manual_login": login_result.get("requires_manual_login", True)
-                    }), 401
-                    
         except ImportError as e:
-            print(f"❌ Threads API not available: {e}")
-            return jsonify({
-                "success": False,
-                "error": f"Threads API not available: {str(e)}"
-            }), 500
-        except Exception as e:
-            print(f"❌ Threads API error: {e}")
-            return jsonify({
-                "success": False,
-                "error": f"Threads API error: {str(e)}"
-            }), 500
+            print(f"❌ Instagrapi not available: {e}")
+            print("🔄 Falling back to Threads API...")
+            
+            # Fallback to Threads API
+            try:
+                from threads_api_real import RealThreadsAPI
+                import asyncio
+                
+                # Create Threads API instance
+                api = RealThreadsAPI(use_instagrapi=True)
+                
+                # Run async login
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                login_result = loop.run_until_complete(api.login(username, password, verification_code))
+                
+                # Clean up
+                loop.run_until_complete(api.logout())
+                loop.close()
+                
+                if login_result.get("success"):
+                    print(f"✅ Login successful for {username}")
+                    
+                    # Save account to database if not session reuse
+                    if not login_result.get("session_reused"):
+                        db = DatabaseManager()
+                        account_id = db.add_account({
+                            "username": username,
+                            "password": password,
+                            "description": data.get('description', ''),
+                            "status": "enabled"
+                        })
+                        
+                        # Update last_login
+                        db.update_account_last_login(account_id)
+                    
+                    return jsonify({
+                        "success": True,
+                        "message": login_result.get("message", "Login successful"),
+                        "user_info": login_result.get("user_info"),
+                        "session_reused": login_result.get("session_reused", False),
+                        "api_used": "threads_api"
+                    })
+                else:
+                    # Check if verification is required
+                    if login_result.get("requires_verification") or login_result.get("status") == "challenge_required":
+                        print(f"📧 Verification required for {username}")
+                        return jsonify({
+                            "success": False,
+                            "message": login_result.get("message", "Email verification required"),
+                            "error": login_result.get("error", "Please check your email for a 6-digit verification code"),
+                            "api_used": "threads_api",
+                            "requires_verification": True,
+                            "verification_type": login_result.get("verification_type", "email"),
+                            "challenge_context": login_result.get("challenge_context")
+                        }), 401
+                    else:
+                        print(f"❌ Login failed for {username}")
+                        return jsonify({
+                            "success": False,
+                            "error": login_result.get("error", "Login failed"),
+                            "api_used": "threads_api",
+                            "requires_manual_login": login_result.get("requires_manual_login", True)
+                        }), 401
+                        
+            except ImportError as threads_error:
+                print(f"❌ Threads API also not available: {threads_error}")
+                return jsonify({
+                    "success": False,
+                    "error": f"Neither Instagrapi nor Threads API available. Instagrapi: {str(e)}, Threads: {str(threads_error)}"
+                }), 500
+            except Exception as threads_error:
+                print(f"❌ Threads API error: {threads_error}")
+                return jsonify({
+                    "success": False,
+                    "error": f"Threads API error: {str(threads_error)}"
+                }), 500
             
     except Exception as e:
         print(f"❌ Error in login_account: {e}")
@@ -1534,12 +1547,93 @@ def start_bot():
     bot_thread.start()
     print("🚀 Bot started in background thread")
 
+@app.route('/api/accounts/sessions', methods=['GET'])
+def list_sessions():
+    """List all available sessions"""
+    try:
+        from session_manager import session_manager
+        sessions = session_manager.list_sessions()
+        return jsonify({
+            "success": True,
+            "sessions": sessions,
+            "count": len(sessions)
+        })
+    except Exception as e:
+        print(f"❌ Error listing sessions: {e}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+@app.route('/api/accounts/sessions/<username>', methods=['DELETE'])
+def delete_session(username):
+    """Delete a specific session"""
+    try:
+        from session_manager import session_manager
+        success = session_manager.delete_session(username)
+        return jsonify({
+            "success": success,
+            "message": f"Session {'deleted' if success else 'not found'} for {username}"
+        })
+    except Exception as e:
+        print(f"❌ Error deleting session: {e}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+@app.route('/api/accounts/sessions/cleanup', methods=['POST'])
+def cleanup_sessions():
+    """Clean up expired sessions"""
+    try:
+        from session_manager import session_manager
+        data = request.json or {}
+        max_age_days = data.get('max_age_days', 30)
+        
+        cleaned_count = session_manager.cleanup_expired_sessions(max_age_days)
+        return jsonify({
+            "success": True,
+            "cleaned_count": cleaned_count,
+            "max_age_days": max_age_days
+        })
+    except Exception as e:
+        print(f"❌ Error cleaning up sessions: {e}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+@app.route('/api/accounts/sessions/<username>/validate', methods=['GET'])
+def validate_session(username):
+    """Validate if a session is still working"""
+    try:
+        from instagrapi_login import validate_session
+        is_valid = validate_session(username)
+        return jsonify({
+            "success": True,
+            "username": username,
+            "is_valid": is_valid
+        })
+    except Exception as e:
+        print(f"❌ Error validating session: {e}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     
     print("🚀 Starting Threads Bot on Render...")
     print(f"🌐 Port: {port}")
     print(f"🔗 Supabase URL: {os.getenv('SUPABASE_URL', 'NOT SET')}")
+    
+    # Start session cleanup scheduler
+    try:
+        from session_cleanup import start_cleanup_scheduler
+        start_cleanup_scheduler()
+    except Exception as e:
+        print(f"⚠️ Failed to start cleanup scheduler: {e}")
     
     # Start the bot in background
     start_bot()
