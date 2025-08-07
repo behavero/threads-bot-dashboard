@@ -54,10 +54,11 @@ export default function AccountsPage() {
       
       console.log('Accounts response:', data)
       
-      if (data.success) {
-        setAccounts(data.accounts)
+      // Handle both old format ({"accounts": [...]}) and new format ({"success": true, "accounts": [...]})
+      if (data.success === true || (data.accounts && Array.isArray(data.accounts))) {
+        setAccounts(data.accounts || [])
         setError('') // Clear any previous errors
-        console.log('Accounts loaded:', data.accounts.length)
+        console.log('Accounts loaded:', (data.accounts || []).length)
       } else {
         console.error('Failed to fetch accounts:', data.error)
         setError(data.error || 'Failed to fetch accounts')
