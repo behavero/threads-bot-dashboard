@@ -115,7 +115,7 @@ export default function ImagesPage() {
     if (!confirm('Are you sure you want to delete this image?')) return
 
     try {
-      const response = await fetch(`https://threads-bot-dashboard-3.onrender.com/api/upload/images/${id}`, {
+      const response = await fetch(`https://threads-bot-dashboard-3.onrender.com/api/images/${id}`, {
         method: 'DELETE'
       })
 

@@ -169,6 +169,18 @@ class DatabaseManager:
             print(f"❌ Error fetching images: {e}")
             return []
     
+    def delete_image(self, image_id: int) -> bool:
+        """Delete an image"""
+        try:
+            response = requests.delete(
+                f"{self.supabase_url}/rest/v1/images?id=eq.{image_id}",
+                headers=self.headers
+            )
+            return response.status_code == 204
+        except Exception as e:
+            print(f"❌ Error deleting image: {e}")
+            return False
+    
     def get_posting_history(self, account_id: Optional[int] = None) -> List[Dict]:
         """Get posting history"""
         try:

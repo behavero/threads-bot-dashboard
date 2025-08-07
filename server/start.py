@@ -465,23 +465,112 @@ def get_images():
 @app.route('/api/images', methods=['POST'])
 def add_image():
     try:
-        data = request.json
-        url = data.get('url')
-        filename = data.get('filename')
-        size = data.get('size')
-        type = data.get('type')
-        
-        if not url:
-            return jsonify({"error": "Image URL required"}), 400
-        
+        # Check if this is a file upload (FormData) or JSON data
+        if request.content_type and 'multipart/form-data' in request.content_type:
+            # Handle file upload
+            if 'images' not in request.files:
+                return jsonify({"error": "No images provided"}), 400
+            
+            files = request.files.getlist('images')
+            if not files or all(file.filename == '' for file in files):
+                return jsonify({"error": "No files selected"}), 400
+            
+            uploaded_images = []
+            db = DatabaseManager()
+            
+            for file in files:
+                if file and file.filename:
+                    try:
+                        # Upload to Supabase Storage
+                        import requests
+                        from werkzeug.utils import secure_filename
+                        
+                        filename = secure_filename(file.filename)
+                        file_content = file.read()
+                        
+                        # Upload to Supabase Storage
+                        supabase_url = "https://perwbmtwutwzsvlirwik.supabase.co"
+                        service_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlcndibXR3dXR3enN2bGlyd2lrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NDQwNTU4MiwiZXhwIjoyMDY5OTgxNTgyfQ.fpTpKFrK0Eg60rN7jpWPKKQFTmIrxVlcHY2MMeKx2AE"
+                        
+                        headers = {
+                            'apikey': service_key,
+                            'Authorization': f'Bearer {service_key}',
+                            'Content-Type': file.content_type
+                        }
+                        
+                        # Upload to Supabase Storage
+                        storage_response = requests.post(
+                            f"{supabase_url}/storage/v1/object/images/{filename}",
+                            data=file_content,
+                            headers=headers
+                        )
+                        
+                        if storage_response.status_code == 200:
+                            # Get the public URL
+                            public_url = f"{supabase_url}/storage/v1/object/public/images/{filename}"
+                            
+                            # Add to database
+                            success = db.add_image(public_url, filename, len(file_content), file.content_type)
+                            
+                            if success:
+                                uploaded_images.append({
+                                    "filename": filename,
+                                    "url": public_url,
+                                    "size": len(file_content),
+                                    "type": file.content_type
+                                })
+                            else:
+                                print(f"❌ Failed to add image {filename} to database")
+                        else:
+                            print(f"❌ Failed to upload {filename} to storage: {storage_response.status_code}")
+                            
+                    except Exception as e:
+                        print(f"❌ Error uploading {file.filename}: {e}")
+            
+            if uploaded_images:
+                return jsonify({
+                    "success": True,
+                    "message": f"Successfully uploaded {len(uploaded_images)} images",
+                    "images": uploaded_images
+                }), 201
+            else:
+                return jsonify({"error": "Failed to upload any images"}), 500
+                
+        else:
+            # Handle JSON data (existing functionality)
+            data = request.json
+            url = data.get('url')
+            filename = data.get('filename')
+            size = data.get('size')
+            type = data.get('type')
+            
+            if not url:
+                return jsonify({"error": "Image URL required"}), 400
+            
+            db = DatabaseManager()
+            success = db.add_image(url, filename, size, type)
+            
+            if success:
+                return jsonify({"message": "Image added successfully"}), 201
+            else:
+                return jsonify({"error": "Failed to add image"}), 500
+                
+    except Exception as e:
+        print(f"❌ Error in add_image: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/images/<int:image_id>', methods=['DELETE'])
+def delete_image(image_id):
+    try:
         db = DatabaseManager()
-        success = db.add_image(url, filename, size, type)
+        success = db.delete_image(image_id)
         
         if success:
-            return jsonify({"message": "Image added successfully"}), 201
+            return jsonify({"success": True, "message": "Image deleted successfully"}), 200
         else:
-            return jsonify({"error": "Failed to add image"}), 500
+            return jsonify({"error": "Failed to delete image"}), 500
     except Exception as e:
+        print(f"❌ Error deleting image: {e}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/api/debug', methods=['GET'])
