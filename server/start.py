@@ -368,6 +368,91 @@ def add_caption():
         print(f"❌ Error adding caption: {e}")
         return jsonify({"error": str(e)}), 500
 
+@app.route('/api/captions/upload-csv', methods=['POST'])
+def upload_csv():
+    """Upload CSV file with captions"""
+    try:
+        if 'file' not in request.files:
+            return jsonify({"error": "No file provided"}), 400
+        
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({"error": "No file selected"}), 400
+        
+        if not file.filename.endswith('.csv'):
+            return jsonify({"error": "File must be a CSV"}), 400
+        
+        # Read CSV content
+        content = file.read().decode('utf-8')
+        lines = content.split('\n')
+        
+        captions = []
+        for line_num, line in enumerate(lines, 1):
+            line = line.strip()
+            if not line:
+                continue
+                
+            # Parse CSV line
+            parts = line.split(',')
+            if len(parts) < 1:
+                continue
+                
+            # Handle different CSV formats
+            text = parts[0].strip().strip('"')
+            category = parts[1].strip().strip('"') if len(parts) > 1 else 'general'
+            tags_str = parts[2].strip().strip('"') if len(parts) > 2 else ''
+            
+            # Parse tags
+            tags = []
+            if tags_str:
+                tags = [tag.strip() for tag in tags_str.split('|') if tag.strip()]
+            
+            if text:
+                captions.append({
+                    "text": text,
+                    "category": category,
+                    "tags": tags,
+                    "used": False
+                })
+        
+        if not captions:
+            return jsonify({"error": "No valid captions found in CSV"}), 400
+        
+        print(f"📝 Uploading {len(captions)} captions from CSV")
+        
+        # Insert captions using direct Supabase approach
+        import requests
+        
+        supabase_url = "https://perwbmtwutwzsvlirwik.supabase.co"
+        service_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlcndibXR3dXR3enN2bGlyd2lrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NDQwNTU4MiwiZXhwIjoyMDY5OTgxNTgyfQ.fpTpKFrK0Eg60rN7jpWPKKQFTmIrxVlcHY2MMeKx2AE"
+        
+        headers = {
+            'apikey': service_key,
+            'Authorization': f'Bearer {service_key}',
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation'
+        }
+        
+        response = requests.post(
+            f"{supabase_url}/rest/v1/captions",
+            json=captions,
+            headers=headers
+        )
+        
+        print(f"📝 CSV upload response: {response.status_code}")
+        
+        if response.status_code == 201:
+            return jsonify({
+                "message": f"Successfully uploaded {len(captions)} captions",
+                "count": len(captions)
+            }), 201
+        else:
+            return jsonify({"error": f"Failed to upload captions: {response.text}"}), 500
+            
+    except Exception as e:
+        print(f"❌ CSV upload error: {e}")
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/api/images', methods=['GET'])
 def get_images():
     try:
