@@ -324,15 +324,19 @@ def add_caption():
         
         print(f"📝 Adding caption: text='{text[:50]}...', category='{category}', tags={tags}")
         
-        db = DatabaseManager()
-        success = db.add_caption(text, category, tags)
-        
-        print(f"📝 Database operation result: {success}")
-        
-        if success:
-            return jsonify({"message": "Caption added successfully"}), 201
-        else:
-            return jsonify({"error": "Failed to add caption"}), 500
+        try:
+            db = DatabaseManager()
+            success = db.add_caption(text, category, tags)
+            
+            print(f"📝 Database operation result: {success}")
+            
+            if success:
+                return jsonify({"message": "Caption added successfully"}), 201
+            else:
+                return jsonify({"error": "Failed to add caption"}), 500
+        except Exception as e:
+            print(f"❌ Database manager error: {e}")
+            return jsonify({"error": f"Database error: {str(e)}"}), 500
     except Exception as e:
         print(f"❌ Error adding caption: {e}")
         return jsonify({"error": str(e)}), 500
@@ -382,6 +386,7 @@ def debug_info():
                 "SUPABASE_SERVICE_ROLE_KEY": "SET" if os.getenv('SUPABASE_SERVICE_ROLE_KEY') else "NOT SET"
             },
             "database_test": None,
+            "database_manager_test": None,
             "timestamp": datetime.now().isoformat()
         }
         
@@ -394,8 +399,20 @@ def debug_info():
                 "captions_count": len(captions),
                 "sample_caption": captions[0] if captions else None
             }
+            
+            # Test database manager initialization
+            debug_info["database_manager_test"] = {
+                "status": "success",
+                "supabase_url": db.supabase_url,
+                "has_key": bool(db.supabase_key),
+                "headers_count": len(db.headers)
+            }
         except Exception as e:
             debug_info["database_test"] = {
+                "status": "error",
+                "error": str(e)
+            }
+            debug_info["database_manager_test"] = {
                 "status": "error",
                 "error": str(e)
             }
