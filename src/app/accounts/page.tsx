@@ -182,9 +182,11 @@ export default function AccountsPage() {
           setHidePassword(true) // Hide password for security
         } else if (data.requires_verification) {
           // Handle verification required
+          console.log('📧 Verification required - showing modal')
           setRequiresVerification(true)
           setVerificationUsername(formData.username)
           setMessage('Please check your email for a 6-digit verification code and enter it below.')
+          console.log('✅ Modal state set to true')
         } else {
           setError(getUserFriendlyError(data.error || 'Failed to create account'))
         }
@@ -678,6 +680,7 @@ export default function AccountsPage() {
       )}
 
       {/* Verification Modal */}
+      {console.log('🔍 Modal render check:', { requiresVerification, showModal })}
       {requiresVerification && !showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="modern-card p-8 w-full max-w-md">
