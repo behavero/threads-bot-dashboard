@@ -155,10 +155,11 @@ export default function AccountsPage() {
         } else {
           setError(getUserFriendlyError(data.error || 'Failed to create account'))
         }
-      } catch (err) {
-        console.error('Error saving account:', err)
-        setError('Network error. Please check your connection and try again.')
       }
+    } catch (err) {
+      console.error('Error saving account:', err)
+      setError('Network error. Please check your connection and try again.')
+    }
   }
 
   const handleEdit = (account: Account) => {
