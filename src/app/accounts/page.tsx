@@ -7,6 +7,10 @@ interface Account {
   username: string
   email: string
   password: string
+  description: string
+  posting_config: any
+  fingerprint_config: any
+  status: 'enabled' | 'disabled'
   is_active: boolean
   created_at: string
 }
