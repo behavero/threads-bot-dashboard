@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import ErrorBoundary from '@/components/ErrorBoundary'
 
 interface Account {
   id: number
@@ -32,7 +33,7 @@ interface LoginState {
   session_reused?: boolean
 }
 
-export default function AccountsPage() {
+function AccountsPageContent() {
   const [accounts, setAccounts] = useState<Account[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
@@ -98,41 +99,26 @@ export default function AccountsPage() {
     if (errorLower.includes('database') || errorLower.includes('connection')) {
       return 'Database connection failed. Please try again.'
     }
-    if (errorLower.includes('authentication') || errorLower.includes('login')) {
+    if (errorLower.includes('authentication') || errorLower.includes('credentials')) {
       return 'Authentication failed. Please check your credentials.'
     }
-    if (errorLower.includes('timeout')) {
-      return 'Request timed out. Please try again.'
+    if (errorLower.includes('instagram api') || errorLower.includes('threads api')) {
+      return 'Instagram API not available. Please try again later.'
     }
-    if (errorLower.includes('not found')) {
-      return 'Resource not found.'
+    if (errorLower.includes('challenge') || errorLower.includes('verification')) {
+      return 'Account verification required. Please check your email.'
     }
-    if (errorLower.includes('network')) {
-      return 'Network error. Please check your connection.'
+    if (errorLower.includes('checkpoint') || errorLower.includes('manual')) {
+      return 'Account security check required. Please log in to Instagram/Threads manually first.'
     }
-    if (errorLower.includes('server')) {
-      return 'Server error. Please try again later.'
+    if (errorLower.includes('2fa') || errorLower.includes('two-factor')) {
+      return 'Two-factor authentication required. Please complete 2FA verification.'
     }
-    if (errorLower.includes('instagram api not available')) {
-      return 'Instagram API is not available. Please check backend dependencies.'
+    if (errorLower.includes('blacklist') || errorLower.includes('ip')) {
+      return 'IP address blocked. Please try from a different network.'
     }
-    if (errorLower.includes('threads api not available')) {
-      return 'Threads API is not available. Please check backend dependencies.'
-    }
-    if (errorLower.includes('cryptography')) {
-      return 'Missing cryptography dependency. Please contact support.'
-    }
-    if (errorLower.includes('pillow') || errorLower.includes('pil')) {
-      return 'Missing image processing dependency. Please contact support.'
-    }
-    if (errorLower.includes('account security check required') || errorLower.includes('requires_manual_login')) {
-      return 'Account security check required. Please log in to Instagram/Threads manually first, then try again.'
-    }
-    if (errorLower.includes('ip address blocked') || errorLower.includes('blacklist')) {
-      return 'Your IP address is blocked. Please try from a different network or contact support.'
-    }
-    if (errorLower.includes('interactive verification required') || errorLower.includes('eof')) {
-      return 'Interactive verification required. Please check your email for a verification code and try again.'
+    if (errorLower.includes('eof') || errorLower.includes('reading a line')) {
+      return 'Interactive verification required. Please check your email for a verification code.'
     }
     
     return error || 'An unexpected error occurred. Please try again.'
@@ -953,5 +939,13 @@ export default function AccountsPage() {
         </div>
       )}
     </div>
+  )
+}
+
+export default function AccountsPage() {
+  return (
+    <ErrorBoundary>
+      <AccountsPageContent />
+    </ErrorBoundary>
   )
 } 
