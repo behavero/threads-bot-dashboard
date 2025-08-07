@@ -91,6 +91,18 @@ export default function AccountsPage() {
     if (errorLower.includes('server')) {
       return 'Server error. Please try again later.'
     }
+    if (errorLower.includes('instagram api not available')) {
+      return 'Instagram API is not available. Please check backend dependencies.'
+    }
+    if (errorLower.includes('threads api not available')) {
+      return 'Threads API is not available. Please check backend dependencies.'
+    }
+    if (errorLower.includes('cryptography')) {
+      return 'Missing cryptography dependency. Please contact support.'
+    }
+    if (errorLower.includes('pillow') || errorLower.includes('pil')) {
+      return 'Missing image processing dependency. Please contact support.'
+    }
     
     return error || 'An unexpected error occurred. Please try again.'
   }

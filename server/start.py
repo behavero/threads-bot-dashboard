@@ -1022,12 +1022,62 @@ def login_account():
                     "error": f"Login failed: {str(e)}"
                 }), 500
                 
-        except ImportError:
-            print("❌ instagrapi not available")
-            return jsonify({
-                "success": False,
-                "error": "Instagram API not available"
-            }), 500
+        except ImportError as e:
+            print(f"❌ instagrapi not available: {e}")
+            print("🔄 Trying Threads API as fallback...")
+            
+            # Try Threads API as fallback
+            try:
+                from threads_api_real import RealThreadsAPI
+                import asyncio
+                
+                # Test Threads API login
+                api = RealThreadsAPI(use_instagrapi=True)
+                
+                # Run async login
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                success = loop.run_until_complete(api.login(username, password))
+                
+                if success:
+                    # Get user info
+                    user_info = loop.run_until_complete(api.get_me())
+                    
+                    # Clean up
+                    loop.run_until_complete(api.logout())
+                    loop.close()
+                    
+                    print(f"✅ Threads API login successful for {username}")
+                    return jsonify({
+                        "success": True,
+                        "message": "Login successful via Threads API",
+                        "user_info": user_info,
+                        "api_used": "threads_api"
+                    })
+                else:
+                    # Clean up
+                    loop.run_until_complete(api.logout())
+                    loop.close()
+                    
+                    print(f"❌ Threads API login failed for {username}")
+                    return jsonify({
+                        "success": False,
+                        "error": "Threads API login failed",
+                        "api_used": "threads_api"
+                    }), 401
+                    
+            except ImportError as threads_error:
+                print(f"❌ Threads API also not available: {threads_error}")
+                return jsonify({
+                    "success": False,
+                    "error": f"Both Instagram API and Threads API not available. Instagram: {str(e)}, Threads: {str(threads_error)}"
+                }), 500
+            except Exception as threads_error:
+                print(f"❌ Threads API error: {threads_error}")
+                return jsonify({
+                    "success": False,
+                    "error": f"Threads API error: {str(threads_error)}"
+                }), 500
             
     except Exception as e:
         print(f"❌ Error in login_account: {e}")

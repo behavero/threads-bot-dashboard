@@ -25,4 +25,5 @@ Pillow>=8.1.1
 
 # Instagram/Threads API
 instagrapi==2.0.0
-threads-api==1.2.0 
+threads-api==1.2.0
+cryptography>=41.0.0 
