@@ -873,7 +873,6 @@ def login_account():
                 LoginRequired, 
                 ClientLoginRequired, 
                 ClientError,
-                ClientLoginTwoFactorRequired,
                 ClientChallengeRequired,
                 ClientCheckpointRequired
             )
@@ -977,13 +976,14 @@ def login_account():
                     "session_saved": True
                 })
                 
-            except ClientLoginTwoFactorRequired:
-                print(f"❌ 2FA required for {username}")
-                return jsonify({
-                    "success": False,
-                    "error": "Two-factor authentication required",
-                    "requires_2fa": True
-                }), 401
+            except Exception as e:
+                if "2FA" in str(e) or "two-factor" in str(e).lower():
+                    print(f"❌ 2FA required for {username}")
+                    return jsonify({
+                        "success": False,
+                        "error": "Two-factor authentication required",
+                        "requires_2fa": True
+                    }), 401
                 
             except ClientChallengeRequired:
                 print(f"❌ Challenge required for {username}")
@@ -1337,7 +1337,6 @@ def trigger_post(account_id):
             from instagrapi.exceptions import (
                 ClientLoginRequired, 
                 ClientError,
-                ClientLoginTwoFactorRequired,
                 ClientChallengeRequired,
                 ClientCheckpointRequired
             )
@@ -1453,12 +1452,13 @@ def trigger_post(account_id):
                     "error": "Failed to publish post"
                 }), 500
                 
-        except ClientLoginTwoFactorRequired:
-            print(f"❌ 2FA required for {account['username']}")
-            return jsonify({
-                "success": False,
-                "error": "Two-factor authentication required"
-            }), 401
+        except Exception as e:
+            if "2FA" in str(e) or "two-factor" in str(e).lower():
+                print(f"❌ 2FA required for {account['username']}")
+                return jsonify({
+                    "success": False,
+                    "error": "Two-factor authentication required"
+                }), 401
             
         except ClientChallengeRequired:
             print(f"❌ Challenge required for {account['username']}")
