@@ -327,6 +327,8 @@ def add_caption():
         db = DatabaseManager()
         success = db.add_caption(text, category, tags)
         
+        print(f"📝 Database operation result: {success}")
+        
         if success:
             return jsonify({"message": "Caption added successfully"}), 201
         else:

@@ -12,7 +12,7 @@ FRONTEND_URL = "https://threads-bot-dashboard-g8bxqd6c0-behaveros-projects.verce
 BACKEND_URL = "https://threads-bot-dashboard-3.onrender.com"
 
 # Add your protection bypass secret here (replace with your actual secret)
-PROTECTION_BYPASS_SECRET = "threads-bot-api-access-2025"  # Replace with your actual secret
+PROTECTION_BYPASS_SECRET = "H8DTho5Qi6iBblInCT0OCYM09DcaF1ul"  # Your actual Vercel bypass secret
 
 def test_frontend_with_bypass():
     """Test frontend API with protection bypass"""
