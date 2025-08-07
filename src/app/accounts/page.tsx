@@ -458,6 +458,15 @@ export default function AccountsPage() {
             Test Threads API
           </button>
           <button
+            onClick={() => {
+              setRequiresVerification(true)
+              setVerificationUsername('test_user')
+            }}
+            className="modern-button px-4 py-2 text-sm bg-purple-600 hover:bg-purple-700"
+          >
+            Test Verification Modal
+          </button>
+          <button
             onClick={openAddModal}
             className="modern-button px-6 py-3 glow-on-hover"
           >
@@ -681,7 +690,7 @@ export default function AccountsPage() {
 
       {/* Verification Modal */}
       {console.log('🔍 Modal render check:', { requiresVerification, showModal })}
-      {requiresVerification && !showModal && (
+      {requiresVerification && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="modern-card p-8 w-full max-w-md">
             <div className="flex justify-between items-center mb-6">
