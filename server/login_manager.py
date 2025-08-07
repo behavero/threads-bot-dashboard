@@ -16,6 +16,19 @@ from instagrapi.exceptions import (
 from typing import Dict, Any, Optional
 import time
 
+def check_pydantic_compatibility():
+    """Check if Pydantic is compatible with instagrapi"""
+    try:
+        import pydantic
+        version = pydantic.__version__
+        if not version.startswith('1.'):
+            print(f"⚠️ Warning: Pydantic v{version} detected. This may cause ForwardRef._evaluate() errors.")
+            return False
+        return True
+    except ImportError:
+        print("⚠️ Warning: Pydantic not found")
+        return False
+
 def login_or_restore_session(username: str, password: str, verification_code: str = None) -> Dict[str, Any]:
     """
     Login to Threads with session restoration
@@ -30,6 +43,14 @@ def login_or_restore_session(username: str, password: str, verification_code: st
     """
     try:
         print(f"🔐 Attempting login for {username}...")
+        
+        # Check Pydantic compatibility first
+        if not check_pydantic_compatibility():
+            return {
+                "success": False,
+                "error": "Pydantic compatibility issue detected. Please contact support.",
+                "api_used": "instagrapi"
+            }, 500
         
         # If verification code is provided, handle challenge completion
         if verification_code:
@@ -68,10 +89,27 @@ def login_or_restore_session(username: str, password: str, verification_code: st
         
         # Perform fresh login
         print(f"🔐 Performing fresh login for {username}...")
-        client = Client()
-        client.delay_range = [1, 3]
         
         try:
+            # Create client with explicit error handling
+            client = Client()
+            client.delay_range = [1, 3]
+            
+            # Test client creation to catch ForwardRef errors early
+            try:
+                # Access some properties that might trigger ForwardRef issues
+                _ = client.device_settings
+                _ = client.user_agent
+            except Exception as e:
+                error_str = str(e)
+                if "ForwardRef._evaluate()" in error_str or "recursive_guard" in error_str:
+                    print(f"❌ ForwardRef._evaluate() error detected: {error_str}")
+                    return {
+                        "success": False,
+                        "error": "Pydantic compatibility issue. Please contact support.",
+                        "api_used": "instagrapi"
+                    }, 500
+            
             client.login(username, password)
             print(f"✅ Login successful for {username}")
             
@@ -150,20 +188,38 @@ def login_or_restore_session(username: str, password: str, verification_code: st
             }, 401
             
         except Exception as e:
-            print(f"❌ Unexpected login error for {username}: {e}")
-            return {
-                "success": False,
-                "message": "Login error",
-                "error": str(e),
-                "api_used": "instagrapi"
-            }, 500
+            error_str = str(e)
+            if "ForwardRef._evaluate()" in error_str or "recursive_guard" in error_str:
+                print(f"❌ ForwardRef._evaluate() error during login: {error_str}")
+                return {
+                    "success": False,
+                    "message": "Pydantic compatibility error",
+                    "error": "System compatibility issue. Please contact support.",
+                    "api_used": "instagrapi"
+                }, 500
+            else:
+                print(f"❌ Unexpected login error for {username}: {e}")
+                return {
+                    "success": False,
+                    "message": "Login error",
+                    "error": str(e),
+                    "api_used": "instagrapi"
+                }, 500
             
     except Exception as e:
-        print(f"❌ Error in login_or_restore_session: {e}")
-        return {
-            "success": False,
-            "error": str(e)
-        }, 500
+        error_str = str(e)
+        if "ForwardRef._evaluate()" in error_str or "recursive_guard" in error_str:
+            print(f"❌ ForwardRef._evaluate() error in login_or_restore_session: {error_str}")
+            return {
+                "success": False,
+                "error": "Pydantic compatibility issue. Please contact support."
+            }, 500
+        else:
+            print(f"❌ Error in login_or_restore_session: {e}")
+            return {
+                "success": False,
+                "error": str(e)
+            }, 500
 
 def _complete_challenge_with_session(username: str, code: str) -> Dict[str, Any]:
     """Complete challenge verification and save session"""
@@ -173,6 +229,21 @@ def _complete_challenge_with_session(username: str, code: str) -> Dict[str, Any]
         # Create new client for challenge completion
         client = Client()
         client.delay_range = [1, 3]
+        
+        # Test client creation to catch ForwardRef errors early
+        try:
+            # Access some properties that might trigger ForwardRef issues
+            _ = client.device_settings
+            _ = client.user_agent
+        except Exception as e:
+            error_str = str(e)
+            if "ForwardRef._evaluate()" in error_str or "recursive_guard" in error_str:
+                print(f"❌ ForwardRef._evaluate() error during challenge: {error_str}")
+                return {
+                    "success": False,
+                    "error": "Pydantic compatibility issue. Please contact support.",
+                    "api_used": "instagrapi"
+                }, 500
         
         # Complete the challenge
         client.challenge_resolve(code)
@@ -200,13 +271,23 @@ def _complete_challenge_with_session(username: str, code: str) -> Dict[str, Any]
         }
         
     except Exception as e:
-        print(f"❌ Challenge completion failed: {e}")
-        return {
-            "success": False,
-            "message": "Verification failed",
-            "error": f"Invalid verification code: {str(e)}",
-            "api_used": "instagrapi"
-        }, 400
+        error_str = str(e)
+        if "ForwardRef._evaluate()" in error_str or "recursive_guard" in error_str:
+            print(f"❌ ForwardRef._evaluate() error during challenge completion: {error_str}")
+            return {
+                "success": False,
+                "message": "Pydantic compatibility error",
+                "error": "System compatibility issue. Please contact support.",
+                "api_used": "instagrapi"
+            }, 500
+        else:
+            print(f"❌ Challenge completion failed: {e}")
+            return {
+                "success": False,
+                "message": "Verification failed",
+                "error": f"Invalid verification code: {str(e)}",
+                "api_used": "instagrapi"
+            }, 400
 
 def validate_session(username: str) -> bool:
     """Validate if a session exists and is working"""

@@ -4,15 +4,17 @@ Flask-CORS==4.0.0
 requests==2.31.0
 python-dotenv==1.0.0
 
-# Pydantic v1.x for instagrapi compatibility
-pydantic>=1.10.7,<2.0
+# Pydantic v1.x for instagrapi compatibility (must be before supabase)
+pydantic==1.10.9
 
 # Production server
 gunicorn==21.2.0
 
-# Database
+# Database (with Pydantic constraint)
 supabase>=2.0.0,<3.0.0
 psycopg2-binary==2.9.7
+# Ensure no Pydantic v2.x is installed
+pydantic!=2.*
 
 # Scheduling
 APScheduler==3.10.4

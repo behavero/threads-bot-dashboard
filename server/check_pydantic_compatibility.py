@@ -6,6 +6,7 @@ Ensures Pydantic v1.x is installed for instagrapi compatibility
 
 import sys
 import subprocess
+import os
 
 def check_pydantic_version():
     """Check if Pydantic v1.x is installed"""
@@ -43,13 +44,38 @@ def check_instagrapi_import():
         print(f"❌ Instagrapi import failed: {e}")
         return False
 
+def check_forwardref_error():
+    """Test for the specific ForwardRef._evaluate() error"""
+    try:
+        print("🔍 Testing for ForwardRef._evaluate() error...")
+        from instagrapi import Client
+        
+        # Try to create a client and access some properties that might trigger the error
+        client = Client()
+        
+        # Test some basic operations that might trigger ForwardRef issues
+        client.delay_range = [1, 3]
+        client.device_settings = {}
+        
+        print("✅ No ForwardRef._evaluate() error detected")
+        return True
+        
+    except Exception as e:
+        error_str = str(e)
+        if "ForwardRef._evaluate()" in error_str or "recursive_guard" in error_str:
+            print(f"❌ ForwardRef._evaluate() error detected: {error_str}")
+            return False
+        else:
+            print(f"⚠️ Other error during test: {error_str}")
+            return True
+
 def install_pydantic_v1():
     """Install Pydantic v1.x"""
     try:
         print("🔧 Installing Pydantic v1.x...")
         subprocess.check_call([
             sys.executable, "-m", "pip", "install", 
-            "pydantic>=1.10.7,<2.0", "--force-reinstall"
+            "pydantic==1.10.9", "--force-reinstall"
         ])
         print("✅ Pydantic v1.x installed successfully")
         return True
@@ -57,9 +83,18 @@ def install_pydantic_v1():
         print(f"❌ Failed to install Pydantic v1.x: {e}")
         return False
 
+def check_environment():
+    """Check the deployment environment"""
+    print(f"🌍 Environment: {os.getenv('RENDER', 'Local')}")
+    print(f"🐍 Python version: {sys.version}")
+    print(f"📁 Working directory: {os.getcwd()}")
+
 def main():
     """Main compatibility check"""
     print("🔍 Checking Pydantic compatibility for instagrapi...")
+    
+    # Check environment
+    check_environment()
     
     # Check current Pydantic version
     pydantic_ok = check_pydantic_version()
@@ -73,11 +108,15 @@ def main():
     # Test instagrapi import
     instagrapi_ok = check_instagrapi_import()
     
+    # Test for ForwardRef error specifically
+    forwardref_ok = check_forwardref_error()
+    
     print("\n📊 Compatibility Summary:")
     print(f"   Pydantic v1.x: {'✅' if pydantic_ok else '❌'}")
     print(f"   Instagrapi import: {'✅' if instagrapi_ok else '❌'}")
+    print(f"   No ForwardRef error: {'✅' if forwardref_ok else '❌'}")
     
-    if pydantic_ok and instagrapi_ok:
+    if pydantic_ok and instagrapi_ok and forwardref_ok:
         print("\n🎉 All compatibility checks passed!")
         print("✅ No more ForwardRef._evaluate() errors expected")
         return True
