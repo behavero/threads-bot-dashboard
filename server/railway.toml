@@ -1,6 +1,0 @@
-[build]
-builder = "NIXPACKS"
-
-[deploy]
-startCommand = "bash deploy.sh"
-healthcheckPath = "/api/status" 
