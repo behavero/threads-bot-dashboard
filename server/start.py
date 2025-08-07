@@ -666,6 +666,142 @@ def debug_info():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/api/accounts/login', methods=['POST'])
+def login_account():
+    """Login to a Threads account using instagrapi"""
+    try:
+        data = request.json
+        username = data.get('username')
+        password = data.get('password')
+        
+        if not username or not password:
+            return jsonify({
+                "success": False, 
+                "error": "Username and password required"
+            }), 400
+        
+        print(f"🔐 Attempting login for {username}...")
+        
+        try:
+            from instagrapi import Client
+            from instagrapi.exceptions import (
+                LoginRequired, 
+                ClientLoginRequired, 
+                ClientError,
+                ClientLoginTwoFactorRequired,
+                ClientChallengeRequired,
+                ClientCheckpointRequired
+            )
+            
+            # Initialize client
+            client = Client()
+            client.delay_range = [1, 3]  # Random delay between requests
+            
+            # Attempt login
+            try:
+                client.login(username, password)
+                print(f"✅ Login successful for {username}")
+                
+                # Get user info
+                user_info = client.user_info_by_username(username)
+                
+                # Get account statistics
+                stats = {
+                    "followers": user_info.follower_count,
+                    "following": user_info.following_count,
+                    "posts": user_info.media_count,
+                    "username": user_info.username,
+                    "full_name": user_info.full_name,
+                    "biography": user_info.biography,
+                    "is_private": user_info.is_private,
+                    "is_verified": user_info.is_verified
+                }
+                
+                # Save session (optional)
+                session_data = client.get_settings()
+                
+                # Save account to database if not exists
+                db = DatabaseManager()
+                existing_account = db.get_account_by_username(username)
+                
+                if not existing_account:
+                    print(f"📝 Saving new account {username} to database...")
+                    success = db.add_account(username, password)
+                    if success:
+                        print(f"✅ Account {username} saved to database")
+                    else:
+                        print(f"⚠️ Failed to save account {username} to database")
+                else:
+                    print(f"📝 Account {username} already exists in database")
+                
+                return jsonify({
+                    "success": True,
+                    "message": "Login successful",
+                    "user_info": stats,
+                    "session_saved": True
+                })
+                
+            except ClientLoginTwoFactorRequired:
+                print(f"❌ 2FA required for {username}")
+                return jsonify({
+                    "success": False,
+                    "error": "Two-factor authentication required",
+                    "requires_2fa": True
+                }), 401
+                
+            except ClientChallengeRequired:
+                print(f"❌ Challenge required for {username}")
+                return jsonify({
+                    "success": False,
+                    "error": "Account verification required (checkpoint)",
+                    "requires_verification": True
+                }), 401
+                
+            except ClientCheckpointRequired:
+                print(f"❌ Checkpoint required for {username}")
+                return jsonify({
+                    "success": False,
+                    "error": "Account checkpoint required",
+                    "requires_checkpoint": True
+                }), 401
+                
+            except ClientLoginRequired as e:
+                print(f"❌ Login failed for {username}: {e}")
+                return jsonify({
+                    "success": False,
+                    "error": "Invalid username or password"
+                }), 401
+                
+            except ClientError as e:
+                print(f"❌ Client error for {username}: {e}")
+                return jsonify({
+                    "success": False,
+                    "error": f"Login error: {str(e)}"
+                }), 500
+                
+            except Exception as e:
+                print(f"❌ Unexpected error for {username}: {e}")
+                return jsonify({
+                    "success": False,
+                    "error": f"Login failed: {str(e)}"
+                }), 500
+                
+        except ImportError:
+            print("❌ instagrapi not available")
+            return jsonify({
+                "success": False,
+                "error": "Instagram API not available"
+            }), 500
+            
+    except Exception as e:
+        print(f"❌ Error in login_account: {e}")
+        import traceback
+        print(f"❌ Traceback: {traceback.format_exc()}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
 def run_bot():
     """Run the bot in a separate thread"""
     global bot, bot_running

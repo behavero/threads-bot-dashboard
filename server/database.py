@@ -78,6 +78,34 @@ class DatabaseManager:
             print(f"❌ get_active_accounts: Traceback: {traceback.format_exc()}")
             return []
     
+    def get_account_by_username(self, username: str) -> Optional[Dict]:
+        """Get account by username"""
+        try:
+            print(f"🔍 get_account_by_username: Looking for username '{username}'")
+            
+            response = requests.get(
+                f"{self.supabase_url}/rest/v1/accounts",
+                headers=self.headers,
+                params={'username': f'eq.{username}'}
+            )
+            
+            print(f"🔍 get_account_by_username: Response status: {response.status_code}")
+            
+            if response.status_code == 200:
+                accounts = response.json()
+                if accounts:
+                    print(f"🔍 get_account_by_username: Found account: {accounts[0]}")
+                    return accounts[0]
+                else:
+                    print(f"🔍 get_account_by_username: No account found for username '{username}'")
+                    return None
+            else:
+                print(f"❌ get_account_by_username: HTTP {response.status_code}: {response.text}")
+                return None
+        except Exception as e:
+            print(f"❌ get_account_by_username: Error: {e}")
+            return None
+    
     def add_account(self, username: str, password: str, user_id: str = None) -> bool:
         """Add a new account"""
         try:
