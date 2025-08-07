@@ -22,9 +22,12 @@ class ThreadsBot:
         """Initialize the bot"""
         print("🤖 Initializing Threads Bot...")
         
-        # Initialize database schema
-        if not self.db.initialize_schema():
-            print("❌ Failed to initialize database")
+        # Test database connection
+        try:
+            accounts = self.db.get_active_accounts()
+            print(f"✅ Database connection successful - {len(accounts)} accounts found")
+        except Exception as e:
+            print(f"❌ Failed to connect to database: {e}")
             return False
         
         print("✅ Bot initialized successfully")
@@ -59,9 +62,8 @@ class ThreadsBot:
                 if api:
                     self.api_instances[username] = api
                 else:
-                    self.db.record_posting_history(
-                        account_id, caption['id'], image['id'],
-                        "error", "Failed to login"
+                    self.db.add_posting_record(
+                        account_id, caption['id'], image['id'] if image else None
                     )
                     return False
             
@@ -90,25 +92,22 @@ class ThreadsBot:
                 self.db.update_account_last_posted(account_id)
                 
                 # Record success
-                self.db.record_posting_history(
-                    account_id, caption['id'], image['id'],
-                    "success"
+                self.db.add_posting_record(
+                    account_id, caption['id'], image['id'] if image else None
                 )
                 
                 return True
             else:
                 print(f"❌ Failed to post for {username}")
-                self.db.record_posting_history(
-                    account_id, caption['id'], image['id'],
-                    "error", "API post failed"
+                self.db.add_posting_record(
+                    account_id, caption['id'], image['id'] if image else None
                 )
                 return False
                 
         except Exception as e:
             print(f"❌ Error posting for {username}: {e}")
-            self.db.record_posting_history(
-                account_id, caption['id'], image['id'],
-                "error", str(e)
+            self.db.add_posting_record(
+                account_id, caption['id'], image['id'] if image else None
             )
             return False
     

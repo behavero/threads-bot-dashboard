@@ -365,12 +365,12 @@ class EnhancedThreadsBot:
     def record_success(self, account_id: str, caption_id: str, image_id: str = None):
         """Record successful post"""
         self.success_count += 1
-        self.db.record_posting_history(account_id, caption_id, image_id, "success")
+        self.db.add_posting_record(account_id, caption_id, image_id)
     
     def record_failure(self, account_id: str, caption_id: str, image_id: str = None, error: str = None):
         """Record failed post"""
         self.failure_count += 1
-        self.db.record_posting_history(account_id, caption_id, image_id, "error", error)
+        self.db.add_posting_record(account_id, caption_id, image_id)
     
     def run_posting_cycle(self):
         """Run one posting cycle with enhanced logic"""
