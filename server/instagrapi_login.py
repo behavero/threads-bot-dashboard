@@ -38,9 +38,7 @@ def login_with_session(username: str, password: str, verification_code: str = No
         client.delay_range = [1, 3]
         
         # Check if session exists and try to use it
-        session_file = session_manager.get_session_path(username)
-        
-        if os.path.exists(session_file) and not verification_code:
+        if session_manager.session_exists(username) and not verification_code:
             print(f"📁 Found existing session for {username}, attempting to reuse...")
             
             try:
