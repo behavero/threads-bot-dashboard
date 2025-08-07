@@ -858,6 +858,7 @@ def login_account():
         data = request.json
         username = data.get('username')
         password = data.get('password')
+        verification_code = data.get('verification_code')
         
         if not username or not password:
             return jsonify({
@@ -1037,12 +1038,9 @@ def login_account():
                 # Run async login
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
-                success = loop.run_until_complete(api.login(username, password))
+                login_result = loop.run_until_complete(api.login(username, password, verification_code))
                 
-                if success:
-                    # Get user info
-                    user_info = loop.run_until_complete(api.get_me())
-                    
+                if login_result.get("success"):
                     # Clean up
                     loop.run_until_complete(api.logout())
                     loop.close()
@@ -1050,22 +1048,35 @@ def login_account():
                     print(f"✅ Threads API login successful for {username}")
                     return jsonify({
                         "success": True,
-                        "message": "Login successful via Threads API",
-                        "user_info": user_info,
+                        "message": login_result.get("message", "Login successful via Threads API"),
+                        "user_info": login_result.get("user_info"),
                         "api_used": "threads_api"
                     })
                 else:
-                    # Clean up
-                    loop.run_until_complete(api.logout())
-                    loop.close()
-                    
-                    print(f"❌ Threads API login failed for {username}")
-                    return jsonify({
-                        "success": False,
-                        "error": "Account security check required. Please log in to Instagram/Threads manually first, then try again.",
-                        "api_used": "threads_api",
-                        "requires_manual_login": True
-                    }), 401
+                    # Check if verification is required
+                    if login_result.get("requires_verification"):
+                        # Store API instance for verification (in production, you'd use a session store)
+                        print(f"📧 Verification required for {username}")
+                        return jsonify({
+                            "success": False,
+                            "message": login_result.get("message", "Email verification required"),
+                            "error": login_result.get("error", "Please check your email for a 6-digit verification code"),
+                            "api_used": "threads_api",
+                            "requires_verification": True,
+                            "verification_type": login_result.get("verification_type", "email")
+                        }), 401
+                    else:
+                        # Clean up
+                        loop.run_until_complete(api.logout())
+                        loop.close()
+                        
+                        print(f"❌ Threads API login failed for {username}")
+                        return jsonify({
+                            "success": False,
+                            "error": login_result.get("error", "Account security check required. Please log in to Instagram/Threads manually first, then try again."),
+                            "api_used": "threads_api",
+                            "requires_manual_login": login_result.get("requires_manual_login", True)
+                        }), 401
                     
             except ImportError as threads_error:
                 print(f"❌ Threads API also not available: {threads_error}")
@@ -1248,6 +1259,68 @@ def test_threads_login():
             
     except Exception as e:
         print(f"❌ Error in test_threads_login: {e}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+@app.route('/api/accounts/verify-code', methods=['POST'])
+def submit_verification_code():
+    """Submit verification code for account login"""
+    try:
+        data = request.json
+        username = data.get('username')
+        verification_code = data.get('verification_code')
+        
+        if not username or not verification_code:
+            return jsonify({
+                "success": False,
+                "error": "Username and verification code required"
+            }), 400
+        
+        print(f"📧 Submitting verification code for {username}...")
+        
+        try:
+            from threads_api_real import RealThreadsAPI
+            import asyncio
+            
+            # Create new API instance for verification
+            api = RealThreadsAPI(use_instagrapi=True)
+            
+            # Run async verification
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            verification_result = loop.run_until_complete(api.submit_verification_code(verification_code))
+            
+            # Clean up
+            loop.run_until_complete(api.logout())
+            loop.close()
+            
+            if verification_result.get("success"):
+                print(f"✅ Verification successful for {username}")
+                return jsonify({
+                    "success": True,
+                    "message": "Verification successful",
+                    "user_info": verification_result.get("user_info"),
+                    "api_used": "threads_api"
+                })
+            else:
+                print(f"❌ Verification failed for {username}")
+                return jsonify({
+                    "success": False,
+                    "error": verification_result.get("error", "Verification failed"),
+                    "api_used": "threads_api"
+                }), 401
+                
+        except Exception as e:
+            print(f"❌ Error during verification: {e}")
+            return jsonify({
+                "success": False,
+                "error": f"Verification error: {str(e)}"
+            }), 500
+            
+    except Exception as e:
+        print(f"❌ Error in submit_verification_code: {e}")
         return jsonify({
             "success": False,
             "error": str(e)

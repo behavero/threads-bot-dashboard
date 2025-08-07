@@ -21,6 +21,7 @@ interface AccountFormData {
   username: string
   password: string
   description: string
+  verification_code?: string
 }
 
 export default function AccountsPage() {
@@ -31,10 +32,13 @@ export default function AccountsPage() {
   const [showModal, setShowModal] = useState(false)
   const [editingAccount, setEditingAccount] = useState<Account | null>(null)
   const [hidePassword, setHidePassword] = useState(false)
+  const [requiresVerification, setRequiresVerification] = useState(false)
+  const [verificationUsername, setVerificationUsername] = useState('')
   const [formData, setFormData] = useState<AccountFormData>({
     username: '',
     password: '',
-    description: ''
+    description: '',
+    verification_code: ''
   })
 
   useEffect(() => {
@@ -154,7 +158,8 @@ export default function AccountsPage() {
           },
           body: JSON.stringify({
             username: formData.username,
-            password: formData.password
+            password: formData.password,
+            verification_code: formData.verification_code
           })
         })
 
@@ -164,9 +169,16 @@ export default function AccountsPage() {
         if (data.success) {
           setShowModal(false)
           resetForm()
+          setRequiresVerification(false)
+          setVerificationUsername('')
           await fetchAccounts()
           setMessage(`Account created successfully! ${data.user_info?.followers || 0} followers, ${data.user_info?.posts || 0} posts`)
           setHidePassword(true) // Hide password for security
+        } else if (data.requires_verification) {
+          // Handle verification required
+          setRequiresVerification(true)
+          setVerificationUsername(formData.username)
+          setMessage('Please check your email for a 6-digit verification code and enter it below.')
         } else {
           setError(getUserFriendlyError(data.error || 'Failed to create account'))
         }
@@ -238,9 +250,12 @@ export default function AccountsPage() {
     setFormData({
       username: '',
       password: '',
-      description: ''
+      description: '',
+      verification_code: ''
     })
     setHidePassword(false)
+    setRequiresVerification(false)
+    setVerificationUsername('')
   }
 
   const openAddModal = () => {
@@ -367,6 +382,40 @@ export default function AccountsPage() {
       }
     } catch (err) {
       console.error('Post error:', err)
+      setError('Network error. Please check your connection and try again.')
+    }
+  }
+
+  const submitVerificationCode = async (code: string) => {
+    try {
+      setError('')
+      setMessage('')
+      console.log(`Submitting verification code for ${verificationUsername}...`)
+      
+      const response = await fetch('https://threads-bot-dashboard-3.onrender.com/api/accounts/verify-code', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          username: verificationUsername,
+          verification_code: code
+        })
+      })
+      
+      const data = await response.json()
+      console.log('Verification response:', data)
+      
+      if (data.success) {
+        setRequiresVerification(false)
+        setVerificationUsername('')
+        setMessage(`Account verified successfully! ${data.user_info?.followers || 0} followers, ${data.user_info?.posts || 0} posts`)
+        await fetchAccounts()
+      } else {
+        setError(getUserFriendlyError(data.error || 'Verification failed'))
+      }
+    } catch (err) {
+      console.error('Verification error:', err)
       setError('Network error. Please check your connection and try again.')
     }
   }
@@ -582,6 +631,26 @@ export default function AccountsPage() {
                 />
               </div>
 
+              {requiresVerification && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-300">
+                    Verification Code *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.verification_code}
+                    onChange={(e) => setFormData({...formData, verification_code: e.target.value})}
+                    required
+                    maxLength={6}
+                    className="w-full px-4 py-3 bg-transparent border border-purple-500 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 transition-colors"
+                    placeholder="Enter 6-digit code from email"
+                  />
+                  <p className="text-sm text-gray-400">
+                    Check your email for a verification code from Instagram/Threads
+                  </p>
+                </div>
+              )}
+
               <div className="flex justify-end space-x-4 pt-4">
                 <button
                   type="button"
@@ -598,6 +667,82 @@ export default function AccountsPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Verification Modal */}
+      {requiresVerification && !showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="modern-card p-8 w-full max-w-md">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-2xl font-bold text-white">
+                Email Verification Required
+              </h3>
+              <button
+                onClick={() => {
+                  setRequiresVerification(false)
+                  setVerificationUsername('')
+                }}
+                className="text-gray-400 hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              <div className="text-center">
+                <p className="text-gray-300 mb-4">
+                  Please check your email for a 6-digit verification code from Instagram/Threads for account <strong>{verificationUsername}</strong>
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">
+                  Verification Code *
+                </label>
+                <input
+                  type="text"
+                  id="verification-code"
+                  maxLength={6}
+                  className="w-full px-4 py-3 bg-transparent border border-purple-500 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 transition-colors text-center text-2xl tracking-widest"
+                  placeholder="000000"
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      const code = (e.target as HTMLInputElement).value
+                      if (code.length === 6) {
+                        submitVerificationCode(code)
+                      }
+                    }
+                  }}
+                />
+              </div>
+
+              <div className="flex justify-end space-x-4 pt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRequiresVerification(false)
+                    setVerificationUsername('')
+                  }}
+                  className="px-6 py-3 text-gray-300 hover:text-white transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const code = (document.getElementById('verification-code') as HTMLInputElement)?.value
+                    if (code && code.length === 6) {
+                      submitVerificationCode(code)
+                    }
+                  }}
+                  className="modern-button px-6 py-3 glow-on-hover"
+                >
+                  Verify Account
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

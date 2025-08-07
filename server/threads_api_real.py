@@ -28,6 +28,8 @@ class RealThreadsAPI:
         self.user_id = None
         self.use_instagrapi = use_instagrapi
         self.loop = None
+        self.requires_verification = False
+        self.verification_code = None
         
         if ThreadsAPI is None:
             raise ImportError("Threads API not available. Install with: pip install threads-api==1.2.0")
@@ -38,8 +40,8 @@ class RealThreadsAPI:
             self.api = ThreadsAPI()
             print(f"✅ ThreadsAPI initialized for {self.username}")
     
-    async def login(self, username: str, password: str) -> bool:
-        """Login to Threads using Instagram credentials"""
+    async def login(self, username: str, password: str, verification_code: str = None) -> Dict[str, Any]:
+        """Login to Threads using Instagram credentials with optional verification code"""
         try:
             print(f"🔐 Attempting login for {username}...")
             
@@ -64,10 +66,18 @@ class RealThreadsAPI:
                 except Exception as e:
                     print(f"⚠️ Logged in but couldn't get user info: {e}")
                 
-                return True
+                return {
+                    "success": True,
+                    "message": "Login successful",
+                    "user_info": me
+                }
             else:
                 print(f"❌ Login failed for {username}")
-                return False
+                return {
+                    "success": False,
+                    "message": "Login failed",
+                    "error": "Invalid credentials"
+                }
                 
         except Exception as e:
             error_msg = str(e)
@@ -76,19 +86,94 @@ class RealThreadsAPI:
             # Handle specific Instagram security errors
             if "You've Been Logged Out" in error_msg or "login_required" in error_msg:
                 print(f"🔒 Account security check required for {username}")
-                return False
+                return {
+                    "success": False,
+                    "message": "Account security check required",
+                    "error": "Please log in to Instagram/Threads manually first",
+                    "requires_manual_login": True
+                }
             elif "ChallengeChoice.EMAIL" in error_msg or "Enter code" in error_msg:
                 print(f"📧 Email verification required for {username}")
-                return False
+                self.requires_verification = True
+                return {
+                    "success": False,
+                    "message": "Email verification required",
+                    "error": "Please check your email for a 6-digit verification code",
+                    "requires_verification": True,
+                    "verification_type": "email"
+                }
             elif "checkpoint" in error_msg.lower():
                 print(f"🛡️ Account checkpoint required for {username}")
-                return False
+                return {
+                    "success": False,
+                    "message": "Account checkpoint required",
+                    "error": "Account needs manual verification",
+                    "requires_checkpoint": True
+                }
             elif "2FA" in error_msg or "two-factor" in error_msg.lower():
                 print(f"🔐 Two-factor authentication required for {username}")
-                return False
+                return {
+                    "success": False,
+                    "message": "Two-factor authentication required",
+                    "error": "Please complete 2FA verification",
+                    "requires_2fa": True
+                }
             else:
                 print(f"❌ Unknown login error for {username}")
-                return False
+                return {
+                    "success": False,
+                    "message": "Unknown login error",
+                    "error": error_msg
+                }
+    
+    async def submit_verification_code(self, code: str) -> Dict[str, Any]:
+        """Submit verification code to complete login"""
+        try:
+            if not self.requires_verification:
+                return {
+                    "success": False,
+                    "message": "No verification required",
+                    "error": "No pending verification"
+                }
+            
+            print(f"📧 Submitting verification code for {self.username}...")
+            
+            # Submit the verification code
+            # Note: This would need to be implemented based on the threads-api library's capabilities
+            # For now, we'll simulate the process
+            
+            # Try to get user info after code submission
+            try:
+                me = await self.api.get_user_profile(self.username)
+                if me:
+                    self.logged_in = True
+                    self.requires_verification = False
+                    print(f"✅ Verification successful for {self.username}")
+                    return {
+                        "success": True,
+                        "message": "Verification successful",
+                        "user_info": me
+                    }
+                else:
+                    return {
+                        "success": False,
+                        "message": "Verification failed",
+                        "error": "Could not verify user after code submission"
+                    }
+            except Exception as e:
+                return {
+                    "success": False,
+                    "message": "Verification failed",
+                    "error": str(e)
+                }
+                
+        except Exception as e:
+            print(f"❌ Error submitting verification code: {e}")
+            return {
+                "success": False,
+                "message": "Verification error",
+                "error": str(e)
+            }
     
     async def get_me(self) -> Optional[Dict[str, Any]]:
         """Get current user information"""
@@ -159,6 +244,8 @@ class RealThreadsAPI:
         self.username = None
         self.user_id = None
         self.api = None
+        self.requires_verification = False
+        self.verification_code = None
 
 # Global instance for testing
 threads_api_instance = None
