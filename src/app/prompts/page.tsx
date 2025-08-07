@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAuth } from '@/lib/auth'
 
 interface Prompt {
   id: number
@@ -19,7 +18,6 @@ interface PromptFormData {
 }
 
 export default function PromptsPage() {
-  const { user } = useAuth()
   const [prompts, setPrompts] = useState<Prompt[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
@@ -27,13 +25,13 @@ export default function PromptsPage() {
   const [showModal, setShowModal] = useState(false)
   const [editingPrompt, setEditingPrompt] = useState<Prompt | null>(null)
   const [selectedCategory, setSelectedCategory] = useState('all')
+  const [csvFile, setCsvFile] = useState<File | null>(null)
+  const [isUploadingCsv, setIsUploadingCsv] = useState(false)
   const [formData, setFormData] = useState<PromptFormData>({
     text: '',
     category: '',
     tags: ''
   })
-  const [csvFile, setCsvFile] = useState<File | null>(null)
-  const [isUploadingCsv, setIsUploadingCsv] = useState(false)
 
   const categories = [
     'all',

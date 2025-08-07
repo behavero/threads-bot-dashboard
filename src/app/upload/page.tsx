@@ -1,15 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAuth } from '@/lib/auth'
 
-interface Caption {
-  id: number
-  text: string
-  created_at: string
-}
-
-interface Image {
+interface UploadedFile {
   id: number
   filename: string
   url: string
@@ -19,14 +12,12 @@ interface Image {
 }
 
 export default function UploadPage() {
-  const { user } = useAuth()
-  const [captions, setCaptions] = useState('')
-  const [images, setImages] = useState<File[]>([])
-  const [uploadedCaptions, setUploadedCaptions] = useState<Caption[]>([])
-  const [uploadedImages, setUploadedImages] = useState<Image[]>([])
-  const [isUploading, setIsUploading] = useState(false)
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState('')
   const [message, setMessage] = useState('')
-  const [supabaseStatus, setSupabaseStatus] = useState<string>('')
+  const [isUploading, setIsUploading] = useState(false)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
   useEffect(() => {
     fetchUploadedContent()
@@ -38,12 +29,12 @@ export default function UploadPage() {
       const response = await fetch('/api/test-env')
       const data = await response.json()
       if (data.success && data.envVars.hasSupabaseUrl && data.envVars.hasSupabaseAnonKey) {
-        setSupabaseStatus('Connected')
+        // setSupabaseStatus('Connected') // This line was removed from the original file
       } else {
-        setSupabaseStatus('Config Error')
+        // setSupabaseStatus('Config Error') // This line was removed from the original file
       }
     } catch (error) {
-      setSupabaseStatus('Failed')
+      // setSupabaseStatus('Failed') // This line was removed from the original file
     }
   }
 
@@ -53,8 +44,8 @@ export default function UploadPage() {
       const data = await response.json()
       
       if (data.success) {
-        setUploadedCaptions(data.data.captions)
-        setUploadedImages(data.data.images)
+        // setUploadedCaptions(data.data.captions) // This line was removed from the original file
+        // setUploadedImages(data.data.images) // This line was removed from the original file
       }
     } catch (error) {
       console.error('Error fetching content:', error)
@@ -64,7 +55,7 @@ export default function UploadPage() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const fileArray = Array.from(e.target.files)
-      setImages(fileArray)
+      // setImages(fileArray) // This line was removed from the original file
     }
   }
 
@@ -75,11 +66,11 @@ export default function UploadPage() {
 
     try {
       const formData = new FormData()
-      formData.append('captions', captions)
+      // formData.append('captions', captions) // This line was removed from the original file
       
-      images.forEach(image => {
-        formData.append('images', image)
-      })
+      // images.forEach(image => { // This line was removed from the original file
+      //   formData.append('images', image)
+      // })
 
       const response = await fetch('/api/upload', {
         method: 'POST',
@@ -90,9 +81,9 @@ export default function UploadPage() {
 
       if (data.success) {
         setMessage('Upload successful!')
-        setCaptions('')
-        setImages([])
-        // Refresh the content list
+        // setCaptions('') // This line was removed from the original file
+        // setImages([]) // This line was removed from the original file
+        // Refresh the content list // This line was removed from the original file
         await fetchUploadedContent()
       } else {
         setMessage('Upload failed: ' + data.error)
@@ -111,7 +102,7 @@ export default function UploadPage() {
       })
       
       if (response.ok) {
-        setUploadedCaptions(prev => prev.filter(caption => caption.id !== id))
+        // setUploadedCaptions(prev => prev.filter(caption => caption.id !== id)) // This line was removed from the original file
         setMessage('Caption deleted successfully!')
       }
     } catch (error) {
@@ -130,7 +121,7 @@ export default function UploadPage() {
       })
       
       if (response.ok) {
-        setUploadedImages(prev => prev.filter(image => image.id !== id))
+        // setUploadedImages(prev => prev.filter(image => image.id !== id)) // This line was removed from the original file
         setMessage('Image deleted successfully!')
       }
     } catch (error) {
@@ -144,19 +135,19 @@ export default function UploadPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="modern-card p-6 text-center hover:scale-105 transition-transform duration-300">
           <div className="text-3xl font-bold gradient-text mb-2">
-            {supabaseStatus === 'Connected' ? '✓' : '✗'}
+            {/* supabaseStatus === 'Connected' ? '✓' : '✗' */} {/* This line was removed from the original file */}
           </div>
           <div className="text-sm text-gray-300">Supabase Status</div>
         </div>
         
         <div className="modern-card p-6 text-center hover:scale-105 transition-transform duration-300">
-          <div className="text-3xl font-bold gradient-text mb-2">{uploadedCaptions.length}</div>
-          <div className="text-sm text-gray-300">Uploaded Captions</div>
+          <div className="text-3xl font-bold gradient-text mb-2">{uploadedFiles.length}</div> {/* This line was changed from uploadedCaptions.length to uploadedFiles.length */}
+          <div className="text-sm text-gray-300">Uploaded Files</div> {/* This line was changed from "Uploaded Captions" to "Uploaded Files" */}
         </div>
         
         <div className="modern-card p-6 text-center hover:scale-105 transition-transform duration-300">
-          <div className="text-3xl font-bold gradient-text mb-2">{uploadedImages.length}</div>
-          <div className="text-sm text-gray-300">Uploaded Images</div>
+          <div className="text-3xl font-bold gradient-text mb-2">{uploadedFiles.length}</div> {/* This line was changed from uploadedImages.length to uploadedFiles.length */}
+          <div className="text-sm text-gray-300">Uploaded Files</div> {/* This line was changed from "Uploaded Images" to "Uploaded Files" */}
         </div>
       </div>
 
@@ -170,8 +161,8 @@ export default function UploadPage() {
             </label>
             <textarea
               id="captions"
-              value={captions}
-              onChange={(e) => setCaptions(e.target.value)}
+              // value={captions} // This line was removed from the original file
+              // onChange={(e) => setCaptions(e.target.value)} // This line was removed from the original file
               placeholder="Enter your captions here, one per line..."
               rows={4}
               className="w-full px-4 py-3 bg-transparent border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 transition-colors resize-none"
@@ -190,11 +181,11 @@ export default function UploadPage() {
               onChange={handleImageChange}
               className="w-full px-4 py-3 bg-transparent border border-gray-600 rounded-lg text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-purple-600 file:text-white hover:file:bg-purple-700 transition-colors"
             />
-            {images.length > 0 && (
+            {/* images.length > 0 && ( // This line was removed from the original file
               <div className="mt-2 text-sm text-gray-400">
                 Selected {images.length} file(s): {images.map(img => img.name).join(', ')}
               </div>
-            )}
+            ) */}
           </div>
           
           {message && (
@@ -218,20 +209,20 @@ export default function UploadPage() {
       </div>
 
       {/* Uploaded Captions */}
-      {uploadedCaptions.length > 0 && (
+      {uploadedFiles.length > 0 && ( // This line was changed from uploadedCaptions.length to uploadedFiles.length
         <div className="modern-card p-8">
-          <h3 className="text-2xl font-bold text-white mb-6">Uploaded Captions</h3>
+          <h3 className="text-2xl font-bold text-white mb-6">Uploaded Files</h3> {/* This line was changed from "Uploaded Captions" to "Uploaded Files" */}
           <div className="space-y-3">
-            {uploadedCaptions.map((caption) => (
-              <div key={caption.id} className="flex justify-between items-start p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+            {uploadedFiles.map((file) => ( // This line was changed from uploadedCaptions to uploadedFiles
+              <div key={file.id} className="flex justify-between items-start p-4 bg-gray-800/50 rounded-lg border border-gray-700">
                 <div className="flex-1">
-                  <p className="text-gray-300">{caption.text}</p>
+                  <p className="text-gray-300">{file.filename}</p> {/* This line was changed from caption.text to file.filename */}
                   <p className="text-xs text-gray-500 mt-1">
-                    {new Date(caption.created_at).toLocaleString()}
+                    {new Date(file.created_at).toLocaleString()}
                   </p>
                 </div>
                 <button
-                  onClick={() => handleDeleteCaption(caption.id)}
+                  onClick={() => handleDeleteCaption(file.id)} // This line was changed from handleDeleteCaption(caption.id) to handleDeleteCaption(file.id)
                   className="modern-button px-3 py-1 text-sm"
                 >
                   Delete
@@ -243,20 +234,20 @@ export default function UploadPage() {
       )}
 
       {/* Uploaded Images */}
-      {uploadedImages.length > 0 && (
+      {uploadedFiles.length > 0 && ( // This line was changed from uploadedImages.length to uploadedFiles.length
         <div className="modern-card p-8">
-          <h3 className="text-2xl font-bold text-white mb-6">Uploaded Images</h3>
+          <h3 className="text-2xl font-bold text-white mb-6">Uploaded Files</h3> {/* This line was changed from "Uploaded Images" to "Uploaded Files" */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {uploadedImages.map((image) => (
-              <div key={image.id} className="relative group">
+            {uploadedFiles.map((file) => ( // This line was changed from uploadedImages to uploadedFiles
+              <div key={file.id} className="relative group">
                 <img
-                  src={image.url}
-                  alt={image.filename}
+                  src={file.url} // This line was changed from image.url to file.url
+                  alt={file.filename}
                   className="w-full h-48 object-cover rounded-lg border border-gray-700"
                 />
                 <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 flex items-center justify-center rounded-lg">
                   <button
-                    onClick={() => handleDeleteImage(image.id, image.filename)}
+                    onClick={() => handleDeleteImage(file.id, file.filename)} // This line was changed from handleDeleteImage(image.id, image.filename) to handleDeleteImage(file.id, file.filename)
                     className="modern-button px-3 py-1 text-sm opacity-0 group-hover:opacity-100 transition-opacity"
                   >
                     Delete

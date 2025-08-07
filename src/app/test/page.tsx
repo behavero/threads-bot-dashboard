@@ -1,15 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAuth } from '@/lib/auth'
 
 export default function TestPage() {
-  const { user, loading } = useAuth()
   const [testResults, setTestResults] = useState<any>({})
-  const [isTesting, setIsTesting] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
 
   const runTests = async () => {
-    setIsTesting(true)
+    setIsLoading(true)
     const results: any = {}
 
     try {
@@ -84,7 +82,7 @@ export default function TestPage() {
     }
 
     setTestResults(results)
-    setIsTesting(false)
+    setIsLoading(false)
   }
 
   if (loading) {
