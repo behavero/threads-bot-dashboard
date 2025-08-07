@@ -14,6 +14,7 @@ interface Account {
   is_active: boolean
   created_at: string
   last_posted?: string
+  last_login?: string
 }
 
 interface AccountFormData {
@@ -422,6 +423,14 @@ export default function AccountsPage() {
                     <span className="text-gray-400">Last Posted:</span>
                     <span className="text-gray-300">
                       {new Date(account.last_posted).toLocaleDateString()}
+                    </span>
+                  </div>
+                )}
+                {account.last_login && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-400">Last Login:</span>
+                    <span className="text-gray-300">
+                      {new Date(account.last_login).toLocaleDateString()}
                     </span>
                   </div>
                 )}

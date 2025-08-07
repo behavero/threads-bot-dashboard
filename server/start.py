@@ -896,6 +896,9 @@ def login_account():
                         "is_verified": user_info.is_verified
                     }
                     
+                    # Update last_login timestamp
+                    db.update_account_last_login(existing_account['id'])
+                    
                     return jsonify({
                         "success": True,
                         "message": "Login successful (reused session)",
@@ -938,6 +941,10 @@ def login_account():
                     success = db.add_account(username, password, session_data=session_data)
                     if success:
                         print(f"✅ Account {username} saved to database with session")
+                        # For new accounts, we need to get the account ID to update last_login
+                        new_account = db.get_account_by_username(username)
+                        if new_account:
+                            db.update_account_last_login(new_account['id'])
                     else:
                         print(f"⚠️ Failed to save account {username} to database")
                 else:
@@ -945,6 +952,8 @@ def login_account():
                     success = db.save_session_data(existing_account['id'], session_data)
                     if success:
                         print(f"✅ Session data saved for {username}")
+                        # Update last_login for existing account
+                        db.update_account_last_login(existing_account['id'])
                     else:
                         print(f"⚠️ Failed to save session data for {username}")
                 
@@ -1064,6 +1073,9 @@ def test_session(username):
             # Get user info to verify login worked
             user_info = client.user_info_by_username(username)
             
+            # Update last_login timestamp
+            db.update_account_last_login(account['id'])
+            
             return jsonify({
                 "success": True,
                 "message": "Session test successful",
@@ -1159,6 +1171,8 @@ def trigger_post(account_id):
                     client.login(account['username'], account['password'])
                     print(f"✅ Successfully logged in with saved session")
                     login_success = True
+                    # Update last_login for session reuse
+                    db.update_account_last_login(account_id)
                 except Exception as session_error:
                     print(f"⚠️ Failed to use saved session: {session_error}")
                     print(f"🔐 Falling back to fresh login...")
@@ -1173,6 +1187,9 @@ def trigger_post(account_id):
                 new_session = client.get_settings()
                 db.save_session_data(account_id, new_session)
                 print(f"💾 Saved new session data")
+                
+                # Update last_login for fresh login
+                db.update_account_last_login(account_id)
             
             # Post content
             print(f"📝 Posting content...")

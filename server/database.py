@@ -282,6 +282,24 @@ class DatabaseManager:
             print(f"❌ Error updating account last_posted: {e}")
             return False
     
+    def update_account_last_login(self, account_id: int) -> bool:
+        """Update account's last_login timestamp"""
+        try:
+            print(f"🔍 update_account_last_login: Updating account {account_id}")
+            
+            from datetime import datetime
+            response = requests.patch(
+                f"{self.supabase_url}/rest/v1/accounts?id=eq.{account_id}",
+                json={"last_login": datetime.now().isoformat()},
+                headers=self.headers
+            )
+            
+            print(f"🔍 update_account_last_login: Response status: {response.status_code}")
+            return response.status_code == 204
+        except Exception as e:
+            print(f"❌ Error updating account last_login: {e}")
+            return False
+    
     def update_account(self, account_id: int, data: dict) -> bool:
         """Update an existing account"""
         try:
