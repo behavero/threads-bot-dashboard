@@ -366,6 +366,42 @@ def add_image():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/api/debug', methods=['GET'])
+def debug_info():
+    """Debug endpoint to check environment and database"""
+    try:
+        import os
+        from database import DatabaseManager
+        
+        debug_info = {
+            "environment": {
+                "SUPABASE_URL": os.getenv('SUPABASE_URL', 'NOT SET'),
+                "SUPABASE_KEY": "SET" if os.getenv('SUPABASE_KEY') else "NOT SET",
+                "SUPABASE_SERVICE_ROLE_KEY": "SET" if os.getenv('SUPABASE_SERVICE_ROLE_KEY') else "NOT SET"
+            },
+            "database_test": None,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+        # Test database connection
+        try:
+            db = DatabaseManager()
+            captions = db.get_all_captions()
+            debug_info["database_test"] = {
+                "status": "success",
+                "captions_count": len(captions),
+                "sample_caption": captions[0] if captions else None
+            }
+        except Exception as e:
+            debug_info["database_test"] = {
+                "status": "error",
+                "error": str(e)
+            }
+        
+        return jsonify(debug_info)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 def run_bot():
     """Run the bot in a separate thread"""
     global bot, bot_running
