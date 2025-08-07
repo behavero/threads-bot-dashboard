@@ -1,17 +1,24 @@
 #!/usr/bin/env python3
 """
-Instagrapi Login Handler
-Handles persistent session-based login for Threads accounts
+Login Manager for Threads Accounts
+Handles login with session restoration and saving
 """
 
-import os
-import time
+from session_store import load_session_from_supabase, save_session_to_supabase, session_exists_in_supabase
+from instagrapi import Client
+from instagrapi.exceptions import (
+    ClientLoginRequired, 
+    ClientError,
+    ClientChallengeRequired,
+    ClientCheckpointRequired,
+    ClientTwoFactorRequired
+)
 from typing import Dict, Any, Optional
-from session_manager import session_manager
+import time
 
-def login_with_session(username: str, password: str, verification_code: str = None) -> Dict[str, Any]:
+def login_or_restore_session(username: str, password: str, verification_code: str = None) -> Dict[str, Any]:
     """
-    Login to Threads using instagrapi with session management
+    Login to Threads with session restoration
     
     Args:
         username: Instagram username
@@ -22,32 +29,21 @@ def login_with_session(username: str, password: str, verification_code: str = No
         Dict with login result and user info
     """
     try:
-        from instagrapi import Client
-        from instagrapi.exceptions import (
-            ClientLoginRequired, 
-            ClientError,
-            ClientChallengeRequired,
-            ClientCheckpointRequired,
-            ClientTwoFactorRequired
-        )
-        
         print(f"🔐 Attempting login for {username}...")
         
-        # Initialize client
-        client = Client()
-        client.delay_range = [1, 3]
+        # If verification code is provided, handle challenge completion
+        if verification_code:
+            print(f"📧 Processing verification code for {username}")
+            return _complete_challenge_with_session(username, verification_code)
         
-        # Check if session exists and try to use it
-        session_file = session_manager.get_session_path(username)
+        # Try to load existing session first
+        client = load_session_from_supabase(username)
         
-        if os.path.exists(session_file) and not verification_code:
+        if client:
             print(f"📁 Found existing session for {username}, attempting to reuse...")
             
             try:
-                # Load existing session
-                session_manager.load_instagrapi_session(username, client)
-                
-                # Validate session by getting user info
+                # Try to validate session by getting user info
                 user_info = client.user_info_by_username(username)
                 if user_info:
                     print(f"✅ Session is valid for {username}")
@@ -68,17 +64,12 @@ def login_with_session(username: str, password: str, verification_code: str = No
                     }
             except Exception as e:
                 print(f"⚠️ Session invalid for {username}: {e}")
-                # Delete invalid session
-                session_manager.delete_session(username)
                 # Continue with fresh login
         
-        # If verification code is provided, handle challenge completion
-        if verification_code:
-            print(f"📧 Processing verification code for {username}")
-            return _complete_challenge(username, verification_code, client)
-        
-        # Attempt fresh login
+        # Perform fresh login
         print(f"🔐 Performing fresh login for {username}...")
+        client = Client()
+        client.delay_range = [1, 3]
         
         try:
             client.login(username, password)
@@ -88,7 +79,7 @@ def login_with_session(username: str, password: str, verification_code: str = No
             user_info = client.user_info_by_username(username)
             
             # Save session
-            session_manager.save_instagrapi_session(username, client)
+            save_session_to_supabase(username, client)
             
             return {
                 "success": True,
@@ -167,23 +158,21 @@ def login_with_session(username: str, password: str, verification_code: str = No
                 "api_used": "instagrapi"
             }, 500
             
-    except ImportError as e:
-        print(f"❌ Instagrapi not available: {e}")
-        return {
-            "success": False,
-            "error": f"Instagrapi not available: {str(e)}"
-        }, 500
     except Exception as e:
-        print(f"❌ Error in login_with_session: {e}")
+        print(f"❌ Error in login_or_restore_session: {e}")
         return {
             "success": False,
             "error": str(e)
         }, 500
 
-def _complete_challenge(username: str, code: str, client) -> Dict[str, Any]:
-    """Complete challenge verification"""
+def _complete_challenge_with_session(username: str, code: str) -> Dict[str, Any]:
+    """Complete challenge verification and save session"""
     try:
         print(f"📧 Completing challenge for {username} with code: {code}")
+        
+        # Create new client for challenge completion
+        client = Client()
+        client.delay_range = [1, 3]
         
         # Complete the challenge
         client.challenge_resolve(code)
@@ -193,7 +182,7 @@ def _complete_challenge(username: str, code: str, client) -> Dict[str, Any]:
         user_info = client.user_info_by_username(username)
         
         # Save session
-        session_manager.save_instagrapi_session(username, client)
+        save_session_to_supabase(username, client)
         
         return {
             "success": True,
@@ -222,15 +211,25 @@ def _complete_challenge(username: str, code: str, client) -> Dict[str, Any]:
 def validate_session(username: str) -> bool:
     """Validate if a session exists and is working"""
     try:
-        from instagrapi import Client
+        client = load_session_from_supabase(username)
+        if not client:
+            return False
         
-        client = Client()
-        return session_manager.validate_session(username, client)
+        # Try to get user info to validate session
+        try:
+            user_info = client.user_info_by_username(username)
+            if user_info:
+                print(f"✅ Session validated for {username}")
+                return True
+        except Exception as e:
+            print(f"❌ Session validation failed for {username}: {e}")
+            # Delete invalid session
+            from session_store import delete_session_from_supabase
+            delete_session_from_supabase(username)
+            return False
+        
+        return False
         
     except Exception as e:
         print(f"❌ Error validating session for {username}: {e}")
         return False
-
-def cleanup_sessions(max_age_days: int = 30) -> int:
-    """Clean up expired sessions"""
-    return session_manager.cleanup_expired_sessions(max_age_days)

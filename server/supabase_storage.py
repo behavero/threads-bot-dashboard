@@ -7,6 +7,7 @@ Handles session storage in Supabase Storage instead of local files
 import os
 import json
 import tempfile
+import base64
 from typing import Optional, Dict, Any
 from datetime import datetime
 from supabase import create_client, Client
@@ -57,25 +58,40 @@ class SupabaseStorageManager:
     def save_instagrapi_session(self, username: str, client) -> bool:
         """Save instagrapi session to Supabase Storage"""
         try:
-            session_file = self._get_session_filename(username)
-            
             # Create temporary file for instagrapi to dump settings
-            with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as temp_file:
                 temp_path = temp_file.name
             
             # Use instagrapi's built-in session saving to temp file
             client.dump_settings(temp_path)
             
-            # Upload to Supabase Storage with upsert
-            with open(temp_path, "rb") as f:
-                self.supabase.storage.from_(self.session_bucket).upload(
-                    session_file, 
-                    f, 
-                    {"upsert": True}
-                )
+            # Read the session data
+            with open(temp_path, 'r') as f:
+                session_data = f.read()
             
             # Clean up temp file
-            os.remove(temp_path)
+            os.unlink(temp_path)
+            
+            # Upload to Supabase Storage
+            filename = self._get_session_filename(username)
+            
+            # Add metadata to session data
+            session_with_meta = {
+                "username": username,
+                "session_data": session_data,
+                "created_at": datetime.now().isoformat(),
+                "last_used": datetime.now().isoformat()
+            }
+            
+            # Convert to JSON string
+            session_json = json.dumps(session_with_meta, indent=2)
+            
+            # Upload to Supabase Storage
+            result = self.supabase.storage.from_(self.session_bucket).upload(
+                path=filename,
+                file=session_json.encode('utf-8'),
+                file_options={"content-type": "application/json"}
+            )
             
             print(f"✅ Session saved to Supabase Storage for {username}")
             return True
@@ -87,25 +103,36 @@ class SupabaseStorageManager:
     def load_instagrapi_session(self, username: str, client) -> bool:
         """Load instagrapi session from Supabase Storage"""
         try:
-            session_file = self._get_session_filename(username)
+            filename = self._get_session_filename(username)
             
             # Download from Supabase Storage
-            result = self.supabase.storage.from_(self.session_bucket).download(session_file)
+            result = self.supabase.storage.from_(self.session_bucket).download(filename)
             
             if not result:
                 print(f"📁 No session file found in Supabase Storage for {username}")
                 return False
             
+            # Parse session data
+            session_json = result.decode('utf-8')
+            session_data = json.loads(session_json)
+            
+            # Extract the actual session data
+            actual_session_data = session_data.get("session_data", session_json)
+            
             # Create temporary file for instagrapi to load settings
-            with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as temp_file:
                 temp_path = temp_file.name
-                temp_file.write(result)
+                temp_file.write(actual_session_data)
             
             # Use instagrapi's built-in session loading
             client.load_settings(temp_path)
             
             # Clean up temp file
-            os.remove(temp_path)
+            os.unlink(temp_path)
+            
+            # Update last_used timestamp
+            session_data["last_used"] = datetime.now().isoformat()
+            self._update_session_metadata(username, session_data)
             
             print(f"✅ Session loaded from Supabase Storage for {username}")
             return True
@@ -114,12 +141,26 @@ class SupabaseStorageManager:
             print(f"❌ Failed to load session from Supabase Storage for {username}: {e}")
             return False
     
+    def _update_session_metadata(self, username: str, session_data: Dict[str, Any]):
+        """Update session metadata in Supabase Storage"""
+        try:
+            filename = self._get_session_filename(username)
+            session_json = json.dumps(session_data, indent=2)
+            
+            self.supabase.storage.from_(self.session_bucket).update(
+                path=filename,
+                file=session_json.encode('utf-8'),
+                file_options={"content-type": "application/json"}
+            )
+        except Exception as e:
+            print(f"⚠️ Failed to update session metadata for {username}: {e}")
+    
     def session_exists(self, username: str) -> bool:
         """Check if session file exists in Supabase Storage"""
         try:
-            session_file = self._get_session_filename(username)
+            filename = self._get_session_filename(username)
             files = self.supabase.storage.from_(self.session_bucket).list()
-            return any(file.name == session_file for file in files)
+            return any(file.name == filename for file in files)
         except Exception as e:
             print(f"❌ Error checking session existence for {username}: {e}")
             return False
@@ -127,8 +168,8 @@ class SupabaseStorageManager:
     def delete_session(self, username: str) -> bool:
         """Delete session file from Supabase Storage"""
         try:
-            session_file = self._get_session_filename(username)
-            self.supabase.storage.from_(self.session_bucket).remove([session_file])
+            filename = self._get_session_filename(username)
+            self.supabase.storage.from_(self.session_bucket).remove([filename])
             print(f"✅ Session deleted from Supabase Storage for {username}")
             return True
         except Exception as e:
@@ -138,25 +179,22 @@ class SupabaseStorageManager:
     def get_session_info(self, username: str) -> Optional[Dict[str, Any]]:
         """Get session metadata from Supabase Storage"""
         try:
-            if not self.session_exists(username):
-                return None
+            filename = self._get_session_filename(username)
             
-            session_file = self._get_session_filename(username)
-            result = self.supabase.storage.from_(self.session_bucket).download(session_file)
+            # Download session file
+            result = self.supabase.storage.from_(self.session_bucket).download(filename)
             
             if not result:
                 return None
             
-            # Get file info from Supabase
-            files = self.supabase.storage.from_(self.session_bucket).list()
-            file_info = next((f for f in files if f.name == session_file), None)
+            session_data = json.loads(result.decode('utf-8'))
             
             return {
-                "username": username,
+                "username": session_data.get("username"),
+                "created_at": session_data.get("created_at"),
+                "last_used": session_data.get("last_used"),
                 "exists": True,
-                "size": len(result),
-                "created_at": file_info.created_at if file_info else None,
-                "updated_at": file_info.updated_at if file_info else None
+                "size": len(result)
             }
             
         except Exception as e:
@@ -192,12 +230,14 @@ class SupabaseStorageManager:
             for file in files:
                 if file.name.endswith('.json'):
                     try:
-                        # Check file creation time
-                        if file.created_at:
-                            created_time = datetime.fromisoformat(file.created_at.replace('Z', '+00:00')).timestamp()
+                        # Get session info to check age
+                        username = file.name[:-5]
+                        session_info = self.get_session_info(username)
+                        
+                        if session_info and session_info.get("created_at"):
+                            created_time = datetime.fromisoformat(session_info["created_at"]).timestamp()
                             
                             if created_time < cutoff_time:
-                                username = file.name[:-5]
                                 self.delete_session(username)
                                 print(f"🧹 Cleaned up expired session for {username}")
                                 cleaned_count += 1
