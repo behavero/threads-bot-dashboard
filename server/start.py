@@ -7,10 +7,77 @@ Main entry point with Flask API and bot scheduling
 import os
 import threading
 import time
+import traceback
+import logging
 from datetime import datetime
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from dotenv import load_dotenv
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+def handle_api_error(error: Exception, context: str = "API", user_message: str = None) -> tuple:
+    """
+    Centralized error handling for API endpoints
+    
+    Args:
+        error: The exception that occurred
+        context: Context where the error occurred (e.g., "login", "posting")
+        user_message: Optional user-friendly message
+    
+    Returns:
+        tuple: (response_dict, status_code)
+    """
+    # Log the full error with traceback
+    logger.error(f"❌ Error in {context}: {str(error)}")
+    logger.error(f"❌ Traceback: {traceback.format_exc()}")
+    
+    # Determine user-friendly message
+    if user_message:
+        message = user_message
+    elif "connection" in str(error).lower():
+        message = "Database connection failed. Please try again."
+    elif "authentication" in str(error).lower() or "login" in str(error).lower():
+        message = "Authentication failed. Please check your credentials."
+    elif "timeout" in str(error).lower():
+        message = "Request timed out. Please try again."
+    elif "not found" in str(error).lower():
+        message = "Resource not found."
+    else:
+        message = "An unexpected error occurred. Please try again."
+    
+    return {
+        "success": False,
+        "error": message,
+        "error_type": type(error).__name__,
+        "context": context,
+        "timestamp": datetime.now().isoformat()
+    }, 500
+
+def safe_database_operation(operation_name: str, db_operation, *args, **kwargs):
+    """
+    Safely execute database operations with error handling
+    
+    Args:
+        operation_name: Name of the operation for logging
+        db_operation: Database operation function
+        *args, **kwargs: Arguments for the database operation
+    
+    Returns:
+        Result of the operation or None if failed
+    """
+    try:
+        logger.info(f"🔍 Executing database operation: {operation_name}")
+        result = db_operation(*args, **kwargs)
+        logger.info(f"✅ Database operation successful: {operation_name}")
+        return result
+    except Exception as e:
+        logger.error(f"❌ Database operation failed: {operation_name}")
+        logger.error(f"❌ Error: {str(e)}")
+        logger.error(f"❌ Traceback: {traceback.format_exc()}")
+        return None
 
 # Load environment variables
 load_dotenv()
@@ -170,53 +237,91 @@ def refresh_engagement_stats():
 
 @app.route('/api/accounts', methods=['GET'])
 def get_accounts():
+    """Get all accounts with comprehensive error handling"""
     try:
-        print("🔍 Starting get_accounts request...")
+        logger.info("🔍 Starting get_accounts request...")
         
         # Test database connection
         db = DatabaseManager()
-        print(f"✅ DatabaseManager initialized")
-        print(f"📊 Supabase URL: {db.supabase_url}")
-        print(f"📊 Headers configured: {list(db.headers.keys())}")
+        logger.info(f"✅ DatabaseManager initialized")
+        logger.info(f"📊 Supabase URL: {db.supabase_url}")
+        logger.info(f"📊 Headers configured: {list(db.headers.keys())}")
         
-        # Get accounts
-        print("📋 Fetching accounts from database...")
-        accounts = db.get_active_accounts()
-        print(f"📋 Retrieved {len(accounts)} accounts")
+        # Get accounts with safe operation
+        accounts = safe_database_operation("get_active_accounts", db.get_active_accounts)
+        
+        if accounts is None:
+            return jsonify(handle_api_error(
+                Exception("Database operation failed"), 
+                "get_accounts", 
+                "Failed to fetch accounts from database"
+            )[0]), 500
+        
+        logger.info(f"📋 Retrieved {len(accounts)} accounts")
         
         if accounts:
-            print(f"📋 Sample account: {accounts[0]}")
+            logger.info(f"📋 Sample account: {accounts[0]}")
         
         # Return response
         response_data = {"success": True, "accounts": accounts}
-        print(f"✅ Returning {len(accounts)} accounts")
+        logger.info(f"✅ Returning {len(accounts)} accounts")
         return jsonify(response_data)
         
     except Exception as e:
-        print(f"❌ Error in get_accounts: {e}")
-        import traceback
-        print(f"❌ Traceback: {traceback.format_exc()}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        error_response, status_code = handle_api_error(e, "get_accounts", "Failed to fetch accounts")
+        return jsonify(error_response), status_code
 
 @app.route('/api/accounts', methods=['POST'])
 def add_account():
+    """Add a new account with comprehensive error handling"""
     try:
         data = request.json
+        if not data:
+            return jsonify({
+                "success": False,
+                "error": "No data provided"
+            }), 400
+        
         username = data.get('username')
         password = data.get('password')
         
         if not username or not password:
-            return jsonify({"success": False, "error": "Username and password required"}), 400
+            return jsonify({
+                "success": False, 
+                "error": "Username and password required"
+            }), 400
         
+        logger.info(f"🔍 Adding new account: {username}")
+        
+        # Initialize database
         db = DatabaseManager()
-        success = db.add_account(username, password)
+        
+        # Add account with safe operation
+        success = safe_database_operation("add_account", db.add_account, username, password)
+        
+        if success is None:
+            return jsonify(handle_api_error(
+                Exception("Database operation failed"), 
+                "add_account", 
+                "Failed to add account to database"
+            )[0]), 500
         
         if success:
-            return jsonify({"success": True, "message": "Account added successfully"}), 201
+            logger.info(f"✅ Account {username} added successfully")
+            return jsonify({
+                "success": True, 
+                "message": "Account added successfully"
+            }), 201
         else:
-            return jsonify({"success": False, "error": "Failed to add account"}), 500
+            logger.error(f"❌ Failed to add account {username}")
+            return jsonify({
+                "success": False, 
+                "error": "Failed to add account. Please try again."
+            }), 500
+            
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        error_response, status_code = handle_api_error(e, "add_account", "Failed to add account")
+        return jsonify(error_response), status_code
 
 @app.route('/api/accounts/<int:account_id>/toggle', methods=['PATCH'])
 def toggle_account(account_id):
@@ -233,36 +338,64 @@ def toggle_account(account_id):
 
 @app.route('/api/accounts/<int:account_id>', methods=['PUT'])
 def update_account(account_id):
+    """Update an account with comprehensive error handling"""
     try:
         data = request.json
-        print(f"🔍 Updating account {account_id} with data: {data}")
+        if not data:
+            return jsonify({
+                "success": False,
+                "error": "No data provided"
+            }), 400
+        
+        logger.info(f"🔍 Updating account {account_id} with data: {data}")
         
         db = DatabaseManager()
-        success = db.update_account(account_id, data)
+        success = safe_database_operation("update_account", db.update_account, account_id, data)
+        
+        if success is None:
+            return jsonify(handle_api_error(
+                Exception("Database operation failed"), 
+                "update_account", 
+                "Failed to update account in database"
+            )[0]), 500
         
         if success:
+            logger.info(f"✅ Account {account_id} updated successfully")
             return jsonify({"success": True, "message": "Account updated successfully"})
         else:
-            return jsonify({"success": False, "error": "Failed to update account"}), 500
+            logger.error(f"❌ Failed to update account {account_id}")
+            return jsonify({"success": False, "error": "Failed to update account. Please try again."}), 500
+            
     except Exception as e:
-        print(f"❌ Error updating account: {e}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        error_response, status_code = handle_api_error(e, "update_account", "Failed to update account")
+        return jsonify(error_response), status_code
 
 @app.route('/api/accounts/<int:account_id>', methods=['DELETE'])
 def delete_account(account_id):
+    """Delete an account with comprehensive error handling"""
     try:
-        print(f"🔍 Deleting account {account_id}")
+        logger.info(f"🔍 Deleting account {account_id}")
         
         db = DatabaseManager()
-        success = db.delete_account(account_id)
+        success = safe_database_operation("delete_account", db.delete_account, account_id)
+        
+        if success is None:
+            return jsonify(handle_api_error(
+                Exception("Database operation failed"), 
+                "delete_account", 
+                "Failed to delete account from database"
+            )[0]), 500
         
         if success:
+            logger.info(f"✅ Account {account_id} deleted successfully")
             return jsonify({"success": True, "message": "Account deleted successfully"})
         else:
-            return jsonify({"success": False, "error": "Failed to delete account"}), 500
+            logger.error(f"❌ Failed to delete account {account_id}")
+            return jsonify({"success": False, "error": "Failed to delete account. Please try again."}), 500
+            
     except Exception as e:
-        print(f"❌ Error deleting account: {e}")
-        return jsonify({"success": False, "error": str(e)}), 500
+        error_response, status_code = handle_api_error(e, "delete_account", "Failed to delete account")
+        return jsonify(error_response), status_code
 
 @app.route('/api/statistics')
 def get_statistics():
@@ -311,9 +444,19 @@ def stop_bot():
 
 @app.route('/api/captions', methods=['GET'])
 def get_captions():
+    """Get all captions with comprehensive error handling"""
     try:
+        logger.info("🔍 Fetching all captions...")
+        
         db = DatabaseManager()
-        captions = db.get_all_captions()
+        captions = safe_database_operation("get_all_captions", db.get_all_captions)
+        
+        if captions is None:
+            return jsonify(handle_api_error(
+                Exception("Database operation failed"), 
+                "get_captions", 
+                "Failed to fetch captions from database"
+            )[0]), 500
         
         # Process captions to ensure all fields have default values
         processed_captions = []
@@ -330,10 +473,12 @@ def get_captions():
             }
             processed_captions.append(processed_caption)
         
-        return jsonify({"captions": processed_captions})
+        logger.info(f"✅ Retrieved {len(processed_captions)} captions")
+        return jsonify({"success": True, "captions": processed_captions})
+        
     except Exception as e:
-        print(f"❌ Error fetching captions: {e}")
-        return jsonify({"error": str(e)}), 500
+        error_response, status_code = handle_api_error(e, "get_captions", "Failed to fetch captions")
+        return jsonify(error_response), status_code
 
 @app.route('/api/captions', methods=['POST'])
 def add_caption():
@@ -499,12 +644,26 @@ def upload_csv():
 
 @app.route('/api/images', methods=['GET'])
 def get_images():
+    """Get all images with comprehensive error handling"""
     try:
+        logger.info("🔍 Fetching all images...")
+        
         db = DatabaseManager()
-        images = db.get_all_images()
-        return jsonify({"images": images})
+        images = safe_database_operation("get_all_images", db.get_all_images)
+        
+        if images is None:
+            return jsonify(handle_api_error(
+                Exception("Database operation failed"), 
+                "get_images", 
+                "Failed to fetch images from database"
+            )[0]), 500
+        
+        logger.info(f"✅ Retrieved {len(images)} images")
+        return jsonify({"success": True, "images": images})
+        
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        error_response, status_code = handle_api_error(e, "get_images", "Failed to fetch images")
+        return jsonify(error_response), status_code
 
 @app.route('/api/images', methods=['POST'])
 def add_image():
@@ -605,17 +764,30 @@ def add_image():
 
 @app.route('/api/images/<int:image_id>', methods=['DELETE'])
 def delete_image(image_id):
+    """Delete an image with comprehensive error handling"""
     try:
+        logger.info(f"🔍 Deleting image {image_id}")
+        
         db = DatabaseManager()
-        success = db.delete_image(image_id)
+        success = safe_database_operation("delete_image", db.delete_image, image_id)
+        
+        if success is None:
+            return jsonify(handle_api_error(
+                Exception("Database operation failed"), 
+                "delete_image", 
+                "Failed to delete image from database"
+            )[0]), 500
         
         if success:
+            logger.info(f"✅ Image {image_id} deleted successfully")
             return jsonify({"success": True, "message": "Image deleted successfully"}), 200
         else:
-            return jsonify({"error": "Failed to delete image"}), 500
+            logger.error(f"❌ Failed to delete image {image_id}")
+            return jsonify({"success": False, "error": "Failed to delete image. Please try again."}), 500
+            
     except Exception as e:
-        print(f"❌ Error deleting image: {e}")
-        return jsonify({"error": str(e)}), 500
+        error_response, status_code = handle_api_error(e, "delete_image", "Failed to delete image")
+        return jsonify(error_response), status_code
 
 @app.route('/api/debug', methods=['GET'])
 def debug_info():

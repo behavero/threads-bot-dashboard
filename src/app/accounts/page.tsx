@@ -55,16 +55,43 @@ export default function AccountsPage() {
         console.log('Accounts loaded:', (data.accounts || []).length)
       } else {
         console.error('Failed to fetch accounts:', data.error)
-        setError(data.error || 'Failed to fetch accounts')
+        // Show user-friendly error message
+        const errorMessage = data.error || 'Failed to fetch accounts'
+        setError(getUserFriendlyError(errorMessage))
         setAccounts([])
       }
     } catch (err) {
       console.error('Error fetching accounts:', err)
-      setError('Error fetching accounts')
+      setError('Network error. Please check your connection and try again.')
       setAccounts([])
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const getUserFriendlyError = (error: string): string => {
+    const errorLower = error.toLowerCase()
+    
+    if (errorLower.includes('database') || errorLower.includes('connection')) {
+      return 'Database connection failed. Please try again.'
+    }
+    if (errorLower.includes('authentication') || errorLower.includes('login')) {
+      return 'Authentication failed. Please check your credentials.'
+    }
+    if (errorLower.includes('timeout')) {
+      return 'Request timed out. Please try again.'
+    }
+    if (errorLower.includes('not found')) {
+      return 'Resource not found.'
+    }
+    if (errorLower.includes('network')) {
+      return 'Network error. Please check your connection.'
+    }
+    if (errorLower.includes('server')) {
+      return 'Server error. Please try again later.'
+    }
+    
+    return error || 'An unexpected error occurred. Please try again.'
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -125,13 +152,12 @@ export default function AccountsPage() {
           setMessage(`Account created successfully! ${data.user_info?.followers || 0} followers, ${data.user_info?.posts || 0} posts`)
           setHidePassword(true) // Hide password for security
         } else {
-          setError(data.error || 'Failed to create account')
+          setError(getUserFriendlyError(data.error || 'Failed to create account'))
         }
+      } catch (err) {
+        console.error('Error saving account:', err)
+        setError('Network error. Please check your connection and try again.')
       }
-    } catch (err) {
-      console.error('Error saving account:', err)
-      setError('Error saving account')
-    }
   }
 
   const handleEdit = (account: Account) => {
@@ -157,10 +183,10 @@ export default function AccountsPage() {
       if (data.success) {
         await fetchAccounts()
       } else {
-        setError(data.error || 'Failed to delete account')
+        setError(getUserFriendlyError(data.error || 'Failed to delete account'))
       }
     } catch (err) {
-      setError('Error deleting account')
+      setError('Network error. Please check your connection and try again.')
     }
   }
 
@@ -184,10 +210,10 @@ export default function AccountsPage() {
       if (data.success) {
         await fetchAccounts()
       } else {
-        setError(data.error || 'Failed to update account status')
+        setError(getUserFriendlyError(data.error || 'Failed to update account status'))
       }
     } catch (err) {
-      setError('Error updating account status')
+      setError('Network error. Please check your connection and try again.')
     }
   }
 
@@ -228,11 +254,11 @@ export default function AccountsPage() {
       if (data.success) {
         setMessage('Login test successful!')
       } else {
-        setError(data.error || 'Login test failed')
+        setError(getUserFriendlyError(data.error || 'Login test failed'))
       }
     } catch (err) {
       console.error('Login test error:', err)
-      setError('Login test failed')
+      setError('Network error. Please check your connection and try again.')
     }
   }
 
@@ -257,11 +283,11 @@ export default function AccountsPage() {
       if (data.success) {
         setMessage(`Session test successful for ${username}! ${data.user_info?.followers || 0} followers`)
       } else {
-        setError(data.error || 'Session test failed')
+        setError(getUserFriendlyError(data.error || 'Session test failed'))
       }
     } catch (err) {
       console.error('Session test error:', err)
-      setError('Session test failed')
+      setError('Network error. Please check your connection and try again.')
     }
   }
 
@@ -286,11 +312,11 @@ export default function AccountsPage() {
         // Refresh accounts to update last_posted
         await fetchAccounts()
       } else {
-        setError(data.error || 'Failed to publish post')
+        setError(getUserFriendlyError(data.error || 'Failed to publish post'))
       }
     } catch (err) {
       console.error('Post error:', err)
-      setError('Failed to publish post')
+      setError('Network error. Please check your connection and try again.')
     }
   }
 
