@@ -110,6 +110,12 @@ export default function AccountsPage() {
     if (errorLower.includes('account security check required') || errorLower.includes('requires_manual_login')) {
       return 'Account security check required. Please log in to Instagram/Threads manually first, then try again.'
     }
+    if (errorLower.includes('ip address blocked') || errorLower.includes('blacklist')) {
+      return 'Your IP address is blocked. Please try from a different network or contact support.'
+    }
+    if (errorLower.includes('interactive verification required') || errorLower.includes('eof')) {
+      return 'Interactive verification required. Please check your email for a verification code and try again.'
+    }
     
     return error || 'An unexpected error occurred. Please try again.'
   }

@@ -7,8 +7,14 @@ Uses threads-api library with async support
 import asyncio
 import time
 import random
+import sys
+import os
 from typing import Optional, Dict, Any
 from datetime import datetime
+
+# Redirect stdin to prevent EOF errors in non-interactive environments
+if hasattr(sys, 'stdin'):
+    sys.stdin = open(os.devnull, 'r')
 
 try:
     from threads_api.src.threads_api import ThreadsAPI
@@ -37,6 +43,8 @@ class RealThreadsAPI:
     async def _ensure_api(self):
         """Ensure API is initialized in async context"""
         if self.api is None:
+            # Set up non-interactive mode
+            os.environ['THREADS_API_NON_INTERACTIVE'] = '1'
             self.api = ThreadsAPI()
             print(f"✅ ThreadsAPI initialized for {self.username}")
     
@@ -92,7 +100,7 @@ class RealThreadsAPI:
                     "error": "Please log in to Instagram/Threads manually first",
                     "requires_manual_login": True
                 }
-            elif "ChallengeChoice.EMAIL" in error_msg or "Enter code" in error_msg:
+            elif "ChallengeChoice.EMAIL" in error_msg or "Enter code" in error_msg or "verification" in error_msg.lower():
                 print(f"📧 Email verification required for {username}")
                 self.requires_verification = True
                 return {
@@ -117,6 +125,23 @@ class RealThreadsAPI:
                     "message": "Two-factor authentication required",
                     "error": "Please complete 2FA verification",
                     "requires_2fa": True
+                }
+            elif "blacklist" in error_msg.lower() or "ip" in error_msg.lower():
+                print(f"🚫 IP blacklisted for {username}")
+                return {
+                    "success": False,
+                    "message": "IP address blocked",
+                    "error": "Your IP address is blocked. Please try from a different network or contact support.",
+                    "requires_manual_login": True
+                }
+            elif "EOF" in error_msg or "reading a line" in error_msg:
+                print(f"📧 Interactive verification required for {username}")
+                return {
+                    "success": False,
+                    "message": "Interactive verification required",
+                    "error": "Please check your email for a verification code and try again",
+                    "requires_verification": True,
+                    "verification_type": "email"
                 }
             else:
                 print(f"❌ Unknown login error for {username}")
