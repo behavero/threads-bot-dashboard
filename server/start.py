@@ -1621,6 +1621,55 @@ def validate_session(username):
             "error": str(e)
         }), 500
 
+@app.route('/api/accounts/sessions/storage-info', methods=['GET'])
+def get_storage_info():
+    """Get information about session storage"""
+    try:
+        from session_manager import session_manager
+        
+        storage_info = {
+            "use_supabase": session_manager.use_supabase,
+            "storage_type": "Supabase Storage" if session_manager.use_supabase else "Local Files",
+            "session_count": len(session_manager.list_sessions())
+        }
+        
+        return jsonify({
+            "success": True,
+            "storage_info": storage_info
+        })
+    except Exception as e:
+        print(f"❌ Error getting storage info: {e}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+@app.route('/api/accounts/sessions/migrate', methods=['POST'])
+def migrate_sessions():
+    """Migrate sessions from local to Supabase Storage"""
+    try:
+        from session_manager import session_manager
+        
+        if session_manager.use_supabase:
+            return jsonify({
+                "success": False,
+                "message": "Already using Supabase Storage"
+            }), 400
+        
+        # This would require additional implementation
+        # For now, just return info
+        return jsonify({
+            "success": False,
+            "message": "Migration not implemented yet"
+        }), 501
+        
+    except Exception as e:
+        print(f"❌ Error migrating sessions: {e}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     

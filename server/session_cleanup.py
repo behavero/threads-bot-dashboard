@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Session Cleanup Scheduler
-Automatically cleans up expired sessions
+Automatically cleans up expired sessions from Supabase Storage
 """
 
 import schedule
@@ -29,6 +29,7 @@ def start_cleanup_scheduler():
         
         print("✅ Session cleanup scheduler started")
         print("📅 Cleanup scheduled for daily at 2 AM and Sundays at 3 AM")
+        print("🌐 Using Supabase Storage for session management")
         
         # Run in background thread
         def run_scheduler():
