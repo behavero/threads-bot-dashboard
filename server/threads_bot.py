@@ -40,7 +40,7 @@ class ThreadsBot:
         print("✅ Bot initialized successfully")
         return True
     
-    def login_account(self, username: str, password: str) -> Optional[ThreadsAPI]:
+    async def login_account(self, username: str, password: str) -> Optional[ThreadsAPI]:
         """Login to a Threads account"""
         if not ThreadsAPI:
             print(f"⚠️ No Threads API available for {username}")
@@ -49,7 +49,7 @@ class ThreadsBot:
         try:
             # Use real Threads API with instagrapi
             api = ThreadsAPI(use_instagrapi=True)
-            success = api.login(username, password)
+            success = await api.login(username, password)
             
             if success:
                 print(f"✅ Successfully logged in to {username}")

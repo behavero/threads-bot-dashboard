@@ -1142,14 +1142,23 @@ def test_threads_login():
         
         try:
             from threads_api_real import RealThreadsAPI
+            import asyncio
             
             # Test Threads API login
             api = RealThreadsAPI(use_instagrapi=True)
-            success = api.login(username, password)
+            
+            # Run async login
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            success = loop.run_until_complete(api.login(username, password))
             
             if success:
                 # Get user info
-                user_info = api.get_me()
+                user_info = loop.run_until_complete(api.get_me())
+                
+                # Clean up
+                loop.run_until_complete(api.logout())
+                loop.close()
                 
                 print(f"✅ Threads API login successful for {username}")
                 return jsonify({
@@ -1159,6 +1168,10 @@ def test_threads_login():
                     "api_available": True
                 })
             else:
+                # Clean up
+                loop.run_until_complete(api.logout())
+                loop.close()
+                
                 print(f"❌ Threads API login failed for {username}")
                 return jsonify({
                     "success": False,
@@ -1202,7 +1215,7 @@ def debug_threads_api_status():
         
         # Test Threads API
         try:
-            from threads import ThreadsAPI
+            from threads_api.src.threads_api import ThreadsAPI
             status["threads_api_available"] = True
             print("✅ Threads API available")
         except ImportError as e:
