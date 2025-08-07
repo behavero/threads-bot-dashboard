@@ -279,12 +279,14 @@ def add_caption():
     try:
         data = request.json
         text = data.get('text')
+        category = data.get('category', 'general')
+        tags = data.get('tags', [])
         
         if not text:
             return jsonify({"error": "Caption text required"}), 400
         
         db = DatabaseManager()
-        success = db.add_caption(text)
+        success = db.add_caption(text, category, tags)
         
         if success:
             return jsonify({"message": "Caption added successfully"}), 201
@@ -307,12 +309,15 @@ def add_image():
     try:
         data = request.json
         url = data.get('url')
+        filename = data.get('filename')
+        size = data.get('size')
+        type = data.get('type')
         
         if not url:
             return jsonify({"error": "Image URL required"}), 400
         
         db = DatabaseManager()
-        success = db.add_image(url)
+        success = db.add_image(url, filename, size, type)
         
         if success:
             return jsonify({"message": "Image added successfully"}), 201

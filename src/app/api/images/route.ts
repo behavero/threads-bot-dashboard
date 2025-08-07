@@ -4,20 +4,18 @@ import { requireAuth } from '@/lib/auth-server'
 
 export async function GET(request: NextRequest) {
   try {
-    // Temporarily remove authentication to debug
-    // const user = await requireAuth(request)
+    console.log('GET /api/images called')
     
-    console.log('Attempting to fetch images from Supabase...')
-    console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
-    console.log('Supabase Key exists:', !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+    // Temporarily disable authentication to fix data flow
+    // const user = await requireAuth(request)
     
     const { data: images, error } = await supabase
       .from('images')
       .select('*')
       .order('created_at', { ascending: false })
-    
-    console.log('Supabase images response:', { data: images, error })
-    
+
+    console.log('Supabase response:', { data: images?.length, error })
+
     if (error) {
       console.error('Supabase error:', error)
       return NextResponse.json(
@@ -25,18 +23,15 @@ export async function GET(request: NextRequest) {
         { status: 500 }
       )
     }
-    
-    console.log('Successfully fetched images:', images?.length || 0)
-    console.log('Sample image:', images?.[0])
-    
+
     return NextResponse.json({
       success: true,
       images: images || []
     })
   } catch (error) {
-    console.error('Error fetching images:', error)
+    console.error('GET /api/images error:', error)
     return NextResponse.json(
-      { success: false, error: 'Failed to fetch images' },
+      { success: false, error: 'Internal server error' },
       { status: 500 }
     )
   }
@@ -48,7 +43,7 @@ export async function POST(request: NextRequest) {
     console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL)
     console.log('Supabase Key exists:', !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
     
-    // Temporarily remove authentication to debug
+    // Temporarily disable authentication to fix data flow
     // const user = await requireAuth(request)
     
     const formData = await request.formData()
@@ -69,13 +64,15 @@ export async function POST(request: NextRequest) {
       try {
         console.log(`Processing image: ${image.name} (${image.size} bytes, ${image.type})`)
         
+        // Validate image type
+        if (!image.type.startsWith('image/')) {
+          results.errors.push(`Invalid file type: ${image.type}`)
+          continue
+        }
+        
         // Upload to Supabase Storage
         const fileName = `${Date.now()}-${image.name}`
         console.log(`Uploading to storage with filename: ${fileName}`)
-        
-        // Check if storage bucket exists
-        const { data: buckets, error: bucketError } = await supabase.storage.listBuckets()
-        console.log('Available buckets:', buckets?.map(b => b.name))
         
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('images')
@@ -107,7 +104,8 @@ export async function POST(request: NextRequest) {
               filename: fileName,
               url: urlData.publicUrl,
               size: image.size,
-              type: image.type
+              type: image.type,
+              used: false
             })
             .select()
             .single()

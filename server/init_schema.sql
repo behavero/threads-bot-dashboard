@@ -21,8 +21,11 @@ CREATE TABLE IF NOT EXISTS captions (
     id SERIAL PRIMARY KEY,
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
     text TEXT NOT NULL,
+    category VARCHAR(100) DEFAULT 'general',
+    tags TEXT[] DEFAULT '{}',
     used BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Images table
@@ -52,7 +55,7 @@ CREATE TABLE IF NOT EXISTS posting_history (
 CREATE TABLE IF NOT EXISTS daily_engagement (
     id SERIAL PRIMARY KEY,
     account_id INTEGER REFERENCES accounts(id) ON DELETE CASCADE,
-    date DATE NOT NULL,
+    post_date DATE NOT NULL,
     total_engagement INTEGER DEFAULT 0,
     likes INTEGER DEFAULT 0,
     replies INTEGER DEFAULT 0,
@@ -61,7 +64,7 @@ CREATE TABLE IF NOT EXISTS daily_engagement (
     post_count INTEGER DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(account_id, date)
+    UNIQUE(account_id, post_date)
 );
 
 -- Create indexes for better performance
@@ -69,12 +72,13 @@ CREATE INDEX IF NOT EXISTS idx_accounts_status ON accounts(status);
 CREATE INDEX IF NOT EXISTS idx_accounts_user_id ON accounts(user_id);
 CREATE INDEX IF NOT EXISTS idx_captions_used ON captions(used);
 CREATE INDEX IF NOT EXISTS idx_captions_user_id ON captions(user_id);
+CREATE INDEX IF NOT EXISTS idx_captions_category ON captions(category);
 CREATE INDEX IF NOT EXISTS idx_images_used ON images(used);
 CREATE INDEX IF NOT EXISTS idx_images_user_id ON images(user_id);
 CREATE INDEX IF NOT EXISTS idx_posting_history_account ON posting_history(account_id);
 CREATE INDEX IF NOT EXISTS idx_posting_history_status ON posting_history(status);
-CREATE INDEX IF NOT EXISTS idx_daily_engagement_account_date ON daily_engagement(account_id, date);
-CREATE INDEX IF NOT EXISTS idx_daily_engagement_date ON daily_engagement(date);
+CREATE INDEX IF NOT EXISTS idx_daily_engagement_account_date ON daily_engagement(account_id, post_date);
+CREATE INDEX IF NOT EXISTS idx_daily_engagement_date ON daily_engagement(post_date);
 
 -- Enable Row Level Security (RLS) on all tables
 ALTER TABLE accounts ENABLE ROW LEVEL SECURITY;
