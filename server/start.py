@@ -14,6 +14,15 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from dotenv import load_dotenv
 
+# Test PIL/Pillow installation
+try:
+    from PIL import Image
+    print("✅ Pillow installed and working")
+except ImportError:
+    print("❌ Pillow not installed - image processing will be disabled")
+    print("   Install with: pip install Pillow>=8.1.1")
+    Image = None
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -802,6 +811,10 @@ def debug_info():
                 "SUPABASE_KEY": "SET" if os.getenv('SUPABASE_KEY') else "NOT SET",
                 "SUPABASE_SERVICE_ROLE_KEY": "SET" if os.getenv('SUPABASE_SERVICE_ROLE_KEY') else "NOT SET"
             },
+            "pillow": {
+                "available": Image is not None,
+                "version": getattr(Image, '__version__', 'unknown') if Image else None
+            },
             "database_test": None,
             "database_manager_test": None,
             "timestamp": datetime.now().isoformat()
@@ -1193,17 +1206,39 @@ def trigger_post(account_id):
             
             # Post content
             print(f"📝 Posting content...")
-            if image:
-                # Post with image
-                result = client.photo_upload(
-                    path=image['url'],  # This might need to be a local file path
-                    caption=caption['text']
-                )
+            if image and Image is not None:
+                # Post with image - download and process locally
+                try:
+                    import requests
+                    import tempfile
+                    import os
+                    
+                    # Download image to temporary file
+                    response = requests.get(image['url'])
+                    if response.status_code == 200:
+                        with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as temp_file:
+                            temp_file.write(response.content)
+                            temp_path = temp_file.name
+                        
+                        # Post with image
+                        result = client.photo_upload(
+                            path=temp_path,
+                            caption=caption['text']
+                        )
+                        
+                        # Clean up temporary file
+                        os.unlink(temp_path)
+                    else:
+                        print(f"❌ Failed to download image: {response.status_code}")
+                        # Fall back to text-only post
+                        result = client.direct_answer(text=caption['text'])
+                except Exception as e:
+                    print(f"❌ Error processing image: {e}")
+                    # Fall back to text-only post
+                    result = client.direct_answer(text=caption['text'])
             else:
                 # Post text only
-                result = client.direct_answer(
-                    text=caption['text']
-                )
+                result = client.direct_answer(text=caption['text'])
             
             if result:
                 print(f"✅ Posted successfully!")

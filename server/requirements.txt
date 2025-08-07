@@ -20,5 +20,8 @@ python-dateutil==2.8.2
 # Async support
 aiohttp==3.9.1
 
+# Image processing
+Pillow>=8.1.1
+
 # Instagram/Threads API
 instagrapi==2.0.0 
