@@ -26,8 +26,8 @@ SUPABASE_ANON_KEY=your_anon_key_here
 # Meta Threads API Configuration (SECRET - Backend Only)
 META_APP_ID=1827652407826369
 META_APP_SECRET=your_rotated_app_secret_here
-OAUTH_REDIRECT_URI=https://threads-bot-dashboard.vercel.app/api/auth/meta/callback
-APP_BASE_URL=https://threads-bot-dashboard.vercel.app
+OAUTH_REDIRECT_URI=https://threads-bot-dashboard-frnnc7lw4-behaveros-projects.vercel.app/api/auth/meta/callback
+APP_BASE_URL=https://threads-bot-dashboard-frnnc7lw4-behaveros-projects.vercel.app
 BACKEND_BASE_URL=https://threads-bot-dashboard-3.onrender.com
 
 # Graph API Configuration
@@ -46,8 +46,8 @@ Set these in your Vercel project dashboard:
 # Public API Configuration (Safe for client bundles)
 NEXT_PUBLIC_BACKEND_URL=https://threads-bot-dashboard-3.onrender.com
 NEXT_PUBLIC_META_APP_ID=1827652407826369
-NEXT_PUBLIC_OAUTH_REDIRECT_URI=https://threads-bot-dashboard.vercel.app/api/auth/meta/callback
-NEXT_PUBLIC_APP_BASE_URL=https://threads-bot-dashboard.vercel.app
+NEXT_PUBLIC_OAUTH_REDIRECT_URI=https://threads-bot-dashboard-frnnc7lw4-behaveros-projects.vercel.app/api/auth/meta/callback
+NEXT_PUBLIC_APP_BASE_URL=https://threads-bot-dashboard-frnnc7lw4-behaveros-projects.vercel.app
 ```
 
 ## 🔐 Meta App Configuration
@@ -65,12 +65,12 @@ In your Meta app settings:
 
 **Valid OAuth Redirect URIs:**
 ```
-https://threads-bot-dashboard.vercel.app/api/auth/meta/callback
+https://threads-bot-dashboard-frnnc7lw4-behaveros-projects.vercel.app/api/auth/meta/callback
 ```
 
 **Allowed Domains:**
 ```
-threads-bot-dashboard.vercel.app
+threads-bot-dashboard-frnnc7lw4-behaveros-projects.vercel.app
 threads-bot-dashboard-3.onrender.com
 ```
 

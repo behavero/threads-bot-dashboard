@@ -55,7 +55,7 @@ class MetaOAuthHelper:
                 'state': state,
             }
             
-            auth_url = f"https://www.threads.net/oauth/authorize?{urlencode(params)}"
+            auth_url = f"https://www.facebook.com/dialog/oauth?{urlencode(params)}"
             logger.info(f"🔗 Built OAuth URL with state: {state[:8]}...")
             return auth_url
             

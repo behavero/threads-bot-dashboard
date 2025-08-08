@@ -63,11 +63,11 @@ def oauth_callback():
         
         if error:
             logger.error(f"❌ OAuth error: {error}")
-            return redirect(f"{os.getenv('APP_BASE_URL')}/accounts?error=oauth_denied&message={error}")
+            return redirect(f"https://threads-bot-dashboard-frnnc7lw4-behaveros-projects.vercel.app/accounts?error=oauth_denied&message={error}")
         
         if not code or not state:
             logger.error("❌ Missing code or state in OAuth callback")
-            return redirect(f"{os.getenv('APP_BASE_URL')}/accounts?error=oauth_invalid")
+            return redirect(f"https://threads-bot-dashboard-frnnc7lw4-behaveros-projects.vercel.app/accounts?error=oauth_invalid")
         
         logger.info(f"🔄 Processing OAuth callback with state: {state[:8]}...")
         
@@ -75,7 +75,7 @@ def oauth_callback():
         account_id = meta_oauth_helper.validate_state(state)
         if not account_id:
             logger.error("❌ Invalid OAuth state")
-            return redirect(f"{os.getenv('APP_BASE_URL')}/accounts?error=oauth_invalid_state")
+            return redirect(f"https://threads-bot-dashboard-frnnc7lw4-behaveros-projects.vercel.app/accounts?error=oauth_invalid_state")
         
         logger.info(f"🔄 Processing OAuth callback for account {account_id}")
         
@@ -102,14 +102,14 @@ def oauth_callback():
             
             logger.info(f"✅ OAuth completed successfully for account {account_id}")
             
-            return redirect(f"{os.getenv('APP_BASE_URL')}/accounts?connected=success&account_id={account_id}")
+            return redirect(f"https://threads-bot-dashboard-frnnc7lw4-behaveros-projects.vercel.app/accounts?connected=success&account_id={account_id}")
         else:
             logger.error(f"❌ Failed to save tokens for account {account_id}")
-            return redirect(f"{os.getenv('APP_BASE_URL')}/accounts?error=oauth_save_failed")
+            return redirect(f"https://threads-bot-dashboard-frnnc7lw4-behaveros-projects.vercel.app/accounts?error=oauth_save_failed")
         
     except Exception as e:
         logger.error(f"❌ Error in OAuth callback: {e}")
-        return redirect(f"{os.getenv('APP_BASE_URL')}/accounts?error=oauth_exception&message={str(e)}")
+        return redirect(f"https://threads-bot-dashboard-frnnc7lw4-behaveros-projects.vercel.app/accounts?error=oauth_exception&message={str(e)}")
 
 @auth.route('/meta/refresh', methods=['GET', 'DELETE'])
 def refresh_oauth():
