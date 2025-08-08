@@ -285,11 +285,11 @@ function AccountsPageContent() {
     setShowModal(true)
   }
 
-  const testPost = async (accountId: number, text: string = 'Test post from Threads API! 🚀') => {
+  const testPost = async (accountId: number, text: string = 'Test post from Threads Bot! 🚀') => {
     setTestPostState({ loading: true, error: '', success: '' })
     
     try {
-      const response = await fetch('https://threads-bot-dashboard-3.onrender.com/threads/post', {
+      const response = await fetch('https://threads-bot-dashboard-3.onrender.com/api/threads/post', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -306,7 +306,7 @@ function AccountsPageContent() {
         setTestPostState({
           loading: false,
           error: '',
-          success: `✅ Post published successfully! Thread ID: ${data.thread_id}`
+          success: `✅ Test post successful! Account: ${data.post?.username}`
         })
         // Refresh accounts to get updated last_posted
         fetchAccounts()
@@ -498,16 +498,14 @@ function AccountsPageContent() {
                   </button>
                 )}
                 
-                {/* Test Post Button - Show if connected */}
-                {account.threads_user_id && account.provider === 'meta' && (
-                  <button
-                    onClick={() => testPost(account.id)}
-                    disabled={testPostState.loading}
-                    className="modern-button px-3 py-1 text-sm bg-green-600 hover:bg-green-700 disabled:opacity-50"
-                  >
-                    {testPostState.loading ? 'Posting...' : 'Test Post'}
-                  </button>
-                )}
+                {/* Test Post Button - Show for all accounts */}
+                <button
+                  onClick={() => testPost(account.id)}
+                  disabled={testPostState.loading}
+                  className="modern-button px-3 py-1 text-sm bg-green-600 hover:bg-green-700 disabled:opacity-50"
+                >
+                  {testPostState.loading ? 'Posting...' : 'Test Post'}
+                </button>
                 
                 <button
                   onClick={() => handleDelete(account.id)}
