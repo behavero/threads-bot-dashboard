@@ -106,28 +106,52 @@ class DatabaseManager:
             print(f"❌ get_account_by_username: Error: {e}")
             return None
     
-    def add_account(self, username: str, password: str, user_id: str = None, session_data: dict = None) -> bool:
-        """Add a new account"""
+    def add_account(self, account_data: dict) -> Optional[int]:
+        """Add a new account with dictionary data"""
         try:
-            account_data = {
-                "username": username,
-                "password": password,
-                "status": "enabled"
-            }
-            if user_id:
-                account_data["user_id"] = user_id
-            if session_data:
-                account_data["session_data"] = session_data
+            print(f"🔍 add_account: Creating account with data: {account_data}")
+            
+            # Ensure required fields
+            if 'username' not in account_data:
+                print("❌ add_account: Missing username in account data")
+                return None
+                
+            # Set default values
+            if 'status' not in account_data:
+                account_data['status'] = 'enabled'
+            if 'created_at' not in account_data:
+                account_data['created_at'] = datetime.now().isoformat()
                 
             response = requests.post(
                 f"{self.supabase_url}/rest/v1/accounts",
                 json=account_data,
                 headers=self.headers
             )
-            return response.status_code == 201
+            
+            print(f"🔍 add_account: Response status: {response.status_code}")
+            print(f"🔍 add_account: Response text: {response.text}")
+            
+            if response.status_code == 201:
+                # Try to get the created account ID from response
+                try:
+                    created_account = response.json()
+                    if isinstance(created_account, list) and len(created_account) > 0:
+                        account_id = created_account[0].get('id')
+                        print(f"🔍 add_account: Created account with ID: {account_id}")
+                        return account_id
+                    elif isinstance(created_account, dict):
+                        account_id = created_account.get('id')
+                        print(f"🔍 add_account: Created account with ID: {account_id}")
+                        return account_id
+                except Exception as e:
+                    print(f"🔍 add_account: Could not parse response for account ID: {e}")
+                    return True  # Success but no ID returned
+            else:
+                print(f"❌ add_account: HTTP {response.status_code}: {response.text}")
+                return None
         except Exception as e:
             print(f"❌ Error adding account: {e}")
-            return False
+            return None
     
     def save_session_data(self, account_id: int, session_data: dict) -> bool:
         """Save session data for an account"""
