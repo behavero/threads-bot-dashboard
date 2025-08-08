@@ -143,8 +143,8 @@ def refresh_oauth():
                     'error': 'No refresh token available'
                 }), 400
             
-                    try:
-            new_token_data = meta_oauth_helper.refresh_access_token(refresh_token, account_id)
+            try:
+                new_token_data = meta_oauth_helper.refresh_access_token(refresh_token, account_id)
                 if db.update_token(account_id, new_token_data):
                     logger.info(f"✅ Token refreshed for account {account_id}")
                     return jsonify({
