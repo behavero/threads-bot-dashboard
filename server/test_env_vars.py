@@ -84,7 +84,11 @@ def check_security() -> bool:
     
     # Check for default values
     if os.getenv('META_APP_SECRET') == '50d1453dc80f9b6cc06c9e3f70c50109':
-        security_issues.append("⚠️  META_APP_SECRET is using the default value - should be rotated")
+        security_issues.append("⚠️  META_APP_SECRET is using the old default value - should be rotated")
+    elif os.getenv('META_APP_SECRET') == '849acf47bd606bdc6c4d515ce1e0f37c':
+        print("✅ META_APP_SECRET is using the current rotated value")
+    elif os.getenv('META_APP_SECRET') and os.getenv('META_APP_SECRET') not in ['50d1453dc80f9b6cc06c9e3f70c50109', '849acf47bd606bdc6c4d515ce1e0f37c']:
+        print("✅ META_APP_SECRET is using a custom value (may be newer rotation)")
     
     if security_issues:
         for issue in security_issues:

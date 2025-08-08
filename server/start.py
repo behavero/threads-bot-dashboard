@@ -104,9 +104,23 @@ def validate_environment():
     if missing_vars:
         print(f"❌ Missing environment variables: {', '.join(missing_vars)}")
         print("Please set these in your Render/Railway environment variables:")
-        print("SUPABASE_URL=https://perwbmtwutwzsvlirwik.supabase.co")
-        print("SUPABASE_KEY=your-supabase-key")
+        print("SUPABASE_URL=your_supabase_url_here")
+        print("SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here")
         return False
+    
+    # Check Meta OAuth configuration
+    meta_app_secret = os.getenv('META_APP_SECRET')
+    if meta_app_secret:
+        print("✅ META_APP_SECRET loaded")
+        # Check if it's the old default value
+        if meta_app_secret == '50d1453dc80f9b6cc06c9e3f70c50109':
+            print("⚠️  WARNING: META_APP_SECRET is using the old default value")
+        elif meta_app_secret == '849acf47bd606bdc6c4d515ce1e0f37c':
+            print("✅ META_APP_SECRET is using the current rotated value")
+        else:
+            print("✅ META_APP_SECRET is using a custom value")
+    else:
+        print("⚠️  META_APP_SECRET not set - OAuth will not work")
     
     return True
 
@@ -585,8 +599,11 @@ def add_caption():
             # Use direct Supabase approach like the working test
             import requests
             
-            supabase_url = "https://perwbmtwutwzsvlirwik.supabase.co"
-            service_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlcndibXR3dXR3enN2bGlyd2lrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NDQwNTU4MiwiZXhwIjoyMDY5OTgxNTgyfQ.fpTpKFrK0Eg60rN7jpWPKKQFTmIrxVlcHY2MMeKx2AE"
+            supabase_url = os.getenv('SUPABASE_URL')
+            service_key = os.getenv('SUPABASE_SERVICE_ROLE_KEY')
+            
+            if not supabase_url or not service_key:
+                return jsonify({"error": "Supabase configuration not found"}), 500
             
             headers = {
                 'apikey': service_key,
@@ -680,8 +697,11 @@ def upload_csv():
         # Insert captions using direct Supabase approach
         import requests
         
-        supabase_url = "https://perwbmtwutwzsvlirwik.supabase.co"
-        service_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlcndibXR3dXR3enN2bGlyd2lrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NDQwNTU4MiwiZXhwIjoyMDY5OTgxNTgyfQ.fpTpKFrK0Eg60rN7jpWPKKQFTmIrxVlcHY2MMeKx2AE"
+        supabase_url = os.getenv('SUPABASE_URL')
+        service_key = os.getenv('SUPABASE_SERVICE_ROLE_KEY')
+        
+        if not supabase_url or not service_key:
+            return jsonify({"error": "Supabase configuration not found"}), 500
         
         headers = {
             'apikey': service_key,
@@ -760,8 +780,12 @@ def add_image():
                         file_content = file.read()
                         
                         # Upload to Supabase Storage
-                        supabase_url = "https://perwbmtwutwzsvlirwik.supabase.co"
-                        service_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlcndibXR3dXR3enN2bGlyd2lrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NDQwNTU4MiwiZXhwIjoyMDY5OTgxNTgyfQ.fpTpKFrK0Eg60rN7jpWPKKQFTmIrxVlcHY2MMeKx2AE"
+                        supabase_url = os.getenv('SUPABASE_URL')
+                        service_key = os.getenv('SUPABASE_SERVICE_ROLE_KEY')
+                        
+                        if not supabase_url or not service_key:
+                            print(f"❌ Supabase configuration not found for {filename}")
+                            continue
                         
                         headers = {
                             'apikey': service_key,
