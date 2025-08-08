@@ -32,18 +32,12 @@ class MetaOAuthService:
         self.graph_api_base = 'https://graph.threads.net/'
         self.auth_base = 'https://www.threads.net'
         
-        # Required scopes for Threads API
+        # Meta permissions for Threads API access
         self.scopes = [
-            'threads_basic',
-            'threads_content_publish',
-            'threads_manage_insights',
-            'threads_manage_replies',
-            'threads_read_replies',
-            'threads_keyword_search',
-            'threads_manage_mentions',
-            'threads_delete',
-            'threads_location_tagging',
-            'threads_profile_discovery',
+            'instagram_basic',
+            'instagram_content_publish',
+            'pages_read_engagement',
+            'pages_show_list',
         ]
         
         logger.info("✅ MetaOAuthService initialized (OAuth configured: {})".format(self.oauth_configured))
