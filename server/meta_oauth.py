@@ -30,12 +30,13 @@ class MetaOAuthHelper:
         if not self.oauth_configured:
             logger.warning("⚠️ Meta OAuth not configured - using direct account creation")
         
-        # Meta permissions for Threads API access
+        # Threads API permissions (from Meta documentation)
         self.scopes = [
-            'instagram_basic',
-            'instagram_content_publish',
-            'pages_read_engagement',
-            'pages_show_list',
+            'threads_basic',
+            'threads_content_publish',
+            'threads_manage_insights',
+            'threads_manage_replies',
+            'threads_read_replies',
         ]
         
         logger.info("✅ MetaOAuthHelper initialized (OAuth configured: {})".format(self.oauth_configured))
