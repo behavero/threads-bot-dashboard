@@ -938,6 +938,17 @@ function AccountsPageContent() {
           </div>
         </div>
       )}
+
+      {/* Footer */}
+      <footer className="w-full border-t border-gray-700 py-4 text-center text-sm text-gray-400 mt-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <a href="/privacy" className="hover:underline text-purple-400">Privacy Policy</a>
+          {' '}•{' '}
+          <a href="/terms" className="hover:underline text-purple-400">Terms of Service</a>
+          {' '}•{' '}
+          <span>© 2025 Threadly. All rights reserved.</span>
+        </div>
+      </footer>
     </div>
   )
 }
