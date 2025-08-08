@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { API_ENDPOINTS } from '@/lib/config'
+import { API_ENDPOINTS, META_CONFIG } from '@/lib/config'
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,14 +11,14 @@ export async function GET(request: NextRequest) {
     if (error) {
       console.error('OAuth error:', error)
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_BASE_URL}/accounts?error=oauth_denied`
+        `${META_CONFIG.APP_BASE_URL}/accounts?error=oauth_denied`
       )
     }
     
     if (!code || !state) {
       console.error('Missing code or state in OAuth callback')
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_BASE_URL}/accounts?error=oauth_invalid`
+        `${META_CONFIG.APP_BASE_URL}/accounts?error=oauth_invalid`
       )
     }
     
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
       const errorData = await response.json()
       console.error('Backend OAuth callback error:', errorData)
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_BASE_URL}/accounts?error=backend_oauth_failed`
+        `${META_CONFIG.APP_BASE_URL}/accounts?error=backend_oauth_failed`
       )
     }
     
@@ -52,19 +52,19 @@ export async function GET(request: NextRequest) {
     if (data.ok) {
       console.log(`OAuth successful for account ${accountId}`)
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_BASE_URL}/accounts?success=oauth_completed&account_id=${accountId}`
+        `${META_CONFIG.APP_BASE_URL}/accounts?success=oauth_completed&account_id=${accountId}`
       )
     } else {
       console.error('OAuth failed:', data.error)
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_BASE_URL}/accounts?error=oauth_failed&message=${encodeURIComponent(data.error)}`
+        `${META_CONFIG.APP_BASE_URL}/accounts?error=oauth_failed&message=${encodeURIComponent(data.error)}`
       )
     }
     
   } catch (error) {
     console.error('OAuth callback error:', error)
     return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_BASE_URL}/accounts?error=oauth_exception`
+      `${META_CONFIG.APP_BASE_URL}/accounts?error=oauth_exception`
     )
   }
 }

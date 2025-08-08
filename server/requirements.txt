@@ -1,35 +1,35 @@
 # Core dependencies
-Flask>=3.0,<4
-Flask-CORS>=4.0,<5
-requests>=2.31,<3
-urllib3>=2.0,<3
-itsdangerous>=2.1,<3
-python-dotenv>=1.0,<2
+Flask==3.0.2
+Flask-CORS==4.0.0
+requests==2.31.0
+urllib3==2.0.7
+itsdangerous==2.1.2
+python-dotenv==1.0.0
 
 # Production server
-gunicorn>=21,<22
+gunicorn==21.2.0
 
 # Database
-supabase>=2.7,<3
-psycopg2-binary>=2.9,<3
+supabase==2.7.4
+psycopg2-binary==2.9.9
 
 # Scheduling
-APScheduler>=3.10,<4
+APScheduler==3.10.4
 
 # Utilities
-python-dateutil>=2.8,<3
+python-dateutil==2.8.2
 
 # Async support
-aiohttp>=3.9,<4
+aiohttp==3.9.3
 
 # Image processing (only if needed for server-side image processing)
-Pillow>=8.1,<10
+Pillow==10.2.0
 
 # HTTP client compatibility
-httpx>=0.24,<0.25
+httpx==0.24.1
 
 # Type hints compatibility
-typing-extensions>=4.7,<5
+typing-extensions==4.8.0
 
 # Cryptography for secure operations
-cryptography>=41.0,<42
+cryptography==41.0.8
