@@ -2,10 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
-  env: {
-    NEXT_PUBLIC_BACKEND_URL: 'https://threads-bot-dashboard-3.onrender.com',
-    // Supabase variables are now automatically provided by Vercel integration
-  },
+  // Environment variables should be set in Vercel dashboard, not hardcoded here
 };
 
 module.exports = nextConfig; 

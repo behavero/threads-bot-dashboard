@@ -3,7 +3,7 @@
  * Centralized configuration for all API endpoints
  */
 
-export const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'https://threads-bot-dashboard-3.onrender.com';
+export const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'https://threads-bot-dashboard-3.onrender.com';
 
 export const META_CONFIG = {
   APP_ID: process.env.NEXT_PUBLIC_META_APP_ID ?? '1827652407826369',

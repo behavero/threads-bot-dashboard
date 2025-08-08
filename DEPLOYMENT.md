@@ -1,253 +1,250 @@
-# Threads API Integration Deployment Guide
+# Threads Bot Dashboard - Deployment Guide
 
-## Overview
+## 🚀 Overview
 
-This guide covers the deployment of the Threads API integration, which replaces the previous `instagrapi` and `threads-api` approach with Meta's official Threads API using OAuth authentication.
+This guide covers deploying the Threads Bot Dashboard with Meta OAuth integration, automated posting, and cron scheduling.
 
-## Prerequisites
+## 📋 Prerequisites
 
-### 1. Meta App Configuration
+- Meta Developer Account with Threads API access
+- Supabase project with Storage bucket
+- Render account for backend hosting
+- Vercel account for frontend hosting
 
-1. **Create Meta App**: Go to [Meta for Developers](https://developers.facebook.com/)
-2. **Add Threads API**: In your app, add the Threads API product
-3. **Configure OAuth**: Set up OAuth redirect URIs:
-   - `https://threads-bot-dashboard.vercel.app/api/auth/meta/callback`
-4. **Enable Required Scopes**:
-   - `threads_basic`
-   - `threads_content_publish`
-   - `threads_manage_insights`
-   - `threads_manage_replies`
-   - `threads_read_replies`
-   - `threads_keyword_search`
-   - `threads_manage_mentions`
-   - `threads_delete`
-   - `threads_location_tagging`
-   - `threads_profile_discovery`
+## 🔧 Environment Variables Setup
 
-### 2. Environment Variables
+### Backend (Render) Environment Variables
 
-#### Backend (Render)
+Set these in your Render service dashboard:
 
 ```bash
-# Database
-SUPABASE_URL=your_supabase_url
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-SUPABASE_ANON_KEY=your_anon_key
+# Database Configuration
+SUPABASE_URL=your_supabase_url_here
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
+SUPABASE_ANON_KEY=your_anon_key_here
 
-# Meta Threads API
+# Meta Threads API Configuration (SECRET - Backend Only)
 META_APP_ID=1827652407826369
-META_APP_SECRET=50d1453dc80f9b6cc06c9e3f70c50109
+META_APP_SECRET=your_rotated_app_secret_here
 OAUTH_REDIRECT_URI=https://threads-bot-dashboard.vercel.app/api/auth/meta/callback
 APP_BASE_URL=https://threads-bot-dashboard.vercel.app
 BACKEND_BASE_URL=https://threads-bot-dashboard-3.onrender.com
 
-# Graph API
+# Graph API Configuration
 GRAPH_API_BASE_URL=https://graph.threads.net/
 GRAPH_API_VERSION=v1.0
 
-# Internal API
-INTERNAL_API_TOKEN=your_long_random_string
+# Internal API Token (for cron jobs and webhooks)
+INTERNAL_API_TOKEN=your_long_random_string_here
 ```
 
-#### Frontend (Vercel)
+### Frontend (Vercel) Environment Variables
+
+Set these in your Vercel project dashboard:
 
 ```bash
-# API Configuration
-NEXT_PUBLIC_API_BASE=https://threads-bot-dashboard-3.onrender.com
+# Public API Configuration (Safe for client bundles)
+NEXT_PUBLIC_BACKEND_URL=https://threads-bot-dashboard-3.onrender.com
 NEXT_PUBLIC_META_APP_ID=1827652407826369
 NEXT_PUBLIC_OAUTH_REDIRECT_URI=https://threads-bot-dashboard.vercel.app/api/auth/meta/callback
 NEXT_PUBLIC_APP_BASE_URL=https://threads-bot-dashboard.vercel.app
 ```
 
-## Database Setup
+## 🔐 Meta App Configuration
 
-### 1. Run Migration
+### 1. Create Meta App
 
-Execute the migration script to create new tables:
+1. Go to [Meta for Developers](https://developers.facebook.com/)
+2. Create a new app or use existing app
+3. Add "Threads API" product to your app
+4. Configure OAuth settings
+
+### 2. OAuth Configuration
+
+In your Meta app settings:
+
+**Valid OAuth Redirect URIs:**
+```
+https://threads-bot-dashboard.vercel.app/api/auth/meta/callback
+```
+
+**Allowed Domains:**
+```
+threads-bot-dashboard.vercel.app
+threads-bot-dashboard-3.onrender.com
+```
+
+### 3. App Secret Rotation
+
+⚠️ **IMPORTANT**: Rotate your app secret regularly:
+
+1. Go to Meta App Settings → Basic
+2. Click "Show" next to App Secret
+3. Click "Regenerate" to create new secret
+4. Update `META_APP_SECRET` in Render environment variables
+5. Never commit the secret to git
+
+## 🗄️ Database Setup
+
+### 1. Supabase Configuration
+
+1. Create a new Supabase project
+2. Create a Storage bucket named `sessions`
+3. Set up RLS policies for security
+4. Get your project URL and service role key
+
+### 2. Run Migrations
+
+Execute these SQL migrations in your Supabase SQL editor:
 
 ```sql
--- Run server/migrations/001_add_threads_api_tables.sql
+-- Migration 001: Add Threads API tables
+-- (See server/migrations/001_add_threads_api_tables.sql)
+
+-- Migration 002: Add OAuth states table  
+-- (See server/migrations/002_add_oauth_states_table.sql)
 ```
 
-### 2. Verify Tables
+## 🚀 Deployment Steps
 
-Check that the following tables exist:
-- `tokens` (for OAuth tokens)
-- `scheduled_posts` (for automated posting)
-- Updated `accounts` table with `threads_user_id` column
-- Updated `posting_history` table with `thread_id` column
+### Backend (Render)
 
-## Deployment Steps
+1. **Connect Repository**
+   - Connect your GitHub repo to Render
+   - Set build command: `pip install -r requirements.txt`
+   - Set start command: `python start.py`
 
-### 1. Backend Deployment (Render)
+2. **Environment Variables**
+   - Add all backend environment variables listed above
+   - Ensure `META_APP_SECRET` is the rotated secret
 
-1. **Update Code**: Push the new code with Threads API integration
-2. **Set Environment Variables**: Add all required environment variables
-3. **Deploy**: Trigger a new deployment
-4. **Verify Health Check**: Test `/api/health` endpoint
+3. **Cron Jobs**
+   - Add cron job: `*/5 * * * * curl -X POST https://your-app.onrender.com/scheduler/run`
+   - This runs every 5 minutes to process scheduled posts
 
-### 2. Frontend Deployment (Vercel)
+### Frontend (Vercel)
 
-1. **Update Code**: Push the new frontend code
-2. **Set Environment Variables**: Add frontend environment variables
-3. **Deploy**: Trigger a new deployment
-4. **Test OAuth Flow**: Verify Connect Threads buttons work
+1. **Connect Repository**
+   - Connect your GitHub repo to Vercel
+   - Set build command: `npm run build`
+   - Set output directory: `client`
 
-### 3. Cron Job Setup (Render)
+2. **Environment Variables**
+   - Add all frontend environment variables listed above
+   - Ensure `NEXT_PUBLIC_BACKEND_URL` points to your Render backend
 
-Set up a cron job to run every 5 minutes:
+3. **Domain Configuration**
+   - Configure custom domain if needed
+   - Update OAuth redirect URIs in Meta app settings
 
+## 🔍 Testing Deployment
+
+### 1. Health Check
+
+Test backend health:
 ```bash
-*/5 * * * * curl -X POST https://threads-bot-dashboard-3.onrender.com/scheduler/run
+curl https://your-backend.onrender.com/api/health
 ```
 
-## Cron Configuration
+Expected response:
+```json
+{
+  "status": "healthy",
+  "database": "connected",
+  "meta_oauth": "configured",
+  "threads_api": "available"
+}
+```
 
-### Render Cron Jobs
+### 2. OAuth Flow Test
 
-The application uses Render's cron job feature to automatically run the scheduler. Configure the following cron jobs in your Render dashboard:
+1. Go to your frontend: `https://your-app.vercel.app`
+2. Navigate to Accounts page
+3. Click "Connect Threads" on an account
+4. Complete Meta OAuth flow
+5. Verify account shows as connected
 
-1. **Scheduler Job** (every 5 minutes):
-   - URL: `https://your-app-name.onrender.com/scheduler/run`
-   - Method: `POST`
-   - Headers: `Content-Type: application/json`
-   - Body: `{}`
-   - Timeout: 300 seconds
-   - Retries: 3
+### 3. Manual Posting Test
 
-2. **Health Check** (every 10 minutes):
-   - URL: `https://your-app-name.onrender.com/api/health`
-   - Method: `GET`
-   - Timeout: 60 seconds
-   - Retries: 2
-
-### Manual Cron Setup
-
-If you prefer to set up cron manually, add these entries to your server's crontab:
-
+Test posting endpoint:
 ```bash
-# Run scheduler every 5 minutes
-*/5 * * * * curl -X POST https://your-app-name.onrender.com/scheduler/run -H "Content-Type: application/json" -d '{}'
-
-# Health check every 10 minutes
-*/10 * * * * curl -X GET https://your-app-name.onrender.com/api/health
+curl -X POST https://your-backend.onrender.com/threads/post \
+  -H "Content-Type: application/json" \
+  -d '{
+    "account_id": "your_account_id",
+    "text": "Test post from API"
+  }'
 ```
 
-### Cron Job Monitoring
+### 4. Scheduler Test
 
-Monitor your cron jobs through:
-- Render Dashboard → Your App → Cron Jobs
-- Application logs for scheduler execution
-- Database `scheduled_posts` table for post status
-
-## Testing
-
-### 1. Run Test Script
-
+Test scheduler endpoint:
 ```bash
-cd server
-python test_threads_api.py
+curl -X POST https://your-backend.onrender.com/scheduler/run
 ```
 
-### 2. Manual Testing
+## 🔒 Security Checklist
 
-1. **Health Check**: `GET /api/health`
-2. **OAuth Start**: `POST /auth/meta/start`
-3. **Threads Post**: `POST /threads/post`
-4. **Scheduler Status**: `GET /scheduler/status`
+- ✅ App secret rotated and not in git
+- ✅ Environment variables set in deployment platforms
+- ✅ OAuth redirect URIs configured correctly
+- ✅ Internal API token set for webhooks
+- ✅ Database RLS policies configured
+- ✅ No hardcoded secrets in client code
 
-### 3. Frontend Testing
-
-1. **Accounts Page**: Verify Connect Threads buttons appear
-2. **OAuth Flow**: Test connecting an account
-3. **Posting**: Test manual posting via Threads API
-4. **Scheduling**: Test scheduling posts
-
-## Monitoring
-
-### 1. Health Checks
-
-Monitor the health endpoint for service status:
-- Database connectivity
-- Meta OAuth service availability
-- Threads API service availability
-
-### 2. Logs
-
-Check Render logs for:
-- OAuth flow errors
-- Posting failures
-- Scheduler issues
-
-### 3. Metrics
-
-Track:
-- Successful OAuth connections
-- Posts published via Threads API
-- Scheduled posts completed
-- Failed operations
-
-## Troubleshooting
+## 🐛 Troubleshooting
 
 ### Common Issues
 
-1. **OAuth Errors**:
-   - Check Meta app configuration
-   - Verify redirect URIs
-   - Ensure required scopes are enabled
+1. **OAuth Redirect Errors**
+   - Verify redirect URI matches exactly in Meta app settings
+   - Check that domain is in allowed domains list
 
-2. **Posting Failures**:
-   - Check account connection status
-   - Verify token validity
-   - Review Threads API error messages
+2. **"Instagram API not available"**
+   - Ensure `META_APP_SECRET` is correct and rotated
+   - Check that Threads API product is added to Meta app
 
-3. **Scheduler Issues**:
-   - Check cron job configuration
-   - Verify database connectivity
-   - Review scheduled posts status
+3. **Database Connection Errors**
+   - Verify `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`
+   - Check that migrations have been run
+
+4. **Cron Jobs Not Running**
+   - Verify cron job is configured in Render
+   - Check that `/scheduler/run` endpoint is accessible
 
 ### Debug Endpoints
 
-- `GET /api/health` - Service health
-- `GET /auth/meta/status/{account_id}` - OAuth status
-- `GET /scheduler/status` - Scheduler status
-- `POST /threads/test/{account_id}` - Test account connection
+- `GET /api/health` - Overall system health
+- `GET /api/debug` - Detailed system information
+- `GET /scheduler/status` - Scheduler status and recent runs
 
-## Migration from Old System
+## 📊 Monitoring
 
-### 1. Data Migration
+### Key Metrics to Monitor
 
-- Existing accounts remain in database
-- New OAuth connections will be added
-- Old posting history is preserved
+1. **OAuth Success Rate**: Track successful account connections
+2. **Posting Success Rate**: Monitor successful vs failed posts
+3. **Scheduler Execution**: Ensure cron jobs are running
+4. **API Response Times**: Monitor backend performance
 
-### 2. Feature Parity
+### Logs to Watch
 
-- ✅ Manual posting via Threads API
-- ✅ Automated scheduling
-- ✅ Account management
-- ✅ OAuth authentication
-- ✅ Token management
+- Backend logs in Render dashboard
+- Frontend logs in Vercel dashboard
+- Database query logs in Supabase dashboard
 
-### 3. New Features
+## 🔄 Updates and Maintenance
 
-- 🔒 Secure OAuth authentication
-- 📊 Official Threads API insights
-- 🚀 Improved reliability
-- 📱 Better error handling
+### Regular Tasks
 
-## Security Considerations
+1. **Monthly**: Rotate Meta app secret
+2. **Weekly**: Check cron job execution logs
+3. **Daily**: Monitor posting success rates
+4. **As needed**: Update dependencies and security patches
 
-1. **Token Storage**: OAuth tokens stored securely in database
-2. **HTTPS Only**: All OAuth flows use HTTPS
-3. **Token Refresh**: Automatic token refresh handling
-4. **Access Control**: Proper RLS policies on new tables
+### Backup Strategy
 
-## Support
-
-For issues with the Threads API integration:
-
-1. Check the logs for detailed error messages
-2. Verify Meta app configuration
-3. Test with the provided test script
-4. Review the troubleshooting section above 
+- Database: Supabase automatic backups
+- Sessions: Stored in Supabase Storage
+- Configuration: Environment variables in deployment platforms
+- Code: Git repository with version control 
