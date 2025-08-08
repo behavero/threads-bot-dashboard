@@ -533,4 +533,120 @@ class DatabaseManager:
             }
         except Exception as e:
             print(f"❌ Error getting statistics: {e}")
-            return {} 
+            return {}
+
+    # Data Deletion Methods for Meta Compliance
+    def delete_accounts_by_user_id(self, user_id: str) -> int:
+        """Delete all accounts associated with a user_id"""
+        try:
+            print(f"🗑️ delete_accounts_by_user_id: Deleting accounts for user_id: {user_id}")
+            
+            # In a real implementation, you'd have a user_id field in accounts table
+            # For now, we'll delete based on some identifier or pattern
+            # This is a placeholder implementation
+            
+            response = requests.delete(
+                f"{self.supabase_url}/rest/v1/accounts",
+                headers=self.headers,
+                params={'user_id': f'eq.{user_id}'}
+            )
+            
+            print(f"🗑️ delete_accounts_by_user_id: Response status: {response.status_code}")
+            
+            if response.status_code == 200:
+                deleted_count = len(response.json()) if response.json() else 0
+                print(f"🗑️ delete_accounts_by_user_id: Deleted {deleted_count} accounts")
+                return deleted_count
+            else:
+                print(f"❌ delete_accounts_by_user_id: HTTP {response.status_code}: {response.text}")
+                return 0
+        except Exception as e:
+            print(f"❌ delete_accounts_by_user_id: Error: {e}")
+            return 0
+
+    def delete_posting_history_by_user_id(self, user_id: str) -> int:
+        """Delete all posting history associated with a user_id"""
+        try:
+            print(f"🗑️ delete_posting_history_by_user_id: Deleting posting history for user_id: {user_id}")
+            
+            response = requests.delete(
+                f"{self.supabase_url}/rest/v1/posting_history",
+                headers=self.headers,
+                params={'user_id': f'eq.{user_id}'}
+            )
+            
+            print(f"🗑️ delete_posting_history_by_user_id: Response status: {response.status_code}")
+            
+            if response.status_code == 200:
+                deleted_count = len(response.json()) if response.json() else 0
+                print(f"🗑️ delete_posting_history_by_user_id: Deleted {deleted_count} posting records")
+                return deleted_count
+            else:
+                print(f"❌ delete_posting_history_by_user_id: HTTP {response.status_code}: {response.text}")
+                return 0
+        except Exception as e:
+            print(f"❌ delete_posting_history_by_user_id: Error: {e}")
+            return 0
+
+    def delete_captions_by_user_id(self, user_id: str) -> int:
+        """Delete all captions associated with a user_id"""
+        try:
+            print(f"🗑️ delete_captions_by_user_id: Deleting captions for user_id: {user_id}")
+            
+            response = requests.delete(
+                f"{self.supabase_url}/rest/v1/captions",
+                headers=self.headers,
+                params={'user_id': f'eq.{user_id}'}
+            )
+            
+            print(f"🗑️ delete_captions_by_user_id: Response status: {response.status_code}")
+            
+            if response.status_code == 200:
+                deleted_count = len(response.json()) if response.json() else 0
+                print(f"🗑️ delete_captions_by_user_id: Deleted {deleted_count} captions")
+                return deleted_count
+            else:
+                print(f"❌ delete_captions_by_user_id: HTTP {response.status_code}: {response.text}")
+                return 0
+        except Exception as e:
+            print(f"❌ delete_captions_by_user_id: Error: {e}")
+            return 0
+
+    def delete_images_by_user_id(self, user_id: str) -> int:
+        """Delete all images associated with a user_id"""
+        try:
+            print(f"🗑️ delete_images_by_user_id: Deleting images for user_id: {user_id}")
+            
+            response = requests.delete(
+                f"{self.supabase_url}/rest/v1/images",
+                headers=self.headers,
+                params={'user_id': f'eq.{user_id}'}
+            )
+            
+            print(f"🗑️ delete_images_by_user_id: Response status: {response.status_code}")
+            
+            if response.status_code == 200:
+                deleted_count = len(response.json()) if response.json() else 0
+                print(f"🗑️ delete_images_by_user_id: Deleted {deleted_count} images")
+                return deleted_count
+            else:
+                print(f"❌ delete_images_by_user_id: HTTP {response.status_code}: {response.text}")
+                return 0
+        except Exception as e:
+            print(f"❌ delete_images_by_user_id: Error: {e}")
+            return 0
+
+    def delete_sessions_by_user_id(self, user_id: str) -> int:
+        """Delete all sessions associated with a user_id from Supabase Storage"""
+        try:
+            print(f"🗑️ delete_sessions_by_user_id: Deleting sessions for user_id: {user_id}")
+            
+            # Delete from Supabase Storage
+            # This would require the Supabase Storage Admin SDK
+            # For now, we'll return a placeholder count
+            
+            print(f"🗑️ delete_sessions_by_user_id: Sessions deletion placeholder - would delete sessions for user_id: {user_id}")
+            return 0  # Placeholder - implement with actual storage deletion
+        except Exception as e:
+            print(f"❌ delete_sessions_by_user_id: Error: {e}")
+            return 0 

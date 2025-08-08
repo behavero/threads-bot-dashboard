@@ -946,6 +946,8 @@ function AccountsPageContent() {
           {' '}•{' '}
           <a href="/terms" className="hover:underline text-purple-400">Terms of Service</a>
           {' '}•{' '}
+          <a href="/data-deletion" className="hover:underline text-purple-400">Data Deletion</a>
+          {' '}•{' '}
           <span>© 2025 Threadly. All rights reserved.</span>
         </div>
       </footer>

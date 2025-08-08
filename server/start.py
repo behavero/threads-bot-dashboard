@@ -123,6 +123,16 @@ import asyncio
 app = Flask(__name__)
 CORS(app)
 
+# Register internal routes for data deletion
+try:
+    from internal_routes import internal
+    app.register_blueprint(internal)
+    print("✅ Internal routes registered successfully")
+except ImportError as e:
+    print(f"⚠️ Could not import internal routes: {e}")
+except Exception as e:
+    print(f"⚠️ Error registering internal routes: {e}")
+
 # Global bot instance
 bot = None
 bot_thread = None
