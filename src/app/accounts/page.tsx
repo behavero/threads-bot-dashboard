@@ -23,7 +23,6 @@ interface Account {
 
 interface AccountFormData {
   username: string
-  password: string
   description: string
 }
 
@@ -47,7 +46,6 @@ function AccountsPageContent() {
   })
   const [formData, setFormData] = useState<AccountFormData>({
     username: '',
-    password: '',
     description: ''
   })
 
@@ -170,7 +168,6 @@ function AccountsPageContent() {
           },
           body: JSON.stringify({
             username: formData.username,
-            password: formData.password,
             description: formData.description
           })
         })
@@ -190,14 +187,13 @@ function AccountsPageContent() {
         // Handle creating new account
         console.log('Creating new account...')
         
-        const response = await fetch('https://threads-bot-dashboard-3.onrender.com/api/accounts', {
+        const response = await fetch('https://threads-bot-dashboard-3.onrender.com/api/accounts/login', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
             username: formData.username,
-            password: formData.password,
             description: formData.description
           })
         })
@@ -205,11 +201,11 @@ function AccountsPageContent() {
         const data = await response.json()
         console.log('Create account response:', data)
 
-        if (data.success) {
+        if (data.ok) {
           setShowModal(false)
           resetForm()
           await fetchAccounts()
-          setMessage('Account created successfully! You can now connect it to Threads.')
+          setMessage('Threads account created successfully! You can now connect it to post content.')
         } else {
           setError(getUserFriendlyError(data.error || 'Failed to create account'))
         }
@@ -224,7 +220,6 @@ function AccountsPageContent() {
     setEditingAccount(account)
     setFormData({
       username: account.username,
-      password: account.password || '',
       description: account.description || ''
     })
     setShowModal(true)
@@ -280,7 +275,6 @@ function AccountsPageContent() {
   const resetForm = () => {
     setFormData({
       username: '',
-      password: '',
       description: ''
     })
   }
@@ -494,7 +488,10 @@ function AccountsPageContent() {
                 {/* Connect Threads Button - Show if not connected via Meta */}
                 {(!account.threads_user_id || account.provider !== 'meta') && (
                   <button
-                    onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_URL || 'https://threads-bot-dashboard-3.onrender.com'}/auth/meta/start?account_id=${account.id}`}
+                    onClick={() => {
+                      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://threads-bot-dashboard-3.onrender.com'
+                      window.location.href = `${backendUrl}/auth/meta/start?account_id=${account.id}`
+                    }}
                     className="modern-button px-3 py-1 text-sm bg-purple-600 hover:bg-purple-700"
                   >
                     Connect Threads
@@ -530,7 +527,7 @@ function AccountsPageContent() {
           <div className="modern-card p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-2xl font-bold text-white">
-                {editingAccount ? 'Edit Account' : 'Add New Account'}
+                {editingAccount ? 'Edit Threads Account' : 'Add Threads Account'}
               </h3>
               <button
                 onClick={() => setShowModal(false)}
@@ -543,7 +540,7 @@ function AccountsPageContent() {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-300">
-                  Username *
+                  Threads Username *
                 </label>
                 <input
                   type="text"
@@ -551,7 +548,7 @@ function AccountsPageContent() {
                   onChange={(e) => setFormData({...formData, username: e.target.value})}
                   required
                   className="w-full px-4 py-3 bg-transparent border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 transition-colors"
-                  placeholder="Enter Threads username"
+                  placeholder="Enter your Threads username (e.g., @username)"
                 />
               </div>
 
@@ -573,7 +570,7 @@ function AccountsPageContent() {
                   type="submit"
                   className="modern-button px-6 py-3 flex-1"
                 >
-                  {editingAccount ? 'Update Account' : 'Add Account'}
+                  {editingAccount ? 'Update Account' : 'Create Account'}
                 </button>
                 <button
                   type="button"
