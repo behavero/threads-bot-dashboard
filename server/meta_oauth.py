@@ -16,13 +16,16 @@ logger = logging.getLogger(__name__)
 
 class MetaOAuthHelper:
     def __init__(self):
-        self.app_id = os.getenv('META_APP_ID')
-        self.app_secret = os.getenv('META_APP_SECRET')
-        self.redirect_uri = os.getenv('OAUTH_REDIRECT_URI')
+        from config.env import load_meta_oauth_config
+        cfg = load_meta_oauth_config()
+        
+        self.app_id = cfg.app_id
+        self.app_secret = cfg.app_secret
+        self.redirect_uri = cfg.redirect_uri
         self.app_base_url = os.getenv('APP_BASE_URL')
         
-        # Check if OAuth is configured (optional now)
-        self.oauth_configured = all([self.app_id, self.app_secret, self.redirect_uri])
+        # Use centralized config validation
+        self.oauth_configured = cfg.is_configured
         
         if not self.oauth_configured:
             logger.warning("⚠️ Meta OAuth not configured - using direct account creation")

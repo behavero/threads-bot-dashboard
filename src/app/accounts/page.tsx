@@ -54,6 +54,27 @@ function AccountsPageContent() {
   useEffect(() => {
     fetchAccounts()
     
+    // Check OAuth configuration
+    const checkOAuthConfig = async () => {
+      try {
+        const resp = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/config/status`, { 
+          cache: 'no-store' 
+        })
+        const json = await resp.json()
+        if (!json.meta_oauth_configured) {
+          console.warn('Meta OAuth misconfigured on backend. Missing:', json.missing)
+          // Optionally show a banner in dev
+          if (process.env.NODE_ENV === 'development') {
+            setError(`OAuth not configured: ${json.missing.join(', ')}`)
+          }
+        }
+      } catch (err) {
+        console.warn('Could not check OAuth configuration:', err)
+      }
+    }
+    
+    checkOAuthConfig()
+    
     // Handle OAuth callback parameters
     const urlParams = new URLSearchParams(window.location.search)
     const connected = urlParams.get('connected')

@@ -84,6 +84,15 @@ threads-bot-dashboard-3.onrender.com
 4. Update `META_APP_SECRET` in Render environment variables
 5. Never commit the secret to git
 
+### 4. Configuration Validation
+
+After deployment, verify your OAuth configuration:
+
+1. Visit: `https://your-render-service.onrender.com/config/status`
+2. Expected response: `{"meta_oauth_configured": true, "missing": []}`
+3. If missing variables are shown, update your Render environment variables
+4. In production, missing OAuth variables will cause the app to fail fast
+
 ## 🗄️ Database Setup
 
 ### 1. Supabase Configuration

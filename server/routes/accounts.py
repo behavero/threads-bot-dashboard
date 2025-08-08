@@ -16,8 +16,23 @@ accounts = Blueprint('accounts', __name__)
 
 @accounts.route('/api/accounts/login', methods=['POST'])
 def login_account():
-    """Simple account creation - no Meta authentication required"""
+    """Account creation - requires Meta OAuth in production"""
     try:
+        from config.env import load_meta_oauth_config, missing_oauth_vars
+        import os
+        
+        # Check OAuth configuration
+        cfg = load_meta_oauth_config()
+        missing = missing_oauth_vars(cfg)
+        ENV = os.environ.get("APP_ENV", os.environ.get("ENV", "development")).lower()
+        
+        # Fail hard in production if OAuth not configured
+        if missing and ENV in ("production", "staging"):
+            return jsonify({
+                "ok": False,
+                "error": f"Direct creation disabled in {ENV}. Missing OAuth vars: {', '.join(missing)}"
+            }), 400
+        
         data = request.get_json()
         if not data:
             return jsonify({
@@ -42,7 +57,7 @@ def login_account():
             "username": username,
             "description": description,
             "status": "enabled",
-            "provider": "direct",
+            "provider": "direct" if not cfg.is_configured else "meta_oauth",
             "created_at": datetime.now().isoformat()
         }
         
@@ -57,7 +72,7 @@ def login_account():
                     "username": username,
                     "description": description,
                     "status": "enabled",
-                    "provider": "direct"
+                    "provider": account_data["provider"]
                 },
                 "message": "Account created successfully"
             }), 201

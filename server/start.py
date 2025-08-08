@@ -89,7 +89,25 @@ def safe_database_operation(operation_name: str, db_operation, *args, **kwargs):
 # Load environment variables
 load_dotenv()
 
-# Check environment variables first
+# Import config validation
+import os
+import logging
+from config.env import load_meta_oauth_config, missing_oauth_vars
+
+logger = logging.getLogger("boot")
+
+# Load and validate Meta OAuth configuration
+CFG = load_meta_oauth_config()
+missing = missing_oauth_vars(CFG)
+ENV = os.environ.get("APP_ENV", os.environ.get("ENV", "development")).lower()
+
+if missing:
+    logger.warning("⚠️ Meta OAuth not configured. Missing: %s", ", ".join(missing))
+    if ENV in ("production", "staging"):
+        raise RuntimeError(f"Meta OAuth misconfigured in {ENV}. Missing: {', '.join(missing)}")
+else:
+    logger.info("✅ Meta OAuth configured (App ID present, Redirect URI set)")
+
 def validate_environment():
     """Validate that required environment variables are set"""
     required_vars = ['SUPABASE_URL', 'SUPABASE_KEY']
@@ -105,20 +123,6 @@ def validate_environment():
         print("SUPABASE_URL=your_supabase_url_here")
         print("SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here")
         return False
-    
-    # Check Meta OAuth configuration
-    meta_app_secret = os.getenv('META_APP_SECRET')
-    if meta_app_secret:
-        print("✅ META_APP_SECRET loaded")
-        # Check if it's the old default value
-        if meta_app_secret == '50d1453dc80f9b6cc06c9e3f70c50109':
-            print("⚠️  WARNING: META_APP_SECRET is using the old default value")
-        elif meta_app_secret == '849acf47bd606bdc6c4d515ce1e0f37c':
-            print("✅ META_APP_SECRET is using the current rotated value")
-        else:
-            print("✅ META_APP_SECRET is using a custom value")
-    else:
-        print("⚠️  META_APP_SECRET not set - OAuth will not work")
     
     return True
 
@@ -151,12 +155,14 @@ try:
     from routes.auth import auth
     from routes.threads import threads
     from routes.scheduler import scheduler
+    from routes.config_status import bp as config_status_bp
     
     app.register_blueprint(accounts)
     app.register_blueprint(stats)
     app.register_blueprint(auth, url_prefix='/auth')
     app.register_blueprint(threads, url_prefix='/threads')
     app.register_blueprint(scheduler, url_prefix='/scheduler')
+    app.register_blueprint(config_status_bp)
     print("✅ Route blueprints registered successfully")
 except ImportError as e:
     print(f"⚠️ Could not import route blueprints: {e}")
