@@ -21,8 +21,11 @@ class MetaOAuthHelper:
         self.redirect_uri = os.getenv('OAUTH_REDIRECT_URI')
         self.app_base_url = os.getenv('APP_BASE_URL')
         
-        if not all([self.app_id, self.app_secret, self.redirect_uri]):
-            raise ValueError("Missing required Meta OAuth environment variables")
+        # Check if OAuth is configured (optional now)
+        self.oauth_configured = all([self.app_id, self.app_secret, self.redirect_uri])
+        
+        if not self.oauth_configured:
+            logger.warning("⚠️ Meta OAuth not configured - using direct account creation")
         
         # Threads API scopes (minimal for publishing)
         self.scopes = [
@@ -33,10 +36,13 @@ class MetaOAuthHelper:
             'threads_read_replies',
         ]
         
-        logger.info("✅ MetaOAuthHelper initialized")
+        logger.info("✅ MetaOAuthHelper initialized (OAuth configured: {})".format(self.oauth_configured))
     
     def build_oauth_url(self, state: str) -> str:
         """Build Meta OAuth URL with required parameters"""
+        if not self.oauth_configured:
+            raise ValueError("OAuth not configured - use direct account creation instead")
+            
         try:
             params = {
                 'client_id': self.app_id,

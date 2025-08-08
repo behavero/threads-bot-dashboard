@@ -20,8 +20,11 @@ class MetaOAuthService:
         self.redirect_uri = os.getenv('OAUTH_REDIRECT_URI')
         self.app_base_url = os.getenv('APP_BASE_URL')
         
-        if not all([self.app_id, self.app_secret, self.redirect_uri]):
-            raise ValueError("Missing required Meta OAuth environment variables")
+        # Check if OAuth is configured (optional now)
+        self.oauth_configured = all([self.app_id, self.app_secret, self.redirect_uri])
+        
+        if not self.oauth_configured:
+            logger.warning("⚠️ Meta OAuth not configured - using direct account creation")
         
         self.graph_api_base = 'https://graph.threads.net/'
         self.auth_base = 'https://www.threads.net'
@@ -40,10 +43,13 @@ class MetaOAuthService:
             'threads_profile_discovery',
         ]
         
-        logger.info("✅ MetaOAuthService initialized")
+        logger.info("✅ MetaOAuthService initialized (OAuth configured: {})".format(self.oauth_configured))
     
     def build_auth_url(self, account_id: int, username: str) -> str:
         """Build OAuth authorization URL"""
+        if not self.oauth_configured:
+            raise ValueError("OAuth not configured - use direct account creation instead")
+            
         try:
             params = {
                 'client_id': self.app_id,
