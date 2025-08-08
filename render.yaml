@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: threads-bot-backend
+    env: python
+    buildCommand: |
+      pip install --upgrade pip wheel
+      PIP_ONLY_BINARY=:all: pip install -r server/requirements.txt
+    startCommand: python server/start.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9

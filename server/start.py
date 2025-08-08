@@ -14,14 +14,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from dotenv import load_dotenv
 
-# Test PIL/Pillow installation
-try:
-    from PIL import Image
-    print("✅ Pillow installed and working")
-except ImportError:
-    print("❌ Pillow not installed - image processing will be disabled")
-    print("   Install with: pip install Pillow>=8.1.1")
-    Image = None
+# Image processing not needed - we use public URLs
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -894,9 +887,9 @@ def debug_info():
                 "SUPABASE_KEY": "SET" if os.getenv('SUPABASE_KEY') else "NOT SET",
                 "SUPABASE_SERVICE_ROLE_KEY": "SET" if os.getenv('SUPABASE_SERVICE_ROLE_KEY') else "NOT SET"
             },
-            "pillow": {
-                "available": Image is not None,
-                "version": getattr(Image, '__version__', 'unknown') if Image else None
+            "image_processing": {
+                "method": "public_urls_only",
+                "server_side_processing": False
             },
             "database_test": None,
             "database_manager_test": None,
@@ -986,18 +979,9 @@ def debug_threads_api_status():
     try:
         status = {
             "meta_threads_api_available": True,
-            "pillow_available": False,
-            "error_details": None
+            "image_processing": "public_urls_only",
+            "server_side_processing": False
         }
-        
-        # Test Pillow (for image processing if needed)
-        try:
-            from PIL import Image
-            status["pillow_available"] = True
-            print("✅ Pillow available")
-        except ImportError as e:
-            status["error_details"] = f"Pillow: {str(e)}"
-            print(f"❌ Pillow not available: {e}")
         
         return jsonify(status)
         
