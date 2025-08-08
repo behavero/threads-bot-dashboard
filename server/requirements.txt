@@ -1,44 +1,35 @@
 # Core dependencies
-Flask==2.3.3
-Flask-CORS==4.0.0
-requests==2.31.0
-urllib3==2.0.7
-itsdangerous==2.1.2
-python-dotenv>=1.0.1
-
-# Pydantic v1.x for instagrapi compatibility (must be before supabase)
-pydantic==1.10.13
+Flask>=3.0,<4
+Flask-CORS>=4.0,<5
+requests>=2.31,<3
+urllib3>=2.0,<3
+itsdangerous>=2.1,<3
+python-dotenv>=1.0,<2
 
 # Production server
-gunicorn==21.2.0
+gunicorn>=21,<22
 
-# Database (with Pydantic constraint)
-supabase>=2.0.0,<3.0.0
-psycopg2-binary==2.9.7
-# Ensure no Pydantic v2.x is installed
-pydantic!=2.*
+# Database
+supabase>=2.7,<3
+psycopg2-binary>=2.9,<3
 
 # Scheduling
-APScheduler==3.10.4
+APScheduler>=3.10,<4
 
 # Utilities
-python-dateutil==2.8.2
+python-dateutil>=2.8,<3
 
 # Async support
-aiohttp==3.9.1
+aiohttp>=3.9,<4
 
-# Image processing
-Pillow>=8.1.1
-
-# Instagram/Threads API - Pinned for compatibility
-instagrapi==1.17.14
-schedule>=1.2.0
-threads-api==1.2.0
-cryptography>=41.0.0
-colorama>=0.4.6
+# Image processing (only if needed for server-side image processing)
+Pillow>=8.1,<10
 
 # HTTP client compatibility
-httpx<0.25
+httpx>=0.24,<0.25
 
 # Type hints compatibility
 typing-extensions>=4.7,<5
+
+# Cryptography for secure operations
+cryptography>=41.0,<42

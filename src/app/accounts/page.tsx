@@ -25,7 +25,6 @@ interface AccountFormData {
   username: string
   password: string
   description: string
-  verification_code?: string
 }
 
 interface TestPostState {
@@ -41,7 +40,6 @@ function AccountsPageContent() {
   const [message, setMessage] = useState('')
   const [showModal, setShowModal] = useState(false)
   const [editingAccount, setEditingAccount] = useState<Account | null>(null)
-  const [hidePassword, setHidePassword] = useState(false)
   const [testPostState, setTestPostState] = useState<TestPostState>({
     loading: false,
     error: '',
@@ -75,10 +73,6 @@ function AccountsPageContent() {
       window.history.replaceState({}, document.title, window.location.pathname)
     }
   }, [])
-
-  useEffect(() => {
-    console.log('🔍 Modal render check:', { requiresVerification, showModal })
-  }, [requiresVerification, showModal])
 
   const fetchAccounts = async () => {
     try {
@@ -142,7 +136,6 @@ function AccountsPageContent() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoginState(prev => ({ ...prev, loading: true, error: '', message: '' }))
 
     try {
       if (editingAccount) {
@@ -168,15 +161,15 @@ function AccountsPageContent() {
           setEditingAccount(null)
           resetForm()
           await fetchAccounts()
-          setLoginState(prev => ({ ...prev, step: 'success', message: 'Account updated successfully!' }))
+          setMessage('Account updated successfully!')
         } else {
-          setLoginState(prev => ({ ...prev, step: 'error', error: data.error || 'Failed to update account' }))
+          setError(data.error || 'Failed to update account')
         }
       } else {
-        // Handle creating new account via login
-        console.log('Creating account via login...')
+        // Handle creating new account
+        console.log('Creating new account...')
         
-        const response = await fetch('https://threads-bot-dashboard-3.onrender.com/api/accounts/login', {
+        const response = await fetch('https://threads-bot-dashboard-3.onrender.com/api/accounts', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -184,59 +177,25 @@ function AccountsPageContent() {
           body: JSON.stringify({
             username: formData.username,
             password: formData.password,
-            verification_code: formData.verification_code
+            description: formData.description
           })
         })
 
         const data = await response.json()
-        console.log('Login response:', data)
+        console.log('Create account response:', data)
 
         if (data.success) {
           setShowModal(false)
           resetForm()
-          setRequiresVerification(false)
-          setVerificationUsername('')
           await fetchAccounts()
-          
-          const message = data.session_reused 
-            ? `Account connected successfully! (Session reused) ${data.user_info?.followers || 0} followers, ${data.user_info?.posts || 0} posts`
-            : `Account created successfully! ${data.user_info?.followers || 0} followers, ${data.user_info?.posts || 0} posts`
-          
-          setLoginState(prev => ({ 
-            ...prev, 
-            step: 'success', 
-            message,
-            session_reused: data.session_reused
-          }))
-          setHidePassword(true) // Hide password for security
-        } else if (data.requires_verification || data.status === 'challenge_required') {
-          // Handle verification required
-          console.log('📧 Verification required - showing modal')
-          setRequiresVerification(true)
-          setVerificationUsername(formData.username)
-          setLoginState(prev => ({ 
-            ...prev, 
-            step: 'verification', 
-            message: 'Please check your email for a 6-digit verification code and enter it below.'
-          }))
-          console.log('✅ Modal state set to true')
+          setMessage('Account created successfully! You can now connect it to Threads.')
         } else {
-          setLoginState(prev => ({ 
-            ...prev, 
-            step: 'error', 
-            error: getUserFriendlyError(data.error || 'Failed to create account')
-          }))
+          setError(getUserFriendlyError(data.error || 'Failed to create account'))
         }
       }
     } catch (err) {
       console.error('Error saving account:', err)
-      setLoginState(prev => ({ 
-        ...prev, 
-        step: 'error', 
-        error: 'Network error. Please check your connection and try again.'
-      }))
-    } finally {
-      setLoginState(prev => ({ ...prev, loading: false }))
+      setError('Network error. Please check your connection and try again.')
     }
   }
 
@@ -301,17 +260,7 @@ function AccountsPageContent() {
     setFormData({
       username: '',
       password: '',
-      description: '',
-      verification_code: ''
-    })
-    setHidePassword(false)
-    setRequiresVerification(false)
-    setVerificationUsername('')
-    setLoginState({
-      step: 'credentials',
-      loading: false,
-      error: '',
-      message: ''
+      description: ''
     })
   }
 
@@ -321,129 +270,7 @@ function AccountsPageContent() {
     setShowModal(true)
   }
 
-  const testLogin = async () => {
-    try {
-      setError('')
-      console.log('Testing login...')
-      
-      const response = await fetch('https://threads-bot-dashboard-3.onrender.com/api/accounts/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          username: 'test_user',
-          password: 'test_pass'
-        })
-      })
-      
-      const data = await response.json()
-      console.log('Login test response:', data)
-      
-      if (data.success) {
-        setMessage('Login test successful!')
-      } else {
-        setError(getUserFriendlyError(data.error || 'Login test failed'))
-      }
-    } catch (err) {
-      console.error('Login test error:', err)
-      setError('Network error. Please check your connection and try again.')
-    }
-  }
-
-  const testThreadsAPI = async () => {
-    try {
-      setError('')
-      console.log('Testing Threads API...')
-      
-      const response = await fetch('https://threads-bot-dashboard-3.onrender.com/api/accounts/test-threads-login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          username: 'test_user',
-          password: 'test_pass'
-        })
-      })
-      
-      const data = await response.json()
-      console.log('Threads API test response:', data)
-      
-      if (data.success) {
-        setMessage('Threads API test successful! API is available and working.')
-      } else {
-        if (data.api_available === false) {
-          setError('Threads API not available. Check backend dependencies.')
-        } else {
-          setError(getUserFriendlyError(data.error || 'Threads API test failed'))
-        }
-      }
-    } catch (err) {
-      console.error('Threads API test error:', err)
-      setError('Network error. Please check your connection and try again.')
-    }
-  }
-
-  const testSession = async (username: string) => {
-    try {
-      setError('')
-      console.log(`Testing session for ${username}...`)
-      
-      const response = await fetch(`https://threads-bot-dashboard-3.onrender.com/api/accounts/${username}/test-session`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          password: 'test_password' // This would need to be provided by user
-        })
-      })
-      
-      const data = await response.json()
-      console.log('Session test response:', data)
-      
-      if (data.success) {
-        setMessage(`Session test successful for ${username}! ${data.user_info?.followers || 0} followers`)
-      } else {
-        setError(getUserFriendlyError(data.error || 'Session test failed'))
-      }
-    } catch (err) {
-      console.error('Session test error:', err)
-      setError('Network error. Please check your connection and try again.')
-    }
-  }
-
-  const postNow = async (accountId: number, username: string) => {
-    try {
-      setError('')
-      setMessage('')
-      console.log(`Triggering post for account ${username}...`)
-      
-      const response = await fetch(`https://threads-bot-dashboard-3.onrender.com/api/accounts/${accountId}/post`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
-      
-      const data = await response.json()
-      console.log('Post response:', data)
-      
-      if (data.success) {
-        setMessage(`Post published successfully for ${username}! ${data.session_reused ? '(Session reused)' : '(Fresh login)'}`)
-        // Refresh accounts to update last_posted
-        await fetchAccounts()
-      } else {
-        setError(getUserFriendlyError(data.error || 'Failed to publish post'))
-      }
-    } catch (err) {
-      console.error('Post error:', err)
-      setError('Network error. Please check your connection and try again.')
-    }
-  }
-
-    const testPost = async (accountId: number, text: string = 'Test post from Threads API! 🚀') => {
+  const testPost = async (accountId: number, text: string = 'Test post from Threads API! 🚀') => {
     setTestPostState({ loading: true, error: '', success: '' })
     
     try {
@@ -646,7 +473,7 @@ function AccountsPageContent() {
                 {/* Connect Threads Button - Show if not connected via Meta */}
                 {(!account.threads_user_id || account.provider !== 'meta') && (
                   <button
-                    onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_API_BASE || 'https://threads-bot-dashboard-3.onrender.com'}/auth/meta/start?account_id=${account.id}`}
+                    onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_URL || 'https://threads-bot-dashboard-3.onrender.com'}/auth/meta/start?account_id=${account.id}`}
                     className="modern-button px-3 py-1 text-sm bg-purple-600 hover:bg-purple-700"
                   >
                     Connect Threads
@@ -736,82 +563,6 @@ function AccountsPageContent() {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* Verification Modal */}
-      {requiresVerification && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="modern-card p-8 w-full max-w-md">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-bold text-white">
-                Email Verification Required
-              </h3>
-              <button
-                onClick={() => {
-                  setRequiresVerification(false)
-                  setVerificationUsername('')
-                }}
-                className="text-gray-400 hover:text-white"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="space-y-6">
-              <div className="text-center">
-                <p className="text-gray-300 mb-4">
-                  Please check your email for a 6-digit verification code from Instagram/Threads for account <strong>{verificationUsername}</strong>
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300">
-                  Verification Code *
-                </label>
-                <input
-                  type="text"
-                  id="verification-code"
-                  maxLength={6}
-                  className="w-full px-4 py-3 bg-transparent border border-purple-500 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 transition-colors text-center text-2xl tracking-widest"
-                  placeholder="000000"
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      const code = (e.target as HTMLInputElement).value
-                      if (code.length === 6) {
-                        submitVerificationCode(code)
-                      }
-                    }
-                  }}
-                />
-              </div>
-
-              <div className="flex justify-end space-x-4 pt-4">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setRequiresVerification(false)
-                    setVerificationUsername('')
-                  }}
-                  className="px-6 py-3 text-gray-300 hover:text-white transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const code = (document.getElementById('verification-code') as HTMLInputElement)?.value
-                    if (code && code.length === 6) {
-                      submitVerificationCode(code)
-                    }
-                  }}
-                  className="modern-button px-6 py-3 glow-on-hover"
-                >
-                  Verify Account
-                </button>
-              </div>
-            </div>
           </div>
         </div>
       )}

@@ -116,7 +116,6 @@ if not validate_environment():
     exit(1)
 
 from database import DatabaseManager
-from threads_bot import ThreadsBot
 from engagement_tracker import engagement_tracker
 import asyncio
 
@@ -1062,169 +1061,7 @@ def process_verification_code(username: str, code: str):
             "error": str(e)
         }), 500
 
-@app.route('/api/accounts/<username>/test-session', methods=['POST'])
-def test_session(username):
-    """Test session reuse for an account"""
-    try:
-        data = request.json
-        password = data.get('password')
-        
-        if not password:
-            return jsonify({
-                "success": False, 
-                "error": "Password required"
-            }), 400
-        
-        print(f"🧪 Testing session for {username}...")
-        
-        try:
-            from instagrapi import Client
-            from instagrapi.exceptions import ClientLoginRequired, ClientError
-            
-            # Initialize client
-            client = Client()
-            client.delay_range = [1, 3]
-            
-            # Get account and session data
-            db = DatabaseManager()
-            account = db.get_account_by_username(username)
-            
-            if not account:
-                return jsonify({
-                    "success": False,
-                    "error": "Account not found"
-                }), 404
-            
-            if not account.get('session_data'):
-                return jsonify({
-                    "success": False,
-                    "error": "No session data found for this account"
-                }), 404
-            
-            print(f"🧪 Found session data for {username}, testing reuse...")
-            
-            # Try to use existing session
-            client.set_settings(account['session_data'])
-            client.login(username, password)
-            
-            # Get user info to verify login worked
-            user_info = client.user_info_by_username(username)
-            
-            # Update last_login timestamp
-            db.update_account_last_login(account['id'])
-            
-            return jsonify({
-                "success": True,
-                "message": "Session test successful",
-                "user_info": {
-                    "followers": user_info.follower_count,
-                    "following": user_info.following_count,
-                    "posts": user_info.media_count,
-                    "username": user_info.username,
-                    "full_name": user_info.full_name,
-                    "is_verified": user_info.is_verified
-                },
-                "session_reused": True
-            })
-            
-        except ClientLoginRequired as e:
-            print(f"❌ Session test failed for {username}: {e}")
-            return jsonify({
-                "success": False,
-                "error": "Session expired, fresh login required"
-            }), 401
-            
-        except Exception as e:
-            print(f"❌ Session test error for {username}: {e}")
-            return jsonify({
-                "success": False,
-                "error": f"Session test failed: {str(e)}"
-            }), 500
-            
-    except Exception as e:
-        print(f"❌ Error in test_session: {e}")
-        return jsonify({
-            "success": False,
-            "error": str(e)
-        }), 500
 
-@app.route('/api/accounts/test-threads-login', methods=['POST'])
-def test_threads_login():
-    """Test Threads API login with real threads-api library"""
-    try:
-        data = request.json
-        username = data.get('username')
-        password = data.get('password')
-        
-        if not username or not password:
-            return jsonify({
-                "success": False,
-                "error": "Username and password required"
-            }), 400
-        
-        print(f"🧪 Testing Threads API login for {username}...")
-        
-        try:
-            from threads_api_real import RealThreadsAPI
-            import asyncio
-            
-            # Test Threads API login
-            api = RealThreadsAPI(use_instagrapi=True)
-            
-            # Run async login
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            success = loop.run_until_complete(api.login(username, password))
-            
-            if success:
-                # Get user info
-                user_info = loop.run_until_complete(api.get_me())
-                
-                # Clean up
-                loop.run_until_complete(api.logout())
-                loop.close()
-                
-                print(f"✅ Threads API login successful for {username}")
-                return jsonify({
-                    "success": True,
-                    "message": "Threads API login successful",
-                    "user_info": user_info,
-                    "api_available": True
-                })
-            else:
-                # Clean up
-                loop.run_until_complete(api.logout())
-                loop.close()
-                
-                print(f"❌ Threads API login failed for {username}")
-                return jsonify({
-                    "success": False,
-                    "error": "Threads API login failed",
-                    "api_available": True
-                }), 401
-                
-        except ImportError as e:
-            print(f"❌ Threads API not available: {e}")
-            return jsonify({
-                "success": False,
-                "error": "Threads API not available",
-                "api_available": False,
-                "details": str(e)
-            }), 500
-        except Exception as e:
-            print(f"❌ Threads API login error: {e}")
-            return jsonify({
-                "success": False,
-                "error": f"Threads API login error: {str(e)}",
-                "api_available": True
-            }), 500
-            
-    except Exception as e:
-        print(f"❌ Error in test_threads_login: {e}")
-        return jsonify({
-            "success": False,
-            "error": str(e)
-        }), 500
 
 @app.route('/api/accounts/verify-code', methods=['POST'])
 def submit_verification_code():
@@ -1290,34 +1127,15 @@ def submit_verification_code():
 
 @app.route('/api/debug/threads-api-status', methods=['GET'])
 def debug_threads_api_status():
-    """Debug endpoint to check Threads API availability"""
+    """Debug endpoint to check Meta Threads API availability"""
     try:
         status = {
-            "threads_api_available": False,
-            "instagrapi_available": False,
+            "meta_threads_api_available": True,
             "pillow_available": False,
             "error_details": None
         }
         
-        # Test Threads API
-        try:
-            from threads_api.src.threads_api import ThreadsAPI
-            status["threads_api_available"] = True
-            print("✅ Threads API available")
-        except ImportError as e:
-            status["error_details"] = f"Threads API: {str(e)}"
-            print(f"❌ Threads API not available: {e}")
-        
-        # Test instagrapi
-        try:
-            from instagrapi import Client
-            status["instagrapi_available"] = True
-            print("✅ instagrapi available")
-        except ImportError as e:
-            status["error_details"] = f"instagrapi: {str(e)}"
-            print(f"❌ instagrapi not available: {e}")
-        
-        # Test Pillow
+        # Test Pillow (for image processing if needed)
         try:
             from PIL import Image
             status["pillow_available"] = True
@@ -1335,360 +1153,16 @@ def debug_threads_api_status():
 
 @app.route('/api/accounts/<int:account_id>/post', methods=['POST'])
 def trigger_post(account_id):
-    """Trigger a post for a specific account"""
-    try:
-        print(f"🚀 Triggering post for account {account_id}...")
-        
-        # Get account details
-        db = DatabaseManager()
-        accounts = db.get_active_accounts()
-        account = next((a for a in accounts if a['id'] == account_id), None)
-        
-        if not account:
-            return jsonify({
-                "success": False,
-                "error": "Account not found or not active"
-            }), 404
-        
-        print(f"📝 Found account: {account['username']}")
-        
-        # Get unused content
-        caption = db.get_unused_caption()
-        image = db.get_unused_image()
-        
-        if not caption:
-            return jsonify({
-                "success": False,
-                "error": "No unused captions available"
-            }), 400
-        
-        print(f"📝 Selected caption: {caption['text'][:50]}...")
-        if image:
-            print(f"🖼️ Selected image: {image['filename']}")
-        else:
-            print("📝 No image selected, posting text only")
-        
-        try:
-            from instagrapi import Client
-            from instagrapi.exceptions import (
-                ClientLoginRequired, 
-                ClientError,
-                ClientChallengeRequired,
-                ClientCheckpointRequired
-            )
-            
-            # Initialize client
-            client = Client()
-            client.delay_range = [1, 3]
-            
-            # Try to use saved session first
-            session_data = db.get_session_data(account_id)
-            login_success = False
-            
-            if session_data:
-                print(f"🔐 Attempting to use saved session for {account['username']}...")
-                try:
-                    client.set_settings(session_data)
-                    client.login(account['username'], account['password'])
-                    print(f"✅ Successfully logged in with saved session")
-                    login_success = True
-                    # Update last_login for session reuse
-                    db.update_account_last_login(account_id)
-                except Exception as session_error:
-                    print(f"⚠️ Failed to use saved session: {session_error}")
-                    print(f"🔐 Falling back to fresh login...")
-            
-            # Fresh login if session failed or doesn't exist
-            if not login_success:
-                print(f"🔐 Performing fresh login for {account['username']}...")
-                client.login(account['username'], account['password'])
-                print(f"✅ Successfully logged in")
-                
-                # Save new session
-                new_session = client.get_settings()
-                db.save_session_data(account_id, new_session)
-                print(f"💾 Saved new session data")
-                
-                # Update last_login for fresh login
-                db.update_account_last_login(account_id)
-            
-            # Post content
-            print(f"📝 Posting content...")
-            if image and Image is not None:
-                # Post with image - download and process locally
-                try:
-                    import requests
-                    import tempfile
-                    import os
-                    
-                    # Download image to temporary file
-                    response = requests.get(image['url'])
-                    if response.status_code == 200:
-                        with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as temp_file:
-                            temp_file.write(response.content)
-                            temp_path = temp_file.name
-                        
-                        # Post with image
-                        result = client.photo_upload(
-                            path=temp_path,
-                            caption=caption['text']
-                        )
-                        
-                        # Clean up temporary file
-                        os.unlink(temp_path)
-                    else:
-                        print(f"❌ Failed to download image: {response.status_code}")
-                        # Fall back to text-only post
-                        result = client.direct_answer(text=caption['text'])
-                except Exception as e:
-                    print(f"❌ Error processing image: {e}")
-                    # Fall back to text-only post
-                    result = client.direct_answer(text=caption['text'])
-            else:
-                # Post text only
-                result = client.direct_answer(text=caption['text'])
-            
-            if result:
-                print(f"✅ Posted successfully!")
-                
-                # Mark content as used
-                db.mark_caption_used(caption['id'])
-                if image:
-                    db.mark_image_used(image['id'])
-                
-                # Update account last_posted
-                db.update_account_last_posted(account_id)
-                
-                # Record success in posting history
-                db.add_posting_record(
-                    account_id, 
-                    caption['id'], 
-                    image['id'] if image else None,
-                    "success"
-                )
-                
-                return jsonify({
-                    "success": True,
-                    "message": "Post published successfully",
-                    "account": account['username'],
-                    "caption": caption['text'],
-                    "image": image['filename'] if image else None,
-                    "session_reused": login_success
-                })
-            else:
-                print(f"❌ Failed to post")
-                db.add_posting_record(
-                    account_id, 
-                    caption['id'], 
-                    image['id'] if image else None,
-                    "error"
-                )
-                return jsonify({
-                    "success": False,
-                    "error": "Failed to publish post"
-                }), 500
-                
-        except Exception as e:
-            if "2FA" in str(e) or "two-factor" in str(e).lower():
-                print(f"❌ 2FA required for {account['username']}")
-                return jsonify({
-                    "success": False,
-                    "error": "Two-factor authentication required"
-                }), 401
-            
-        except ClientChallengeRequired:
-            print(f"❌ Challenge required for {account['username']}")
-            return jsonify({
-                "success": False,
-                "error": "Account verification required"
-            }), 401
-            
-        except ClientCheckpointRequired:
-            print(f"❌ Checkpoint required for {account['username']}")
-            return jsonify({
-                "success": False,
-                "error": "Account checkpoint required"
-            }), 401
-            
-        except ClientLoginRequired as e:
-            print(f"❌ Login failed for {account['username']}: {e}")
-            return jsonify({
-                "success": False,
-                "error": "Authentication failed"
-            }), 401
-            
-        except Exception as e:
-            print(f"❌ Error posting for {account['username']}: {e}")
-            db.add_posting_record(
-                account_id, 
-                caption['id'], 
-                image['id'] if image else None,
-                "error",
-                str(e)
-            )
-            return jsonify({
-                "success": False,
-                "error": f"Posting failed: {str(e)}"
-            }), 500
-            
-    except Exception as e:
-        print(f"❌ Error in trigger_post: {e}")
-        import traceback
-        print(f"❌ Traceback: {traceback.format_exc()}")
-        return jsonify({
-            "success": False,
-            "error": str(e)
-        }), 500
+    """Trigger a post for a specific account (DEPRECATED - Use Meta OAuth)"""
+    return jsonify({
+        "success": False,
+        "error": "This endpoint is deprecated. Use Meta OAuth flow and POST /threads/post instead."
+    }), 400
 
-def run_bot():
-    """Run the bot in a separate thread"""
-    global bot, bot_running
-    
-    try:
-        print("🤖 Starting Threads Bot...")
-        bot = ThreadsBot()
-        bot_running = True
-        bot.run_continuously()
-    except Exception as e:
-        print(f"❌ Bot thread error: {e}")
-        bot_running = False
 
-def start_bot():
-    """Start the bot in a background thread"""
-    global bot_thread
-    
-    if bot_thread and bot_thread.is_alive():
-        print("⚠️ Bot is already running")
-        return
-    
-    bot_thread = threading.Thread(target=run_bot, daemon=True)
-    bot_thread.start()
-    print("🚀 Bot started in background thread")
 
-@app.route('/api/accounts/sessions', methods=['GET'])
-def list_sessions():
-    """List all available sessions"""
-    try:
-        from session_store import list_sessions_from_supabase
-        sessions = list_sessions_from_supabase()
-        return jsonify({
-            "success": True,
-            "sessions": sessions,
-            "count": len(sessions)
-        })
-    except Exception as e:
-        print(f"❌ Error listing sessions: {e}")
-        return jsonify({
-            "success": False,
-            "error": str(e)
-        }), 500
 
-@app.route('/api/accounts/sessions/<username>', methods=['DELETE'])
-def delete_session(username):
-    """Delete a specific session"""
-    try:
-        from session_store import delete_session_from_supabase
-        success = delete_session_from_supabase(username)
-        return jsonify({
-            "success": success,
-            "message": f"Session {'deleted' if success else 'not found'} for {username}"
-        })
-    except Exception as e:
-        print(f"❌ Error deleting session: {e}")
-        return jsonify({
-            "success": False,
-            "error": str(e)
-        }), 500
 
-@app.route('/api/accounts/sessions/cleanup', methods=['POST'])
-def cleanup_sessions():
-    """Clean up expired sessions"""
-    try:
-        from session_manager import session_manager
-        data = request.json or {}
-        max_age_days = data.get('max_age_days', 30)
-        
-        cleaned_count = session_manager.cleanup_expired_sessions(max_age_days)
-        return jsonify({
-            "success": True,
-            "cleaned_count": cleaned_count,
-            "max_age_days": max_age_days
-        })
-    except Exception as e:
-        print(f"❌ Error cleaning up sessions: {e}")
-        return jsonify({
-            "success": False,
-            "error": str(e)
-        }), 500
-
-@app.route('/api/accounts/sessions/<username>/validate', methods=['GET'])
-def validate_session(username):
-    """Validate if a session is still working"""
-    try:
-        from login_manager import validate_session
-        is_valid = validate_session(username)
-        return jsonify({
-            "success": True,
-            "username": username,
-            "is_valid": is_valid
-        })
-    except Exception as e:
-        print(f"❌ Error validating session: {e}")
-        return jsonify({
-            "success": False,
-            "error": str(e)
-        }), 500
-
-@app.route('/api/accounts/sessions/storage-info', methods=['GET'])
-def get_storage_info():
-    """Get information about session storage"""
-    try:
-        from session_store import list_sessions_from_supabase, session_exists_in_supabase
-        
-        sessions = list_sessions_from_supabase()
-        storage_info = {
-            "use_supabase": True,
-            "storage_type": "Supabase Storage",
-            "session_count": len(sessions),
-            "bucket": "sessions"
-        }
-        
-        return jsonify({
-            "success": True,
-            "storage_info": storage_info
-        })
-    except Exception as e:
-        print(f"❌ Error getting storage info: {e}")
-        return jsonify({
-            "success": False,
-            "error": str(e)
-        }), 500
-
-@app.route('/api/accounts/sessions/migrate', methods=['POST'])
-def migrate_sessions():
-    """Migrate sessions from local to Supabase Storage"""
-    try:
-        from session_manager import session_manager
-        
-        if session_manager.use_supabase:
-            return jsonify({
-                "success": False,
-                "message": "Already using Supabase Storage"
-            }), 400
-        
-        # This would require additional implementation
-        # For now, just return info
-        return jsonify({
-            "success": False,
-            "message": "Migration not implemented yet"
-        }), 501
-        
-    except Exception as e:
-        print(f"❌ Error migrating sessions: {e}")
-        return jsonify({
-            "success": False,
-            "error": str(e)
-        }), 500
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
@@ -1697,29 +1171,19 @@ if __name__ == '__main__':
     print(f"🌐 Port: {port}")
     print(f"🔗 Supabase URL: {os.getenv('SUPABASE_URL', 'NOT SET')}")
     
-    # Check Pydantic compatibility
+    # Check Meta OAuth service
     try:
-        from check_pydantic_compatibility import check_pydantic_version, check_instagrapi_import
-        pydantic_ok = check_pydantic_version()
-        instagrapi_ok = check_instagrapi_import()
-        
-        if not pydantic_ok or not instagrapi_ok:
-            print("⚠️ Pydantic/Instagrapi compatibility issues detected")
-            print("🔧 This may cause ForwardRef._evaluate() errors")
+        from services.meta_oauth import meta_oauth_service
+        if meta_oauth_service.app_id:
+            print("✅ Meta OAuth service configured")
         else:
-            print("✅ Pydantic/Instagrapi compatibility verified")
+            print("⚠️ Meta OAuth service not configured")
     except Exception as e:
-        print(f"⚠️ Could not verify Pydantic compatibility: {e}")
+        print(f"⚠️ Could not verify Meta OAuth service: {e}")
     
-    # Start session cleanup scheduler
-    try:
-        from session_cleanup import start_cleanup_scheduler
-        start_cleanup_scheduler()
-    except Exception as e:
-        print(f"⚠️ Failed to start cleanup scheduler: {e}")
+
     
-    # Start the bot in background
-    start_bot()
+
     
     # Start Flask app
     print(f"🌐 Starting Flask server on port {port}")
