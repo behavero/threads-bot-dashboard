@@ -951,58 +951,12 @@ def login_account():
         
         print(f"🔐 Attempting login for {username}...")
         
-        # Use the new simplified login system
-        try:
-            from login_manager import login_or_restore_session
-            
-            login_result = login_or_restore_session(username, password, verification_code)
-            
-            # Handle tuple response (result, status_code)
-            if isinstance(login_result, tuple):
-                result, status_code = login_result
-                
-                # Save account to database if login successful and not session reuse
-                if result.get("success") and not result.get("session_reused"):
-                    db = DatabaseManager()
-                    account_id = db.add_account({
-                        "username": username,
-                        "password": password,
-                        "description": data.get('description', ''),
-                        "status": "enabled"
-                    })
-                    
-                    # Update last_login
-                    db.update_account_last_login(account_id)
-                
-                return jsonify(result), status_code
-            
-            # Handle single response
-            if login_result.get("success") and not login_result.get("session_reused"):
-                db = DatabaseManager()
-                account_id = db.add_account({
-                    "username": username,
-                    "password": password,
-                    "description": data.get('description', ''),
-                    "status": "enabled"
-                })
-                
-                # Update last_login
-                db.update_account_last_login(account_id)
-            
-            return jsonify(login_result)
-            
-        except ImportError as e:
-            print(f"❌ Login manager not available: {e}")
-            return jsonify({
-                "success": False,
-                "error": f"Login system not available: {str(e)}"
-            }), 500
-        except Exception as e:
-            print(f"❌ Login error: {e}")
-            return jsonify({
-                "success": False,
-                "error": str(e)
-            }), 500
+        # Legacy login system removed - use Meta OAuth instead
+        return jsonify({
+            "success": False,
+            "error": "Legacy login system removed. Please use Meta OAuth flow to connect your Threads account.",
+            "oauth_required": True
+        }), 400
             
     except Exception as e:
         print(f"❌ Error in login_account: {e}")
@@ -1013,141 +967,18 @@ def login_account():
             "error": str(e)
         }), 500
 
-def process_verification_code(username: str, code: str):
-    """Process verification code for challenge completion"""
-    try:
-        print(f"📧 Processing verification code for {username}")
-        
-        # Find the challenge session
-        challenge_id = None
-        for cid, session in challenge_sessions.items():
-            if session["username"] == username:
-                challenge_id = cid
-                break
-        
-        if not challenge_id:
-            return jsonify({
-                "success": False,
-                "error": "No pending verification found for this username"
-            }), 400
-        
-        session_data = challenge_sessions[challenge_id]
-        client = session_data["client"]
-        
-        try:
-            # Complete the challenge
-            client.challenge_resolve(code)
-            print(f"✅ Challenge completed for {username}")
-            
-            # Get user info
-            user_info = client.user_info_by_username(username)
-            
-            # Save account to database
-            db = DatabaseManager()
-            account_id = db.add_account({
-                "username": username,
-                "password": session_data["password"],
-                "description": "",
-                "status": "enabled"
-            })
-            
-            # Save session data
-            session_data_settings = client.get_settings()
-            db.save_session_data(account_id, session_data_settings)
-            db.update_account_last_login(account_id)
-            
-            # Clean up challenge session
-            del challenge_sessions[challenge_id]
-            
-            return jsonify({
-                "success": True,
-                "message": "Verification successful",
-                "user_info": {
-                    "username": user_info.username,
-                    "followers": user_info.follower_count,
-                    "posts": user_info.media_count
-                },
-                "account_id": account_id,
-                "api_used": "instagrapi"
-            })
-            
-        except Exception as e:
-            print(f"❌ Challenge resolution failed: {e}")
-            return jsonify({
-                "success": False,
-                "error": f"Invalid verification code: {str(e)}"
-            }), 400
-            
-    except Exception as e:
-        print(f"❌ Error processing verification code: {e}")
-        return jsonify({
-            "success": False,
-            "error": str(e)
-        }), 500
+# Legacy verification system removed - use Meta OAuth instead
 
 
 
 @app.route('/api/accounts/verify-code', methods=['POST'])
 def submit_verification_code():
-    """Submit verification code for account login"""
-    try:
-        data = request.json
-        username = data.get('username')
-        verification_code = data.get('verification_code')
-        
-        if not username or not verification_code:
-            return jsonify({
-                "success": False,
-                "error": "Username and verification code required"
-            }), 400
-        
-        print(f"📧 Submitting verification code for {username}...")
-        
-        try:
-            from threads_api_real import RealThreadsAPI
-            import asyncio
-            
-            # Create new API instance for verification
-            api = RealThreadsAPI(use_instagrapi=True)
-            
-            # Run async verification
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            verification_result = loop.run_until_complete(api.submit_verification_code(verification_code))
-            
-            # Clean up
-            loop.run_until_complete(api.logout())
-            loop.close()
-            
-            if verification_result.get("success"):
-                print(f"✅ Verification successful for {username}")
-                return jsonify({
-                    "success": True,
-                    "message": "Verification successful",
-                    "user_info": verification_result.get("user_info"),
-                    "api_used": "threads_api"
-                })
-            else:
-                print(f"❌ Verification failed for {username}")
-                return jsonify({
-                    "success": False,
-                    "error": verification_result.get("error", "Verification failed"),
-                    "api_used": "threads_api"
-                }), 401
-                
-        except Exception as e:
-            print(f"❌ Error during verification: {e}")
-            return jsonify({
-                "success": False,
-                "error": f"Verification error: {str(e)}"
-            }), 500
-            
-    except Exception as e:
-        print(f"❌ Error in submit_verification_code: {e}")
-        return jsonify({
-            "success": False,
-            "error": str(e)
-        }), 500
+    """Legacy verification endpoint - use Meta OAuth instead"""
+    return jsonify({
+        "success": False,
+        "error": "Legacy verification system removed. Please use Meta OAuth flow to connect your Threads account.",
+        "oauth_required": True
+    }), 400
 
 @app.route('/api/debug/threads-api-status', methods=['GET'])
 def debug_threads_api_status():

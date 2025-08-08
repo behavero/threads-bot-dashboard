@@ -1,11 +1,17 @@
 {
   "/_not-found": "app/_not-found.js",
   "/accounts/page": "app/accounts/page.js",
-  "/dashboard/page": "app/dashboard/page.js",
+  "/api/auth/meta/callback/route": "app/api/auth/meta/callback/route.js",
+  "/api/data-deletion/status/route": "app/api/data-deletion/status/route.js",
   "/captions/page": "app/captions/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/api/data-deletion/route": "app/api/data-deletion/route.js",
+  "/data-deletion/page": "app/data-deletion/page.js",
   "/page": "app/page.js",
-  "/test/page": "app/test/page.js",
   "/prompts/page": "app/prompts/page.js",
+  "/privacy/page": "app/privacy/page.js",
+  "/test/page": "app/test/page.js",
+  "/terms/page": "app/terms/page.js",
   "/upload/page": "app/upload/page.js",
   "/images/page": "app/images/page.js"
 }
