@@ -11,11 +11,14 @@ interface Account {
   description: string
   posting_config: any
   fingerprint_config: any
-  status: 'enabled' | 'disabled'
+  status: 'enabled' | 'disabled' | 'connected' | 'disconnected' | 'scheduling_enabled'
   is_active: boolean
   created_at: string
   last_posted?: string
   last_login?: string
+  threads_user_id?: string
+  provider?: string
+  ig_user_id?: string
 }
 
 interface AccountFormData {
@@ -25,12 +28,10 @@ interface AccountFormData {
   verification_code?: string
 }
 
-interface LoginState {
-  step: 'credentials' | 'verification' | 'success' | 'error'
+interface TestPostState {
   loading: boolean
   error: string
-  message: string
-  session_reused?: boolean
+  success: string
 }
 
 function AccountsPageContent() {
@@ -41,23 +42,38 @@ function AccountsPageContent() {
   const [showModal, setShowModal] = useState(false)
   const [editingAccount, setEditingAccount] = useState<Account | null>(null)
   const [hidePassword, setHidePassword] = useState(false)
-  const [loginState, setLoginState] = useState<LoginState>({
-    step: 'credentials',
+  const [testPostState, setTestPostState] = useState<TestPostState>({
     loading: false,
     error: '',
-    message: ''
+    success: ''
   })
-  const [requiresVerification, setRequiresVerification] = useState(false)
-  const [verificationUsername, setVerificationUsername] = useState('')
   const [formData, setFormData] = useState<AccountFormData>({
     username: '',
     password: '',
-    description: '',
-    verification_code: ''
+    description: ''
   })
 
   useEffect(() => {
     fetchAccounts()
+    
+    // Handle OAuth callback parameters
+    const urlParams = new URLSearchParams(window.location.search)
+    const connected = urlParams.get('connected')
+    const error = urlParams.get('error')
+    const accountId = urlParams.get('account_id')
+    const message = urlParams.get('message')
+    
+    if (connected === 'success' && accountId) {
+      setMessage(`✅ Account ${accountId} connected to Threads successfully!`)
+      // Refresh accounts to get updated status
+      fetchAccounts()
+      // Clear URL parameters
+      window.history.replaceState({}, document.title, window.location.pathname)
+    } else if (error) {
+      setError(getUserFriendlyError(message || error))
+      // Clear URL parameters
+      window.history.replaceState({}, document.title, window.location.pathname)
+    }
   }, [])
 
   useEffect(() => {
@@ -427,91 +443,45 @@ function AccountsPageContent() {
     }
   }
 
-  const testVerificationModal = async () => {
-    console.log('🧪 Testing verification modal...')
-    setRequiresVerification(true)
-    setVerificationUsername('test_user')
-    setMessage('Test: Verification modal should appear')
-  }
-
-  const testBackendVerificationResponse = async () => {
-    console.log('🧪 Testing backend verification response...')
+    const testPost = async (accountId: number, text: string = 'Test post from Threads API! 🚀') => {
+    setTestPostState({ loading: true, error: '', success: '' })
     
-    // Simulate the backend response that should trigger verification
-    const mockResponse = {
-      success: false,
-      requires_verification: true,
-      verification_type: "email",
-      message: "Email verification required",
-      error: "Please check your email for a 6-digit verification code"
-    }
-    
-    console.log('📧 Mock response:', mockResponse)
-    
-    if (mockResponse.requires_verification) {
-      console.log('📧 Verification required - showing modal')
-      setRequiresVerification(true)
-      setVerificationUsername('Lanavalentine.official')
-      setMessage('Please check your email for a 6-digit verification code and enter it below.')
-      console.log('✅ Modal state set to true')
-    }
-  }
-
-  const submitVerificationCode = async (code: string) => {
     try {
-      setError('')
-      setMessage('')
-      console.log(`Submitting verification code for ${verificationUsername}...`)
-      
-      // Try the new challenge verification endpoint first
-      const response = await fetch('https://threads-bot-dashboard-3.onrender.com/api/accounts/login', {
+      const response = await fetch('https://threads-bot-dashboard-3.onrender.com/threads/post', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          username: verificationUsername,
-          password: '', // Password not needed for verification
-          verification_code: code
+          account_id: accountId,
+          text: text
         })
       })
       
       const data = await response.json()
-      console.log('Verification response:', data)
       
-      if (data.success) {
-        setRequiresVerification(false)
-        setVerificationUsername('')
-        setMessage(`Account verified successfully! ${data.user_info?.followers || 0} followers, ${data.user_info?.posts || 0} posts`)
-        await fetchAccounts()
-      } else {
-        // Fallback to old verification endpoint
-        const fallbackResponse = await fetch('https://threads-bot-dashboard-3.onrender.com/api/accounts/verify-code', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            username: verificationUsername,
-            verification_code: code
-          })
+      if (data.ok) {
+        setTestPostState({
+          loading: false,
+          error: '',
+          success: `✅ Post published successfully! Thread ID: ${data.thread_id}`
         })
-        
-        const fallbackData = await fallbackResponse.json()
-        console.log('Fallback verification response:', fallbackData)
-        
-        if (fallbackData.success) {
-          setRequiresVerification(false)
-          setVerificationUsername('')
-          setMessage(`Account verified successfully! ${fallbackData.user_info?.followers || 0} followers, ${fallbackData.user_info?.posts || 0} posts`)
-          await fetchAccounts()
-        } else {
-          setError(getUserFriendlyError(fallbackData.error || 'Verification failed'))
-        }
+        // Refresh accounts to get updated last_posted
+        fetchAccounts()
+      } else {
+        setTestPostState({
+          loading: false,
+          error: data.error || 'Failed to post',
+          success: ''
+        })
       }
     } catch (err) {
-      console.error('Verification error:', err)
-      setError('Network error. Please check your connection and try again.')
+      console.error('Test post error:', err)
+      setTestPostState({
+        loading: false,
+        error: 'Network error during posting',
+        success: ''
+      })
     }
   }
 
@@ -533,30 +503,6 @@ function AccountsPageContent() {
         </div>
         <div className="flex space-x-4">
           <button
-            onClick={testLogin}
-            className="modern-button px-4 py-2 text-sm"
-          >
-            Test Login
-          </button>
-          <button
-            onClick={testThreadsAPI}
-            className="modern-button px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700"
-          >
-            Test Threads API
-          </button>
-          <button
-            onClick={testVerificationModal}
-            className="modern-button px-4 py-2 text-sm bg-purple-600 hover:bg-purple-700"
-          >
-            Test Verification Modal
-          </button>
-          <button
-            onClick={testBackendVerificationResponse}
-            className="modern-button px-4 py-2 text-sm bg-orange-600 hover:bg-orange-700"
-          >
-            Test Backend Response
-          </button>
-          <button
             onClick={openAddModal}
             className="modern-button px-6 py-3 glow-on-hover"
           >
@@ -576,6 +522,19 @@ function AccountsPageContent() {
       {message && (
         <div className="modern-card p-4 border border-green-500/30">
           <div className="text-green-400">{message}</div>
+        </div>
+      )}
+
+      {/* Test Post Messages */}
+      {testPostState.error && (
+        <div className="modern-card p-4 border border-red-500/30">
+          <div className="text-red-400">{testPostState.error}</div>
+        </div>
+      )}
+      
+      {testPostState.success && (
+        <div className="modern-card p-4 border border-green-500/30">
+          <div className="text-green-400">{testPostState.success}</div>
         </div>
       )}
 
@@ -625,11 +584,23 @@ function AccountsPageContent() {
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Status:</span>
                   <span className={`font-medium ${
-                    account.status === 'enabled' ? 'text-green-400' : 'text-red-400'
+                    account.status === 'enabled' || account.status === 'connected' || account.status === 'scheduling_enabled' 
+                      ? 'text-green-400' 
+                      : account.status === 'disabled' || account.status === 'disconnected'
+                      ? 'text-red-400'
+                      : 'text-yellow-400'
                   }`}>
                     {account.status}
                   </span>
                 </div>
+                {account.provider && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-400">Provider:</span>
+                    <span className="text-purple-400">
+                      {account.provider}
+                    </span>
+                  </div>
+                )}
                 {account.last_posted && (
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-400">Last Posted:</span>
@@ -646,6 +617,22 @@ function AccountsPageContent() {
                     </span>
                   </div>
                 )}
+                {account.threads_user_id && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-400">Threads ID:</span>
+                    <span className="text-purple-400">
+                      {account.threads_user_id}
+                    </span>
+                  </div>
+                )}
+                {account.ig_user_id && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-400">Instagram ID:</span>
+                    <span className="text-blue-400">
+                      {account.ig_user_id}
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div className="flex space-x-2">
@@ -655,18 +642,28 @@ function AccountsPageContent() {
                 >
                   Edit
                 </button>
-                <button
-                  onClick={() => testSession(account.username)}
-                  className="modern-button px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700"
-                >
-                  Test Session
-                </button>
-                <button
-                  onClick={() => postNow(account.id, account.username)}
-                  className="modern-button px-3 py-1 text-sm bg-green-600 hover:bg-green-700"
-                >
-                  Post Now
-                </button>
+                
+                {/* Connect Threads Button - Show if not connected via Meta */}
+                {(!account.threads_user_id || account.provider !== 'meta') && (
+                  <button
+                    onClick={() => window.location.href = `${process.env.NEXT_PUBLIC_API_BASE || 'https://threads-bot-dashboard-3.onrender.com'}/auth/meta/start?account_id=${account.id}`}
+                    className="modern-button px-3 py-1 text-sm bg-purple-600 hover:bg-purple-700"
+                  >
+                    Connect Threads
+                  </button>
+                )}
+                
+                {/* Test Post Button - Show if connected */}
+                {account.threads_user_id && account.provider === 'meta' && (
+                  <button
+                    onClick={() => testPost(account.id)}
+                    disabled={testPostState.loading}
+                    className="modern-button px-3 py-1 text-sm bg-green-600 hover:bg-green-700 disabled:opacity-50"
+                  >
+                    {testPostState.loading ? 'Posting...' : 'Test Post'}
+                  </button>
+                )}
+                
                 <button
                   onClick={() => handleDelete(account.id)}
                   className="modern-button px-3 py-1 text-sm bg-red-600 hover:bg-red-700"
@@ -696,167 +693,47 @@ function AccountsPageContent() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Step 1: Credentials */}
-              {loginState.step === 'credentials' && (
-                <>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-300">
-                      Username *
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.username}
-                      onChange={(e) => setFormData({...formData, username: e.target.value})}
-                      required
-                      disabled={loginState.loading}
-                      className="w-full px-4 py-3 bg-transparent border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 transition-colors disabled:opacity-50"
-                      placeholder="Enter Threads username"
-                    />
-                  </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">
+                  Username *
+                </label>
+                <input
+                  type="text"
+                  value={formData.username}
+                  onChange={(e) => setFormData({...formData, username: e.target.value})}
+                  required
+                  className="w-full px-4 py-3 bg-transparent border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 transition-colors"
+                  placeholder="Enter Threads username"
+                />
+              </div>
 
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-300">
-                      Password *
-                    </label>
-                    <input
-                      type="password"
-                      value={hidePassword ? '' : formData.password}
-                      onChange={(e) => setFormData({...formData, password: e.target.value})}
-                      required={!editingAccount}
-                      disabled={hidePassword || loginState.loading}
-                      className="w-full px-4 py-3 bg-transparent border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 transition-colors disabled:opacity-50"
-                      placeholder={hidePassword ? "Password hidden for security" : (editingAccount ? "Leave blank to keep current password" : "Enter Threads password")}
-                    />
-                  </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">
+                  Description
+                </label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({...formData, description: e.target.value})}
+                  rows={3}
+                  className="w-full px-4 py-3 bg-transparent border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 transition-colors resize-none"
+                  placeholder="Account description (optional)"
+                />
+              </div>
 
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-300">
-                      Description
-                    </label>
-                    <textarea
-                      value={formData.description}
-                      onChange={(e) => setFormData({...formData, description: e.target.value})}
-                      rows={3}
-                      disabled={loginState.loading}
-                      className="w-full px-4 py-3 bg-transparent border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 transition-colors resize-none disabled:opacity-50"
-                      placeholder="Account description (optional)"
-                    />
-                  </div>
-                </>
-              )}
-
-              {/* Step 2: Verification */}
-              {loginState.step === 'verification' && (
-                <div className="space-y-4">
-                  <div className="text-center">
-                    <div className="text-6xl mb-4">📧</div>
-                    <h4 className="text-lg font-semibold text-white mb-2">Email Verification Required</h4>
-                    <p className="text-gray-300">
-                      Please check your email for a 6-digit verification code from Instagram/Threads
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-300">
-                      Verification Code *
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.verification_code}
-                      onChange={(e) => setFormData({...formData, verification_code: e.target.value})}
-                      required
-                      maxLength={6}
-                      disabled={loginState.loading}
-                      className="w-full px-4 py-3 bg-transparent border border-purple-500 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 transition-colors text-center text-2xl tracking-widest disabled:opacity-50"
-                      placeholder="000000"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Step 3: Success */}
-              {loginState.step === 'success' && (
-                <div className="text-center space-y-4">
-                  <div className="text-6xl mb-4">✅</div>
-                  <h4 className="text-lg font-semibold text-white mb-2">Account Connected Successfully!</h4>
-                  <p className="text-gray-300">
-                    {loginState.message}
-                  </p>
-                  {loginState.session_reused && (
-                    <div className="bg-green-500/20 border border-green-500/30 rounded-lg p-3">
-                      <p className="text-green-400 text-sm">Session reused - no new login required</p>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Step 4: Error */}
-              {loginState.step === 'error' && (
-                <div className="text-center space-y-4">
-                  <div className="text-6xl mb-4">❌</div>
-                  <h4 className="text-lg font-semibold text-white mb-2">Login Failed</h4>
-                  <p className="text-red-400">
-                    {loginState.error}
-                  </p>
-                </div>
-              )}
-
-              {/* Loading State */}
-              {loginState.loading && (
-                <div className="text-center space-y-4">
-                  <div className="text-6xl mb-4">⏳</div>
-                  <h4 className="text-lg font-semibold text-white mb-2">Connecting Account...</h4>
-                  <p className="text-gray-300">
-                    Please wait while we connect to Threads
-                  </p>
-                </div>
-              )}
-
-              <div className="flex justify-end space-x-4 pt-4">
+              <div className="flex space-x-4">
+                <button
+                  type="submit"
+                  className="modern-button px-6 py-3 flex-1"
+                >
+                  {editingAccount ? 'Update Account' : 'Add Account'}
+                </button>
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  disabled={loginState.loading}
-                  className="px-6 py-3 text-gray-300 hover:text-white transition-colors disabled:opacity-50"
+                  className="modern-button px-6 py-3 bg-gray-600 hover:bg-gray-700"
                 >
                   Cancel
                 </button>
-                {loginState.step === 'credentials' && (
-                  <button
-                    type="submit"
-                    disabled={loginState.loading}
-                    className="modern-button px-6 py-3 glow-on-hover disabled:opacity-50"
-                  >
-                    {loginState.loading ? 'Connecting...' : (editingAccount ? 'Update Account' : 'Add Account')}
-                  </button>
-                )}
-                {loginState.step === 'verification' && (
-                  <button
-                    type="submit"
-                    disabled={loginState.loading || !formData.verification_code || formData.verification_code.length !== 6}
-                    className="modern-button px-6 py-3 glow-on-hover disabled:opacity-50"
-                  >
-                    {loginState.loading ? 'Verifying...' : 'Verify Account'}
-                  </button>
-                )}
-                {loginState.step === 'success' && (
-                  <button
-                    type="button"
-                    onClick={() => setShowModal(false)}
-                    className="modern-button px-6 py-3 glow-on-hover"
-                  >
-                    Done
-                  </button>
-                )}
-                {loginState.step === 'error' && (
-                  <button
-                    type="button"
-                    onClick={() => setLoginState(prev => ({ ...prev, step: 'credentials' }))}
-                    className="modern-button px-6 py-3 glow-on-hover"
-                  >
-                    Try Again
-                  </button>
-                )}
               </div>
             </form>
           </div>

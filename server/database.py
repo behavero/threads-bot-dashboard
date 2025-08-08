@@ -649,4 +649,440 @@ class DatabaseManager:
             return 0  # Placeholder - implement with actual storage deletion
         except Exception as e:
             print(f"❌ delete_sessions_by_user_id: Error: {e}")
-            return 0 
+            return 0
+
+    # Token Management Methods for Threads API
+    def save_token(self, account_id: int, token_data: dict) -> bool:
+        """Save or update token for an account"""
+        try:
+            print(f"💾 save_token: Saving token for account {account_id}")
+            
+            # Check if token already exists
+            existing_token = self.get_token_by_account_id(account_id)
+            
+            if existing_token:
+                # Update existing token
+                response = requests.patch(
+                    f"{self.supabase_url}/rest/v1/tokens",
+                    headers=self.headers,
+                    params={'account_id': f'eq.{account_id}'},
+                    json=token_data
+                )
+            else:
+                # Create new token
+                token_data['account_id'] = account_id
+                response = requests.post(
+                    f"{self.supabase_url}/rest/v1/tokens",
+                    headers=self.headers,
+                    json=token_data
+                )
+            
+            if response.status_code in [200, 201, 204]:
+                print(f"✅ save_token: Token saved for account {account_id}")
+                return True
+            else:
+                print(f"❌ save_token: Failed to save token for account {account_id}: {response.status_code} - {response.text}")
+                return False
+                
+        except Exception as e:
+            print(f"❌ save_token: Error: {e}")
+            return False
+
+    def get_token_by_account_id(self, account_id: int) -> Optional[dict]:
+        """Get token data for an account"""
+        try:
+            print(f"🔍 get_token_by_account_id: Getting token for account {account_id}")
+            
+            response = requests.get(
+                f"{self.supabase_url}/rest/v1/tokens",
+                headers=self.headers,
+                params={'account_id': f'eq.{account_id}'}
+            )
+            
+            if response.status_code == 200:
+                tokens = response.json()
+                if tokens:
+                    print(f"✅ get_token_by_account_id: Token found for account {account_id}")
+                    return tokens[0]
+                else:
+                    print(f"📂 get_token_by_account_id: No token found for account {account_id}")
+                    return None
+            else:
+                print(f"❌ get_token_by_account_id: HTTP {response.status_code}: {response.text}")
+                return None
+                
+        except Exception as e:
+            print(f"❌ get_token_by_account_id: Error: {e}")
+            return None
+
+    def update_token(self, account_id: int, token_data: dict) -> bool:
+        """Update token data for an account"""
+        try:
+            print(f"🔄 update_token: Updating token for account {account_id}")
+            
+            response = requests.patch(
+                f"{self.supabase_url}/rest/v1/tokens",
+                headers=self.headers,
+                params={'account_id': f'eq.{account_id}'},
+                json=token_data
+            )
+            
+            if response.status_code in [200, 204]:
+                print(f"✅ update_token: Token updated for account {account_id}")
+                return True
+            else:
+                print(f"❌ update_token: Failed to update token for account {account_id}: {response.status_code} - {response.text}")
+                return False
+                
+        except Exception as e:
+            print(f"❌ update_token: Error: {e}")
+            return False
+
+    def delete_token(self, account_id: int) -> bool:
+        """Delete token for an account"""
+        try:
+            print(f"🗑️ delete_token: Deleting token for account {account_id}")
+            
+            response = requests.delete(
+                f"{self.supabase_url}/rest/v1/tokens",
+                headers=self.headers,
+                params={'account_id': f'eq.{account_id}'}
+            )
+            
+            if response.status_code in [200, 204]:
+                print(f"✅ delete_token: Token deleted for account {account_id}")
+                return True
+            else:
+                print(f"❌ delete_token: Failed to delete token for account {account_id}: {response.status_code} - {response.text}")
+                return False
+                
+        except Exception as e:
+            print(f"❌ delete_token: Error: {e}")
+            return False
+
+    def get_all_tokens(self) -> List[dict]:
+        """Get all tokens"""
+        try:
+            print("🔍 get_all_tokens: Getting all tokens")
+            
+            response = requests.get(
+                f"{self.supabase_url}/rest/v1/tokens",
+                headers=self.headers
+            )
+            
+            if response.status_code == 200:
+                tokens = response.json()
+                print(f"✅ get_all_tokens: Retrieved {len(tokens)} tokens")
+                return tokens
+            else:
+                print(f"❌ get_all_tokens: HTTP {response.status_code}: {response.text}")
+                return []
+                
+        except Exception as e:
+            print(f"❌ get_all_tokens: Error: {e}")
+            return []
+
+    # Scheduled Posts Methods
+    def add_scheduled_post(self, account_id: int, scheduled_for: str, caption_id: Optional[int] = None, 
+                          image_id: Optional[int] = None) -> bool:
+        """Add a scheduled post"""
+        try:
+            print(f"📅 add_scheduled_post: Adding scheduled post for account {account_id}")
+            
+            post_data = {
+                "account_id": account_id,
+                "scheduled_for": scheduled_for,
+                "status": "pending"
+            }
+            
+            if caption_id:
+                post_data["caption_id"] = caption_id
+            if image_id:
+                post_data["image_id"] = image_id
+                
+            response = requests.post(
+                f"{self.supabase_url}/rest/v1/scheduled_posts",
+                headers=self.headers,
+                json=post_data
+            )
+            
+            if response.status_code == 201:
+                print(f"✅ add_scheduled_post: Scheduled post added for account {account_id}")
+                return True
+            else:
+                print(f"❌ add_scheduled_post: Failed to add scheduled post: {response.status_code} - {response.text}")
+                return False
+                
+        except Exception as e:
+            print(f"❌ add_scheduled_post: Error: {e}")
+            return False
+
+    def get_scheduled_posts(self, account_id: Optional[int] = None, status: Optional[str] = None) -> List[dict]:
+        """Get scheduled posts"""
+        try:
+            print(f"🔍 get_scheduled_posts: Getting scheduled posts")
+            
+            params = {}
+            if account_id:
+                params['account_id'] = f'eq.{account_id}'
+            if status:
+                params['status'] = f'eq.{status}'
+                
+            response = requests.get(
+                f"{self.supabase_url}/rest/v1/scheduled_posts",
+                headers=self.headers,
+                params=params
+            )
+            
+            if response.status_code == 200:
+                posts = response.json()
+                print(f"✅ get_scheduled_posts: Retrieved {len(posts)} scheduled posts")
+                return posts
+            else:
+                print(f"❌ get_scheduled_posts: HTTP {response.status_code}: {response.text}")
+                return []
+                
+        except Exception as e:
+            print(f"❌ get_scheduled_posts: Error: {e}")
+            return []
+
+    def update_scheduled_post_status(self, post_id: int, status: str) -> bool:
+        """Update scheduled post status"""
+        try:
+            print(f"🔄 update_scheduled_post_status: Updating post {post_id} to status {status}")
+            
+            response = requests.patch(
+                f"{self.supabase_url}/rest/v1/scheduled_posts",
+                headers=self.headers,
+                params={'id': f'eq.{post_id}'},
+                json={"status": status}
+            )
+            
+            if response.status_code in [200, 204]:
+                print(f"✅ update_scheduled_post_status: Post {post_id} status updated to {status}")
+                return True
+            else:
+                print(f"❌ update_scheduled_post_status: Failed to update post {post_id}: {response.status_code} - {response.text}")
+                return False
+                
+        except Exception as e:
+            print(f"❌ update_scheduled_post_status: Error: {e}")
+            return False
+
+    # OAuth State Management Methods
+    def store_oauth_state(self, account_id: int, state: str) -> bool:
+        """Store OAuth state for CSRF protection"""
+        try:
+            print(f"💾 store_oauth_state: Storing state for account {account_id}")
+            
+            state_data = {
+                "account_id": account_id,
+                "state": state,
+                "created_at": datetime.now().isoformat()
+            }
+            
+            response = requests.post(
+                f"{self.supabase_url}/rest/v1/oauth_states",
+                headers=self.headers,
+                json=state_data
+            )
+            
+            if response.status_code == 201:
+                print(f"✅ store_oauth_state: State stored for account {account_id}")
+                return True
+            else:
+                print(f"❌ store_oauth_state: Failed to store state: {response.status_code} - {response.text}")
+                return False
+                
+        except Exception as e:
+            print(f"❌ store_oauth_state: Error: {e}")
+            return False
+
+    def get_oauth_state_account_id(self, state: str) -> Optional[int]:
+        """Get account_id from OAuth state"""
+        try:
+            print(f"🔍 get_oauth_state_account_id: Looking up state")
+            
+            response = requests.get(
+                f"{self.supabase_url}/rest/v1/oauth_states",
+                headers=self.headers,
+                params={'state': f'eq.{state}'}
+            )
+            
+            if response.status_code == 200:
+                states = response.json()
+                if states:
+                    account_id = states[0].get('account_id')
+                    print(f"✅ get_oauth_state_account_id: Found account {account_id}")
+                    return account_id
+                else:
+                    print(f"📂 get_oauth_state_account_id: No state found")
+                    return None
+            else:
+                print(f"❌ get_oauth_state_account_id: HTTP {response.status_code}: {response.text}")
+                return None
+                
+        except Exception as e:
+            print(f"❌ get_oauth_state_account_id: Error: {e}")
+            return None
+
+    def delete_oauth_state(self, state: str) -> bool:
+        """Delete OAuth state after use"""
+        try:
+            print(f"🗑️ delete_oauth_state: Deleting state")
+            
+            response = requests.delete(
+                f"{self.supabase_url}/rest/v1/oauth_states",
+                headers=self.headers,
+                params={'state': f'eq.{state}'}
+            )
+            
+            if response.status_code in [200, 204]:
+                print(f"✅ delete_oauth_state: State deleted")
+                return True
+            else:
+                print(f"❌ delete_oauth_state: Failed to delete state: {response.status_code} - {response.text}")
+                return False
+                
+        except Exception as e:
+            print(f"❌ delete_oauth_state: Error: {e}")
+            return False
+
+    def cleanup_expired_oauth_states(self) -> int:
+        """Clean up expired OAuth states (older than 1 hour)"""
+        try:
+            print(f"🧹 cleanup_expired_oauth_states: Cleaning up expired states")
+            
+            # Calculate cutoff time (1 hour ago)
+            cutoff_time = (datetime.now() - timedelta(hours=1)).isoformat()
+            
+            response = requests.delete(
+                f"{self.supabase_url}/rest/v1/oauth_states",
+                headers=self.headers,
+                params={'created_at': f'lt.{cutoff_time}'}
+            )
+            
+            if response.status_code in [200, 204]:
+                print(f"✅ cleanup_expired_oauth_states: Expired states cleaned up")
+                return 0  # Placeholder - actual count would need separate query
+            else:
+                print(f"❌ cleanup_expired_oauth_states: Failed to cleanup: {response.status_code} - {response.text}")
+                return 0
+                
+        except Exception as e:
+            print(f"❌ cleanup_expired_oauth_states: Error: {e}")
+            return 0
+
+    def get_account_by_id(self, account_id: int) -> Optional[dict]:
+        """Get account by ID"""
+        try:
+            print(f"🔍 get_account_by_id: Getting account {account_id}")
+            
+            response = requests.get(
+                f"{self.supabase_url}/rest/v1/accounts",
+                headers=self.headers,
+                params={'id': f'eq.{account_id}'}
+            )
+            
+            if response.status_code == 200:
+                accounts = response.json()
+                if accounts:
+                    print(f"✅ get_account_by_id: Found account {account_id}")
+                    return accounts[0]
+                else:
+                    print(f"📂 get_account_by_id: No account found with ID {account_id}")
+                    return None
+            else:
+                print(f"❌ get_account_by_id: HTTP {response.status_code}: {response.text}")
+                return None
+                
+        except Exception as e:
+            print(f"❌ get_account_by_id: Error: {e}")
+            return None
+
+    def get_image_by_id(self, image_id: int) -> Optional[dict]:
+        """Get image by ID"""
+        try:
+            print(f"🔍 get_image_by_id: Getting image {image_id}")
+            
+            response = requests.get(
+                f"{self.supabase_url}/rest/v1/images",
+                headers=self.headers,
+                params={'id': f'eq.{image_id}'}
+            )
+            
+            if response.status_code == 200:
+                images = response.json()
+                if images:
+                    print(f"✅ get_image_by_id: Found image {image_id}")
+                    return images[0]
+                else:
+                    print(f"📂 get_image_by_id: No image found with ID {image_id}")
+                    return None
+            else:
+                print(f"❌ get_image_by_id: HTTP {response.status_code}: {response.text}")
+                return None
+                
+        except Exception as e:
+            print(f"❌ get_image_by_id: Error: {e}")
+            return None
+
+    def get_caption_by_id(self, caption_id: int) -> Optional[dict]:
+        """Get caption by ID"""
+        try:
+            print(f"🔍 get_caption_by_id: Getting caption {caption_id}")
+            
+            response = requests.get(
+                f"{self.supabase_url}/rest/v1/captions",
+                headers=self.headers,
+                params={'id': f'eq.{caption_id}'}
+            )
+            
+            if response.status_code == 200:
+                captions = response.json()
+                if captions:
+                    print(f"✅ get_caption_by_id: Found caption {caption_id}")
+                    return captions[0]
+                else:
+                    print(f"📂 get_caption_by_id: No caption found with ID {caption_id}")
+                    return None
+            else:
+                print(f"❌ get_caption_by_id: HTTP {response.status_code}: {response.text}")
+                return None
+                
+        except Exception as e:
+            print(f"❌ get_caption_by_id: Error: {e}")
+            return None
+
+    def record_posting_history(self, account_id: int, caption_id: Optional[int] = None,
+                              image_id: Optional[int] = None, thread_id: Optional[str] = None,
+                              status: str = 'posted') -> bool:
+        """Record posting history"""
+        try:
+            print(f"📝 record_posting_history: Recording post for account {account_id}")
+            
+            data = {
+                'account_id': account_id,
+                'caption_id': caption_id,
+                'image_id': image_id,
+                'thread_id': thread_id,
+                'status': status,
+                'posted_at': datetime.now().isoformat()
+            }
+            
+            response = requests.post(
+                f"{self.supabase_url}/rest/v1/posting_history",
+                headers=self.headers,
+                json=data
+            )
+            
+            if response.status_code == 201:
+                print(f"✅ record_posting_history: Posting history recorded for account {account_id}")
+                return True
+            else:
+                print(f"❌ record_posting_history: Failed to record: {response.status_code} - {response.text}")
+                return False
+                
+        except Exception as e:
+            print(f"❌ record_posting_history: Error: {e}")
+            return False 
