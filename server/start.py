@@ -5,6 +5,8 @@ Main entry point with Flask API and bot scheduling
 """
 
 import os
+import sys
+import platform
 import threading
 import time
 import traceback
@@ -13,6 +15,9 @@ from datetime import datetime
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from dotenv import load_dotenv
+
+# Log Python version and platform at startup
+print(f"[BOOT] Python: {sys.version}  Platform: {platform.platform()}", flush=True)
 
 # Image processing not needed - we use public URLs
 

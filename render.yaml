@@ -3,7 +3,7 @@ services:
     name: threads-bot-backend
     env: python
     buildCommand: |
-      pip install --upgrade pip wheel
+      pip install --upgrade pip wheel setuptools
       PIP_ONLY_BINARY=:all: pip install -r server/requirements.txt
     startCommand: python server/start.py
     envVars:

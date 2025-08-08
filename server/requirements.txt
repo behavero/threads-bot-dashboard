@@ -1,6 +1,7 @@
-# Force pip and wheel for binary-only installation
+# Force pip, wheel, and setuptools for binary-only installation
 pip>=25.2
 wheel
+setuptools>=68
 
 # Core dependencies
 Flask==3.0.2
@@ -32,5 +33,5 @@ httpx==0.24.1
 # Type hints compatibility
 typing-extensions==4.8.0
 
-# Cryptography for secure operations
-cryptography==41.0.8
+# Cryptography for secure operations (safe range with wheels for Python 3.11)
+cryptography>=42,<46
