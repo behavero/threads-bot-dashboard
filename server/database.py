@@ -1126,4 +1126,35 @@ class DatabaseManager:
             return response.status_code == 204
         except Exception as e:
             print(f"❌ Error updating image use count: {e}")
-            return False 
+            return False
+    
+    def mark_caption_used(self, caption_id: int) -> bool:
+        """Mark caption as used"""
+        try:
+            response = requests.patch(
+                f"{self.supabase_url}/rest/v1/captions?id=eq.{caption_id}",
+                json={'used': True},
+                headers=self.headers
+            )
+            return response.status_code == 204
+        except Exception as e:
+            print(f"❌ Error marking caption used: {e}")
+            return False
+    
+    def get_token_by_account_id(self, account_id: int) -> Optional[dict]:
+        """Get OAuth token for account"""
+        try:
+            response = requests.get(
+                f"{self.supabase_url}/rest/v1/oauth_tokens",
+                headers=self.headers,
+                params={'account_id': f'eq.{account_id}'}
+            )
+            
+            if response.status_code == 200:
+                tokens = response.json()
+                if tokens:
+                    return tokens[0]
+            return None
+        except Exception as e:
+            print(f"❌ Error getting token: {e}")
+            return None 

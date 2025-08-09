@@ -1,355 +1,496 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState, useRef } from 'react'
+import Layout from '@/components/Layout'
+import { 
+  PlusIcon, 
+  CloudArrowUpIcon,
+  ArrowPathIcon,
+  TrashIcon,
+  PencilIcon,
+  CheckIcon,
+  XMarkIcon,
+  ExclamationTriangleIcon
+} from '@heroicons/react/24/outline'
 
 interface Caption {
   id: number
   text: string
-  category: string
-  tags: string[]
+  category: string | null
+  tags: string[] | null
   used: boolean
   created_at: string
-  updated_at: string
+  used_at: string | null
+}
+
+interface CaptionFormData {
+  text: string
+  category: string
+  tags: string
 }
 
 export default function CaptionsPage() {
   const [captions, setCaptions] = useState<Caption[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [newCaption, setNewCaption] = useState({
+  const [error, setError] = useState('')
+  const [message, setMessage] = useState('')
+  const [showModal, setShowModal] = useState(false)
+  const [editingCaption, setEditingCaption] = useState<Caption | null>(null)
+  const [formData, setFormData] = useState<CaptionFormData>({
     text: '',
-    category: 'general',
-    tags: [] as string[]
+    category: '',
+    tags: ''
   })
-  const [tagInput, setTagInput] = useState('')
-  const [uploading, setUploading] = useState(false)
-  const [csvFile, setCsvFile] = useState<File | null>(null)
-
-  // Fetch captions from backend directly
-  const fetchCaptions = async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      
-      // Call backend directly instead of frontend API
-      const response = await fetch('https://threads-bot-dashboard-3.onrender.com/api/captions')
-      
-      if (response.ok) {
-        const data = await response.json()
-        setCaptions(data.captions || [])
-      } else {
-        throw new Error(`Failed to fetch captions: ${response.status}`)
-      }
-    } catch (err) {
-      console.error('Error fetching captions:', err)
-      setError(err instanceof Error ? err.message : 'Failed to fetch captions')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // Add caption using backend directly
-  const addCaption = async () => {
-    if (!newCaption.text.trim()) {
-      setError('Caption text is required')
-      return
-    }
-
-    try {
-      setUploading(true)
-      setError(null)
-
-      // Call backend directly
-      const response = await fetch('https://threads-bot-dashboard-3.onrender.com/api/captions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          text: newCaption.text,
-          category: newCaption.category,
-          tags: newCaption.tags
-        })
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        console.log('Caption added successfully:', data)
-        
-        // Reset form
-        setNewCaption({
-          text: '',
-          category: 'general',
-          tags: []
-        })
-        setTagInput('')
-        
-        // Refresh captions
-        await fetchCaptions()
-      } else {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to add caption')
-      }
-    } catch (err) {
-      console.error('Error adding caption:', err)
-      setError(err instanceof Error ? err.message : 'Failed to add caption')
-    } finally {
-      setUploading(false)
-    }
-  }
-
-  // Upload CSV using backend directly
-  const uploadCSV = async () => {
-    if (!csvFile) {
-      setError('Please select a CSV file')
-      return
-    }
-
-    try {
-      setUploading(true)
-      setError(null)
-
-      const formData = new FormData()
-      formData.append('file', csvFile)
-
-      // Call backend directly for CSV upload
-      const response = await fetch('https://threads-bot-dashboard-3.onrender.com/api/captions/upload-csv', {
-        method: 'POST',
-        body: formData
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        console.log('CSV uploaded successfully:', data)
-        
-        // Reset file input
-        setCsvFile(null)
-        
-        // Refresh captions
-        await fetchCaptions()
-      } else {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to upload CSV')
-      }
-    } catch (err) {
-      console.error('Error uploading CSV:', err)
-      setError(err instanceof Error ? err.message : 'Failed to upload CSV')
-    } finally {
-      setUploading(false)
-    }
-  }
-
-  // Add tag to new caption
-  const addTag = () => {
-    if (tagInput.trim() && !newCaption.tags.includes(tagInput.trim())) {
-      setNewCaption(prev => ({
-        ...prev,
-        tags: [...prev.tags, tagInput.trim()]
-      }))
-      setTagInput('')
-    }
-  }
-
-  // Remove tag from new caption
-  const removeTag = (tagToRemove: string) => {
-    setNewCaption(prev => ({
-      ...prev,
-      tags: prev.tags.filter(tag => tag !== tagToRemove)
-    }))
-  }
+  const [csvUploading, setCsvUploading] = useState(false)
+  const csvInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     fetchCaptions()
   }, [])
 
+  const fetchCaptions = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/captions`)
+      const data = await response.json()
+      
+      if (data.ok) {
+        setCaptions(data.captions || [])
+      } else {
+        setError(data.error || 'Failed to fetch captions')
+      }
+    } catch (err) {
+      setError('Failed to connect to server')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const createCaption = async () => {
+    try {
+      const tags = formData.tags ? formData.tags.split(',').map(t => t.trim()).filter(Boolean) : []
+      
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/captions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: formData.text,
+          category: formData.category || null,
+          tags: tags.length > 0 ? tags : null
+        })
+      })
+      
+      const data = await response.json()
+      
+      if (data.ok) {
+        setMessage('Caption added successfully!')
+        setShowModal(false)
+        resetForm()
+        await fetchCaptions()
+      } else {
+        setError(data.error || 'Failed to add caption')
+      }
+    } catch (err) {
+      setError('Failed to add caption')
+    }
+  }
+
+  const updateCaption = async () => {
+    if (!editingCaption) return
+    
+    try {
+      const tags = formData.tags ? formData.tags.split(',').map(t => t.trim()).filter(Boolean) : []
+      
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/captions/${editingCaption.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: formData.text,
+          category: formData.category || null,
+          tags: tags.length > 0 ? tags : null
+        })
+      })
+      
+      const data = await response.json()
+      
+      if (data.ok) {
+        setMessage('Caption updated successfully!')
+        setShowModal(false)
+        setEditingCaption(null)
+        resetForm()
+        await fetchCaptions()
+      } else {
+        setError(data.error || 'Failed to update caption')
+      }
+    } catch (err) {
+      setError('Failed to update caption')
+    }
+  }
+
+  const deleteCaption = async (captionId: number) => {
+    if (!confirm('Are you sure you want to delete this caption?')) return
+    
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/captions/${captionId}`, {
+        method: 'DELETE'
+      })
+      
+      if (response.ok) {
+        setMessage('Caption deleted successfully!')
+        await fetchCaptions()
+      } else {
+        setError('Failed to delete caption')
+      }
+    } catch (err) {
+      setError('Failed to delete caption')
+    }
+  }
+
+  const resetAllCaptions = async () => {
+    if (!confirm('Are you sure you want to mark all captions as unused? This cannot be undone.')) return
+    
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/captions/reset`, {
+        method: 'POST'
+      })
+      
+      const data = await response.json()
+      
+      if (data.ok) {
+        setMessage('All captions marked as unused!')
+        await fetchCaptions()
+      } else {
+        setError(data.error || 'Failed to reset captions')
+      }
+    } catch (err) {
+      setError('Failed to reset captions')
+    }
+  }
+
+  const uploadCsv = async (file: File) => {
+    try {
+      setCsvUploading(true)
+      
+      const formData = new FormData()
+      formData.append('csv_file', file)
+      
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/captions/upload`, {
+        method: 'POST',
+        body: formData
+      })
+      
+      const data = await response.json()
+      
+      if (data.ok) {
+        setMessage(`Successfully uploaded ${data.count} captions!`)
+        await fetchCaptions()
+      } else {
+        setError(data.error || 'Failed to upload CSV')
+      }
+    } catch (err) {
+      setError('Failed to upload CSV')
+    } finally {
+      setCsvUploading(false)
+    }
+  }
+
+  const openEditModal = (caption: Caption) => {
+    setEditingCaption(caption)
+    setFormData({
+      text: caption.text,
+      category: caption.category || '',
+      tags: caption.tags ? caption.tags.join(', ') : ''
+    })
+    setShowModal(true)
+  }
+
+  const resetForm = () => {
+    setFormData({ text: '', category: '', tags: '' })
+    setEditingCaption(null)
+    setError('')
+    setMessage('')
+  }
+
+  const unusedCount = captions.filter(c => !c.used).length
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 p-8">
-        <div className="max-w-6xl mx-auto">
-          <div className="modern-card p-8">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-400 mx-auto"></div>
-              <p className="mt-4 text-gray-300">Loading captions...</p>
-            </div>
-          </div>
+      <Layout>
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
         </div>
-      </div>
+      </Layout>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 p-8">
-      <div className="max-w-6xl mx-auto">
-        <div className="modern-card p-8">
-          <h1 className="text-3xl font-bold gradient-text mb-8">Captions Management</h1>
+    <Layout>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Captions</h1>
+            <p className="text-gray-600 mt-1">Manage your caption library for automated posting</p>
+          </div>
           
-          {error && (
-            <div className="bg-red-900/20 border border-red-500 text-red-300 px-4 py-3 rounded-lg mb-6">
-              {error}
+          <div className="flex items-center space-x-3">
+            <input
+              ref={csvInputRef}
+              type="file"
+              accept=".csv"
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (file) uploadCsv(file)
+              }}
+              className="hidden"
+            />
+            
+            <button
+              onClick={() => csvInputRef.current?.click()}
+              disabled={csvUploading}
+              className="btn-secondary flex items-center space-x-2"
+            >
+              <CloudArrowUpIcon className="w-5 h-5" />
+              <span>{csvUploading ? 'Uploading...' : 'Upload CSV'}</span>
+            </button>
+            
+            <button
+              onClick={resetAllCaptions}
+              className="btn-ghost flex items-center space-x-2"
+            >
+              <ArrowPathIcon className="w-5 h-5" />
+              <span>Reset All</span>
+            </button>
+            
+            <button
+              onClick={() => setShowModal(true)}
+              className="btn-primary flex items-center space-x-2"
+            >
+              <PlusIcon className="w-5 h-5" />
+              <span>Add Caption</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="card">
+            <div className="text-center">
+              <p className="text-2xl font-bold text-gray-900">{captions.length}</p>
+              <p className="text-sm text-gray-600">Total Captions</p>
+            </div>
+          </div>
+          <div className="card">
+            <div className="text-center">
+              <p className="text-2xl font-bold text-green-600">{unusedCount}</p>
+              <p className="text-sm text-gray-600">Unused</p>
+            </div>
+          </div>
+          <div className="card">
+            <div className="text-center">
+              <p className="text-2xl font-bold text-blue-600">{captions.length - unusedCount}</p>
+              <p className="text-sm text-gray-600">Used</p>
+            </div>
+          </div>
+          <div className="card">
+            <div className="text-center">
+              <p className="text-2xl font-bold text-purple-600">
+                {captions.length > 0 ? Math.round((unusedCount / captions.length) * 100) : 0}%
+              </p>
+              <p className="text-sm text-gray-600">Available</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Messages */}
+        {error && (
+          <div className="glass-card border-red-200 bg-red-50 rounded-xl p-4">
+            <div className="flex items-center">
+              <ExclamationTriangleIcon className="w-5 h-5 text-red-600 mr-2" />
+              <p className="text-red-700">{error}</p>
+              <button onClick={() => setError('')} className="ml-auto">
+                <XMarkIcon className="w-5 h-5 text-red-600" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {message && (
+          <div className="glass-card border-green-200 bg-green-50 rounded-xl p-4">
+            <div className="flex items-center">
+              <CheckIcon className="w-5 h-5 text-green-600 mr-2" />
+              <p className="text-green-700">{message}</p>
+              <button onClick={() => setMessage('')} className="ml-auto">
+                <XMarkIcon className="w-5 h-5 text-green-600" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Captions Grid */}
+        <div className="card">
+          <div className="card-header">
+            <h2 className="card-title">Caption Library</h2>
+            <span className="text-sm text-gray-500">{captions.length} total</span>
+          </div>
+
+          {captions.length === 0 ? (
+            <div className="text-center py-12">
+              <PlusIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No captions yet</h3>
+              <p className="text-gray-600 mb-4">Add captions to start automated posting</p>
+              <button onClick={() => setShowModal(true)} className="btn-primary">
+                Add Your First Caption
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {captions.map((caption) => (
+                <div
+                  key={caption.id}
+                  className={`glass-card rounded-xl p-4 border ${
+                    caption.used ? 'border-gray-200 bg-gray-50/50' : 'border-green-200 bg-green-50/30'
+                  }`}
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <span className={`badge ${caption.used ? 'badge-warning' : 'badge-success'}`}>
+                      {caption.used ? 'Used' : 'Available'}
+                    </span>
+                    <div className="flex space-x-1">
+                      <button
+                        onClick={() => openEditModal(caption)}
+                        className="p-1 text-gray-400 hover:text-gray-600"
+                      >
+                        <PencilIcon className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => deleteCaption(caption.id)}
+                        className="p-1 text-gray-400 hover:text-red-600"
+                      >
+                        <TrashIcon className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <p className="text-sm text-gray-900 mb-3 overflow-hidden" style={{
+                    display: '-webkit-box',
+                    WebkitLineClamp: 3,
+                    WebkitBoxOrient: 'vertical'
+                  }}>
+                    {caption.text}
+                  </p>
+                  
+                  {caption.category && (
+                    <p className="text-xs text-blue-600 mb-1">
+                      Category: {caption.category}
+                    </p>
+                  )}
+                  
+                  {caption.tags && caption.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mb-2">
+                      {caption.tags.map((tag, index) => (
+                        <span key={index} className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  
+                  <p className="text-xs text-gray-500">
+                    Added {new Date(caption.created_at).toLocaleDateString()}
+                  </p>
+                  
+                  {caption.used_at && (
+                    <p className="text-xs text-gray-500">
+                      Used {new Date(caption.used_at).toLocaleDateString()}
+                    </p>
+                  )}
+                </div>
+              ))}
             </div>
           )}
+        </div>
 
-          {/* Add New Caption */}
-          <div className="modern-card p-6 mb-8">
-            <h2 className="text-xl font-semibold text-white mb-4">Add New Caption</h2>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Caption Text</label>
-                <textarea
-                  value={newCaption.text}
-                  onChange={(e) => setNewCaption(prev => ({ ...prev, text: e.target.value }))}
-                  className="w-full p-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
-                  rows={3}
-                  placeholder="Enter your caption text..."
-                />
+        {/* Add/Edit Caption Modal */}
+        {showModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="card w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+              <div className="card-header">
+                <h3 className="card-title">
+                  {editingCaption ? 'Edit Caption' : 'Add Caption'}
+                </h3>
+                <button onClick={() => { setShowModal(false); resetForm(); }}>
+                  <XMarkIcon className="w-6 h-6 text-gray-400" />
+                </button>
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Category</label>
-                <input
-                  type="text"
-                  value={newCaption.category}
-                  onChange={(e) => setNewCaption(prev => ({ ...prev, category: e.target.value }))}
-                  className="w-full p-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
-                  placeholder="general"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Tags</label>
-                <div className="flex gap-2 mb-2">
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Caption Text *
+                  </label>
+                  <textarea
+                    value={formData.text}
+                    onChange={(e) => setFormData({ ...formData, text: e.target.value })}
+                    placeholder="Write your caption here..."
+                    rows={4}
+                    className="form-input resize-none"
+                    required
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    {formData.text.length} characters
+                  </p>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Category
+                  </label>
                   <input
                     type="text"
-                    value={tagInput}
-                    onChange={(e) => setTagInput(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
-                    className="flex-1 p-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
-                    placeholder="Add a tag..."
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    placeholder="e.g., motivation, lifestyle, business"
+                    className="form-input"
                   />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Tags
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.tags}
+                    onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
+                    placeholder="tag1, tag2, tag3"
+                    className="form-input"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Separate tags with commas
+                  </p>
+                </div>
+                
+                <div className="flex space-x-3 pt-4">
                   <button
-                    onClick={addTag}
-                    className="modern-button px-4 py-3"
+                    onClick={editingCaption ? updateCaption : createCaption}
+                    className="btn-primary flex-1"
+                    disabled={!formData.text.trim()}
                   >
-                    Add
+                    {editingCaption ? 'Update Caption' : 'Add Caption'}
+                  </button>
+                  <button
+                    onClick={() => { setShowModal(false); resetForm(); }}
+                    className="btn-ghost flex-1"
+                  >
+                    Cancel
                   </button>
                 </div>
-                {newCaption.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {newCaption.tags.map((tag, index) => (
-                      <span
-                        key={index}
-                        className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-purple-600 text-white"
-                      >
-                        {tag}
-                        <button
-                          onClick={() => removeTag(tag)}
-                          className="ml-2 text-purple-200 hover:text-white"
-                        >
-                          ×
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                )}
               </div>
-
-              <button
-                onClick={addCaption}
-                disabled={uploading || !newCaption.text.trim()}
-                className="modern-button w-full py-3 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {uploading ? 'Adding...' : 'Add Caption'}
-              </button>
             </div>
           </div>
-
-          {/* CSV Upload */}
-          <div className="modern-card p-6 mb-8">
-            <h2 className="text-xl font-semibold text-white mb-4">Upload CSV</h2>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">CSV File</label>
-                <input
-                  type="file"
-                  accept=".csv"
-                  onChange={(e) => setCsvFile(e.target.files?.[0] || null)}
-                  className="w-full p-3 bg-gray-800 border border-gray-600 rounded-lg text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-600 file:text-white hover:file:bg-purple-700"
-                />
-              </div>
-
-              <div className="text-sm text-gray-400">
-                <p>CSV format: text,category,tags</p>
-                <p>Example: "Hello world",general,"tag1|tag2|tag3"</p>
-              </div>
-
-              <button
-                onClick={uploadCSV}
-                disabled={uploading || !csvFile}
-                className="modern-button w-full py-3 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {uploading ? 'Uploading...' : 'Upload CSV'}
-              </button>
-            </div>
-          </div>
-
-          {/* Captions List */}
-          <div className="modern-card p-6">
-            <h2 className="text-xl font-semibold text-white mb-4">All Captions ({captions.length})</h2>
-            
-            {captions.length === 0 ? (
-              <p className="text-gray-400 text-center py-8">No captions found. Add your first caption above!</p>
-            ) : (
-              <div className="space-y-4">
-                {captions.map((caption) => (
-                  <div key={caption.id} className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
-                    <div className="flex justify-between items-start mb-2">
-                      <p className="text-white font-medium">{caption.text}</p>
-                      <span className={`px-2 py-1 rounded text-xs ${
-                        caption.used ? 'bg-green-600 text-green-100' : 'bg-yellow-600 text-yellow-100'
-                      }`}>
-                        {caption.used ? 'Used' : 'Available'}
-                      </span>
-                    </div>
-                    
-                    <div className="flex items-center gap-4 text-sm text-gray-400">
-                      <span>Category: {caption.category}</span>
-                      <span>Created: {new Date(caption.created_at).toLocaleDateString()}</span>
-                    </div>
-                    
-                    {caption.tags && caption.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {caption.tags.map((tag, index) => (
-                          <span
-                            key={index}
-                            className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-purple-600 text-white"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+        )}
       </div>
-
-      {/* Footer */}
-      <footer className="w-full border-t border-gray-700 py-4 text-center text-sm text-gray-400 mt-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <a href="/privacy" className="hover:underline text-purple-400">Privacy Policy</a>
-          {' '}•{' '}
-          <a href="/terms" className="hover:underline text-purple-400">Terms of Service</a>
-          {' '}•{' '}
-          <a href="/data-deletion" className="hover:underline text-purple-400">Data Deletion</a>
-          {' '}•{' '}
-          <span>© 2025 Threadly. All rights reserved.</span>
-        </div>
-      </footer>
-    </div>
+    </Layout>
   )
-} 
+}

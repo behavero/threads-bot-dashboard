@@ -53,11 +53,18 @@ def login_account():
         
         # Create account in database
         db = DatabaseManager()
+        
+        # Check connection status
+        from services.session_store import session_store
+        has_session = session_store.exists(username)
+        connection_status = "connected_session" if has_session else "disconnected"
+        
         account_data = {
             "username": username,
             "description": description,
             "status": "enabled",
             "provider": "direct" if not cfg.is_configured else "meta_oauth",
+            "connection_status": connection_status,
             "created_at": datetime.now().isoformat()
         }
         
@@ -106,3 +113,163 @@ def test_login():
         "error": "Legacy test login removed. Please use Meta OAuth flow to connect your Threads account.",
         "oauth_required": True
     }), 400
+
+@accounts.route('/api/accounts/<int:account_id>/session', methods=['POST'])
+def upload_session(account_id):
+    """Upload session file for an account"""
+    try:
+        if 'session_file' not in request.files:
+            return jsonify({
+                "ok": False,
+                "error": "No session file provided"
+            }), 400
+        
+        file = request.files['session_file']
+        if file.filename == '':
+            return jsonify({
+                "ok": False,
+                "error": "No file selected"
+            }), 400
+        
+        # Get account
+        db = DatabaseManager()
+        account = db.get_account_by_id(account_id)
+        if not account:
+            return jsonify({
+                "ok": False,
+                "error": "Account not found"
+            }), 404
+        
+        username = account['username']
+        
+        # Parse session data
+        try:
+            import json
+            session_data = json.loads(file.read().decode('utf-8'))
+        except Exception as e:
+            return jsonify({
+                "ok": False,
+                "error": f"Invalid session file format: {str(e)}"
+            }), 400
+        
+        # Save session
+        from services.session_store import session_store
+        if session_store.save_session(username, session_data):
+            # Update account connection status
+            db.update_account(account_id, {
+                'connection_status': 'connected_session',
+                'updated_at': datetime.now().isoformat()
+            })
+            
+            logger.info(f"✅ Session uploaded for account {account_id} ({username})")
+            return jsonify({
+                "ok": True,
+                "account_id": account_id,
+                "username": username,
+                "message": "Session uploaded successfully"
+            }), 200
+        else:
+            return jsonify({
+                "ok": False,
+                "error": "Failed to save session"
+            }), 500
+            
+    except Exception as e:
+        logger.error(f"❌ Error uploading session: {e}")
+        return jsonify({
+            "ok": False,
+            "error": str(e)
+        }), 500
+
+@accounts.route('/api/accounts/<int:account_id>/status', methods=['GET'])
+def check_account_status(account_id):
+    """Check account connection status and posting capabilities"""
+    try:
+        # Get account
+        db = DatabaseManager()
+        account = db.get_account_by_id(account_id)
+        if not account:
+            return jsonify({
+                "ok": False,
+                "error": "Account not found"
+            }), 404
+        
+        # Check status using ThreadsClient
+        from services.threads_api import threads_client
+        status = threads_client.check_account_status(account)
+        
+        return jsonify({
+            "ok": True,
+            "status": status
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"❌ Error checking account status: {e}")
+        return jsonify({
+            "ok": False,
+            "error": str(e)
+        }), 500
+
+@accounts.route('/api/accounts/<int:account_id>', methods=['PATCH'])
+def update_account(account_id):
+    """Update account settings (autopilot, cadence, etc.)"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                "ok": False,
+                "error": "No JSON data provided"
+            }), 400
+        
+        # Get account
+        db = DatabaseManager()
+        account = db.get_account_by_id(account_id)
+        if not account:
+            return jsonify({
+                "ok": False,
+                "error": "Account not found"
+            }), 404
+        
+        # Build update data
+        update_data = {}
+        
+        if 'autopilot_enabled' in data:
+            update_data['autopilot_enabled'] = bool(data['autopilot_enabled'])
+        
+        if 'cadence_minutes' in data:
+            cadence = int(data['cadence_minutes'])
+            if cadence not in [5, 10, 15, 30, 60]:
+                return jsonify({
+                    "ok": False,
+                    "error": "Invalid cadence value"
+                }), 400
+            update_data['cadence_minutes'] = cadence
+        
+        if 'description' in data:
+            update_data['description'] = data['description']
+        
+        if update_data:
+            update_data['updated_at'] = datetime.now().isoformat()
+            
+            if db.update_account(account_id, update_data):
+                return jsonify({
+                    "ok": True,
+                    "message": "Account updated successfully"
+                }), 200
+            else:
+                return jsonify({
+                    "ok": False,
+                    "error": "Failed to update account"
+                }), 500
+        else:
+            return jsonify({
+                "ok": True,
+                "message": "No changes made"
+            }), 200
+            
+    except Exception as e:
+        logger.error(f"❌ Error updating account: {e}")
+        return jsonify({
+            "ok": False,
+            "error": str(e)
+        }), 500

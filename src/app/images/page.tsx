@@ -1,257 +1,466 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import Image from 'next/image'
+import { useEffect, useState, useRef } from 'react'
+import Layout from '@/components/Layout'
+import { 
+  PlusIcon, 
+  CloudArrowUpIcon,
+  LinkIcon,
+  TrashIcon,
+  EyeIcon,
+  CheckIcon,
+  XMarkIcon,
+  ExclamationTriangleIcon
+} from '@heroicons/react/24/outline'
 
-interface ImageFile {
+interface Image {
   id: number
   filename: string
   url: string
-  size: number
-  type: string
+  alt_text: string | null
+  use_count: number
   created_at: string
+  last_used_at: string | null
+}
+
+interface ImageFormData {
+  url: string
+  alt_text: string
 }
 
 export default function ImagesPage() {
-  const [images, setImages] = useState<ImageFile[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [images, setImages] = useState<Image[]>([])
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [uploading, setUploading] = useState(false)
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([])
   const [message, setMessage] = useState('')
+  const [showModal, setShowModal] = useState(false)
+  const [modalType, setModalType] = useState<'upload' | 'url'>('upload')
+  const [formData, setFormData] = useState<ImageFormData>({
+    url: '',
+    alt_text: ''
+  })
+  const [uploading, setUploading] = useState(false)
+  const [previewImage, setPreviewImage] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    fetchUploadedImages()
+    fetchImages()
   }, [])
 
-  const fetchUploadedImages = async () => {
+  const fetchImages = async () => {
     try {
-      console.log('Fetching uploaded images...')
-      const response = await fetch('https://threads-bot-dashboard-3.onrender.com/api/images')
+      setLoading(true)
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/images`)
       const data = await response.json()
       
-      console.log('Images response:', data)
-      
-      if (data.success) {
-        setImages(data.images)
-        console.log('Images loaded:', data.images.length)
+      if (data.ok) {
+        setImages(data.images || [])
       } else {
-        console.error('Failed to fetch images:', data.error)
+        setError(data.error || 'Failed to fetch images')
       }
-    } catch (error) {
-      console.error('Error fetching images:', error)
+    } catch (err) {
+      setError('Failed to connect to server')
     } finally {
-      setIsLoading(false)
+      setLoading(false)
     }
   }
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const fileArray = Array.from(e.target.files)
-      console.log('Selected images:', fileArray.map(f => ({ name: f.name, size: f.size, type: f.type })))
-      setSelectedFiles(fileArray)
-    }
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setUploading(true)
-    setMessage('')
-
+  const uploadFile = async (file: File) => {
     try {
-      const formData = new FormData()
+      setUploading(true)
       
-      selectedFiles.forEach(image => {
-        formData.append('images', image)
-      })
-
-      console.log('Uploading images:', selectedFiles.map(img => img.name))
-
-      const response = await fetch('https://threads-bot-dashboard-3.onrender.com/api/images', {
+      const formData = new FormData()
+      formData.append('image_file', file)
+      formData.append('alt_text', formData.alt_text || '')
+      
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/images/upload`, {
         method: 'POST',
         body: formData
       })
-
-      console.log('Upload response status:', response.status)
-
-      // Check if response is ok before trying to parse JSON
-      if (!response.ok) {
-        const errorText = await response.text()
-        console.error('Server error response:', errorText)
-        setMessage(`Upload failed: Server returned ${response.status} - ${errorText.substring(0, 100)}`)
-        return
-      }
-
-      // Try to parse JSON response
-      let data
-      try {
-        data = await response.json()
-        console.log('Upload response data:', data)
-      } catch (jsonError) {
-        const responseText = await response.text()
-        console.error('JSON parsing error:', jsonError)
-        console.error('Response text:', responseText)
-        setMessage(`Upload failed: Invalid JSON response - ${responseText.substring(0, 100)}`)
-        return
-      }
-
-      if (data.success) {
-        setMessage('Upload successful!')
-        setSelectedFiles([])
-        // Refresh the content list
-        await fetchUploadedImages()
+      
+      const data = await response.json()
+      
+      if (data.ok) {
+        setMessage('Image uploaded successfully!')
+        setShowModal(false)
+        resetForm()
+        await fetchImages()
       } else {
-        setMessage('Upload failed: ' + (data.error || 'Unknown error'))
+        setError(data.error || 'Failed to upload image')
       }
-    } catch (error) {
-      console.error('Upload error:', error)
-      setMessage('Upload failed: ' + error)
+    } catch (err) {
+      setError('Failed to upload image')
     } finally {
       setUploading(false)
     }
   }
 
-  const handleDeleteImage = async (id: number, filename: string) => {
-    if (!confirm('Are you sure you want to delete this image?')) return
-
+  const addImageByUrl = async () => {
     try {
-      const response = await fetch(`https://threads-bot-dashboard-3.onrender.com/api/images/${id}`, {
-        method: 'DELETE'
+      setUploading(true)
+      
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/images`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          url: formData.url,
+          alt_text: formData.alt_text || null
+        })
       })
-
+      
       const data = await response.json()
-
-      if (data.success) {
-        await fetchUploadedImages()
+      
+      if (data.ok) {
+        setMessage('Image added successfully!')
+        setShowModal(false)
+        resetForm()
+        await fetchImages()
       } else {
-        setError(data.error || 'Failed to delete image')
+        setError(data.error || 'Failed to add image')
       }
-    } catch (error) {
-      console.error('Error deleting image:', error)
-      setError('Error deleting image')
+    } catch (err) {
+      setError('Failed to add image')
+    } finally {
+      setUploading(false)
     }
   }
 
-  return (
-    <div className="space-y-6 sm:space-y-8">
-      {/* Status Indicators */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
-        <div className="modern-card p-4 sm:p-6 text-center hover:scale-105 transition-transform duration-300">
-          <div className="text-2xl sm:text-3xl font-bold gradient-text mb-2">
-            {/* supabaseStatus === 'Connected' ? '✓' : '✗' */}
-            {/* This variable is not defined in the new code, so it will be removed or commented out */}
-            {/* For now, I'm keeping it as is, but it will cause a runtime error */}
-            {/* <div className="text-2xl sm:text-3xl font-bold gradient-text mb-2">
-              {supabaseStatus === 'Connected' ? '✓' : '✗'}
-            </div> */}
-            {/* <div className="text-xs sm:text-sm text-gray-300">Supabase Status</div> */}
-          </div>
-          <div className="text-xs sm:text-sm text-gray-300">Supabase Status</div>
-        </div>
-        
-        <div className="modern-card p-4 sm:p-6 text-center hover:scale-105 transition-transform duration-300">
-          <div className="text-2xl sm:text-3xl font-bold gradient-text mb-2">{images.length}</div>
-          <div className="text-xs sm:text-sm text-gray-300">Uploaded Images</div>
-        </div>
-        
-        <div className="modern-card p-4 sm:p-6 text-center hover:scale-105 transition-transform duration-300">
-          <div className="text-2xl sm:text-3xl font-bold gradient-text mb-2">{selectedFiles.length}</div>
-          <div className="text-xs sm:text-sm text-gray-300">Selected Images</div>
-        </div>
-      </div>
+  const deleteImage = async (imageId: number) => {
+    if (!confirm('Are you sure you want to delete this image?')) return
+    
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/images/${imageId}`, {
+        method: 'DELETE'
+      })
+      
+      if (response.ok) {
+        setMessage('Image deleted successfully!')
+        await fetchImages()
+      } else {
+        setError('Failed to delete image')
+      }
+    } catch (err) {
+      setError('Failed to delete image')
+    }
+  }
 
-      {/* Upload Form */}
-      <div className="modern-card p-6 sm:p-8">
-        <h3 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">Upload Images</h3>
-        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-          <div className="space-y-2">
-            <label htmlFor="images" className="text-sm font-medium text-gray-300">
-              Select Images
-            </label>
-            <input
-              id="images"
-              type="file"
-              multiple
-              accept=".png,.jpg,.jpeg,.gif,.webp"
-              onChange={handleImageChange}
-              className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-transparent border border-gray-600 rounded-lg text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs sm:file:text-sm file:font-medium file:bg-purple-600 file:text-white hover:file:bg-purple-700 transition-colors"
-            />
-            {selectedFiles.length > 0 && (
-              <div className="mt-2 text-xs sm:text-sm text-gray-400">
-                Selected {selectedFiles.length} file(s): {selectedFiles.map(img => img.name).join(', ')}
-              </div>
-            )}
+  const openModal = (type: 'upload' | 'url') => {
+    setModalType(type)
+    setShowModal(true)
+    resetForm()
+  }
+
+  const resetForm = () => {
+    setFormData({ url: '', alt_text: '' })
+    setPreviewImage(null)
+    setError('')
+    setMessage('')
+  }
+
+  const handleFileSelect = (file: File) => {
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader()
+      reader.onload = (e) => setPreviewImage(e.target?.result as string)
+      reader.readAsDataURL(file)
+      
+      // Auto-set alt text from filename
+      const filename = file.name.split('.')[0]
+      setFormData(prev => ({ ...prev, alt_text: filename.replace(/[_-]/g, ' ') }))
+    }
+  }
+
+  const totalUseCount = images.reduce((sum, img) => sum + img.use_count, 0)
+  const averageUseCount = images.length > 0 ? Math.round(totalUseCount / images.length) : 0
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+        </div>
+      </Layout>
+    )
+  }
+
+  return (
+    <Layout>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Images</h1>
+            <p className="text-gray-600 mt-1">Manage your image library for automated posting</p>
           </div>
           
-          {message && (
-            <div className={`p-3 rounded-lg text-sm sm:text-base ${
-              message.includes('successful') 
-                ? 'bg-green-500/10 text-green-400 border border-green-500/30' 
-                : 'bg-red-500/10 text-red-400 border border-red-500/30'
-            }`}>
-              {message}
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={() => openModal('url')}
+              className="btn-secondary flex items-center space-x-2"
+            >
+              <LinkIcon className="w-5 h-5" />
+              <span>Add URL</span>
+            </button>
+            
+            <button
+              onClick={() => openModal('upload')}
+              className="btn-primary flex items-center space-x-2"
+            >
+              <CloudArrowUpIcon className="w-5 h-5" />
+              <span>Upload Image</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="card">
+            <div className="text-center">
+              <p className="text-2xl font-bold text-gray-900">{images.length}</p>
+              <p className="text-sm text-gray-600">Total Images</p>
+            </div>
+          </div>
+          <div className="card">
+            <div className="text-center">
+              <p className="text-2xl font-bold text-blue-600">{totalUseCount}</p>
+              <p className="text-sm text-gray-600">Total Uses</p>
+            </div>
+          </div>
+          <div className="card">
+            <div className="text-center">
+              <p className="text-2xl font-bold text-purple-600">{averageUseCount}</p>
+              <p className="text-sm text-gray-600">Avg Uses</p>
+            </div>
+          </div>
+          <div className="card">
+            <div className="text-center">
+              <p className="text-2xl font-bold text-green-600">
+                {images.filter(img => img.use_count === 0).length}
+              </p>
+              <p className="text-sm text-gray-600">Unused</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Messages */}
+        {error && (
+          <div className="glass-card border-red-200 bg-red-50 rounded-xl p-4">
+            <div className="flex items-center">
+              <ExclamationTriangleIcon className="w-5 h-5 text-red-600 mr-2" />
+              <p className="text-red-700">{error}</p>
+              <button onClick={() => setError('')} className="ml-auto">
+                <XMarkIcon className="w-5 h-5 text-red-600" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {message && (
+          <div className="glass-card border-green-200 bg-green-50 rounded-xl p-4">
+            <div className="flex items-center">
+              <CheckIcon className="w-5 h-5 text-green-600 mr-2" />
+              <p className="text-green-700">{message}</p>
+              <button onClick={() => setMessage('')} className="ml-auto">
+                <XMarkIcon className="w-5 h-5 text-green-600" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Images Grid */}
+        <div className="card">
+          <div className="card-header">
+            <h2 className="card-title">Image Library</h2>
+            <span className="text-sm text-gray-500">{images.length} total</span>
+          </div>
+
+          {images.length === 0 ? (
+            <div className="text-center py-12">
+              <CloudArrowUpIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No images yet</h3>
+              <p className="text-gray-600 mb-4">Upload or add images to enhance your posts</p>
+              <div className="flex justify-center space-x-3">
+                <button onClick={() => openModal('upload')} className="btn-primary">
+                  Upload Image
+                </button>
+                <button onClick={() => openModal('url')} className="btn-secondary">
+                  Add by URL
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {images.map((image) => (
+                <div
+                  key={image.id}
+                  className="glass-card rounded-xl overflow-hidden border border-gray-200"
+                >
+                  <div className="aspect-square relative bg-gray-100">
+                    <img
+                      src={image.url}
+                      alt={image.alt_text || image.filename}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement
+                        target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMDAgMTAwTDEwMCAxMDBaIiBzdHJva2U9IiM5Q0E5QjQiIHN0cm9rZS13aWR0aD0iMiIvPgo8L3N2Zz4K'
+                      }}
+                    />
+                    <div className="absolute top-2 right-2 flex space-x-1">
+                      <button
+                        onClick={() => window.open(image.url, '_blank')}
+                        className="p-1 bg-black bg-opacity-50 rounded text-white hover:bg-opacity-70"
+                      >
+                        <EyeIcon className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => deleteImage(image.id)}
+                        className="p-1 bg-black bg-opacity-50 rounded text-white hover:bg-opacity-70"
+                      >
+                        <TrashIcon className="w-4 h-4" />
+                      </button>
+                    </div>
+                    
+                    {image.use_count > 0 && (
+                      <div className="absolute top-2 left-2">
+                        <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded">
+                          {image.use_count} uses
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="p-3">
+                    <p className="text-sm font-medium text-gray-900 truncate">
+                      {image.filename}
+                    </p>
+                    
+                    {image.alt_text && (
+                      <p className="text-xs text-gray-600 mt-1 line-clamp-2">
+                        {image.alt_text}
+                      </p>
+                    )}
+                    
+                    <div className="flex items-center justify-between mt-2">
+                      <p className="text-xs text-gray-500">
+                        {new Date(image.created_at).toLocaleDateString()}
+                      </p>
+                      
+                      {image.last_used_at && (
+                        <p className="text-xs text-blue-600">
+                          Last used {new Date(image.last_used_at).toLocaleDateString()}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
-          
-          <button 
-            type="submit" 
-            className="modern-button px-4 sm:px-6 py-2 sm:py-3 glow-on-hover w-full sm:w-auto" 
-            disabled={uploading || selectedFiles.length === 0}
-          >
-            {uploading ? 'Uploading...' : 'Upload Images'}
-          </button>
-        </form>
-      </div>
+        </div>
 
-      {/* Uploaded Images */}
-      {images.length > 0 && (
-        <div className="modern-card p-6 sm:p-8">
-          <h3 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">Uploaded Images</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-            {images.map((image) => (
-              <div key={image.id} className="relative group">
-                <img
-                  src={image.url}
-                  alt={image.filename}
-                  className="w-full h-32 sm:h-48 object-cover rounded-lg border border-gray-700"
-                />
-                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 flex items-center justify-center rounded-lg">
+        {/* Add Image Modal */}
+        {showModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="card w-full max-w-lg max-h-[90vh] overflow-y-auto">
+              <div className="card-header">
+                <h3 className="card-title">
+                  {modalType === 'upload' ? 'Upload Image' : 'Add Image by URL'}
+                </h3>
+                <button onClick={() => { setShowModal(false); resetForm(); }}>
+                  <XMarkIcon className="w-6 h-6 text-gray-400" />
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                {modalType === 'upload' ? (
+                  <div>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0]
+                        if (file) handleFileSelect(file)
+                      }}
+                      className="hidden"
+                    />
+                    
+                    <div
+                      onClick={() => fileInputRef.current?.click()}
+                      className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:border-blue-400 transition-colors"
+                    >
+                      {previewImage ? (
+                        <div className="space-y-4">
+                          <img
+                            src={previewImage}
+                            alt="Preview"
+                            className="w-32 h-32 object-cover rounded-lg mx-auto"
+                          />
+                          <p className="text-sm text-gray-600">Click to select a different image</p>
+                        </div>
+                      ) : (
+                        <div>
+                          <CloudArrowUpIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                          <p className="text-lg text-gray-600 mb-2">Drop image here or click to browse</p>
+                          <p className="text-sm text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Image URL *
+                    </label>
+                    <input
+                      type="url"
+                      value={formData.url}
+                      onChange={(e) => setFormData({ ...formData, url: e.target.value })}
+                      placeholder="https://example.com/image.jpg"
+                      className="form-input"
+                      required
+                    />
+                  </div>
+                )}
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Alt Text / Description
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.alt_text}
+                    onChange={(e) => setFormData({ ...formData, alt_text: e.target.value })}
+                    placeholder="Describe the image for accessibility"
+                    className="form-input"
+                  />
+                </div>
+                
+                <div className="flex space-x-3 pt-4">
                   <button
-                    onClick={() => handleDeleteImage(image.id, image.filename)}
-                    className="modern-button px-3 py-1 text-xs sm:text-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => {
+                      if (modalType === 'upload' && fileInputRef.current?.files?.[0]) {
+                        uploadFile(fileInputRef.current.files[0])
+                      } else if (modalType === 'url') {
+                        addImageByUrl()
+                      }
+                    }}
+                    className="btn-primary flex-1"
+                    disabled={uploading || (modalType === 'url' && !formData.url)}
                   >
-                    Delete
+                    {uploading ? 'Processing...' : modalType === 'upload' ? 'Upload Image' : 'Add Image'}
+                  </button>
+                  <button
+                    onClick={() => { setShowModal(false); resetForm(); }}
+                    className="btn-ghost flex-1"
+                  >
+                    Cancel
                   </button>
                 </div>
-                <div className="mt-2 text-xs text-gray-400 truncate">
-                  {image.filename}
-                </div>
               </div>
-            ))}
+            </div>
           </div>
-        </div>
-      )}
-
-      {images.length === 0 && (
-        <div className="modern-card p-8 sm:p-12 text-center">
-          <div className="text-4xl sm:text-6xl mb-4">🖼️</div>
-          <h3 className="text-lg sm:text-xl font-semibold text-white mb-2">No Images Yet</h3>
-          <p className="text-gray-300 mb-6 text-sm sm:text-base">Upload your first image to start building your content library</p>
-        </div>
-      )}
-
-      {/* Footer */}
-      <footer className="w-full border-t border-gray-700 py-4 text-center text-sm text-gray-400 mt-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <a href="/privacy" className="hover:underline text-purple-400">Privacy Policy</a>
-          {' '}•{' '}
-          <a href="/terms" className="hover:underline text-purple-400">Terms of Service</a>
-          {' '}•{' '}
-          <a href="/data-deletion" className="hover:underline text-purple-400">Data Deletion</a>
-          {' '}•{' '}
-          <span>© 2025 Threadly. All rights reserved.</span>
-        </div>
-      </footer>
-    </div>
+        )}
+      </div>
+    </Layout>
   )
-} 
+}

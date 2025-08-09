@@ -164,8 +164,10 @@ class AutopilotService:
             return None
     
     def post_once(self, account: Dict, caption: Dict, image: Optional[Dict] = None) -> Tuple[bool, str]:
-        """Post once using available methods"""
+        """Post once using ThreadsClient"""
         try:
+            from services.threads_api import threads_client
+            
             account_id = account['id']
             username = account['username']
             caption_text = caption['text']
@@ -176,50 +178,15 @@ class AutopilotService:
             if image_url:
                 logger.info(f"🖼️ Image: {image_url}")
             
-            # Try official Meta API first if enabled
-            if self.meta_publish_enabled and account.get('threads_user_id'):
-                success, message = self._post_via_meta_api(account, caption_text, image_url)
-                if success:
-                    return True, message
-            
-            # Fallback to session-based posting
-            success, message = self._post_via_session(account, caption_text, image_url)
+            # Use ThreadsClient which handles method selection automatically
+            success, message = threads_client.post_thread(account, caption_text, image_url)
             return success, message
             
         except Exception as e:
             logger.error(f"❌ Error posting for account {account.get('id')}: {e}")
             return False, str(e)
     
-    def _post_via_meta_api(self, account: Dict, caption_text: str, image_url: Optional[str]) -> Tuple[bool, str]:
-        """Post via official Meta Threads API"""
-        try:
-            # This would use the official Meta API
-            # For now, return success as placeholder
-            logger.info(f"🔐 Using Meta API for account {account['id']}")
-            return True, "Posted via Meta API (placeholder)"
-            
-        except Exception as e:
-            logger.error(f"❌ Meta API posting failed: {e}")
-            return False, f"Meta API error: {str(e)}"
-    
-    def _post_via_session(self, account: Dict, caption_text: str, image_url: Optional[str]) -> Tuple[bool, str]:
-        """Post via session-based client"""
-        try:
-            username = account['username']
-            
-            # Check if session exists
-            session_data = self.db.get_session_data(account['id'])
-            if not session_data:
-                return False, "No session data available"
-            
-            # This would use the session to post
-            # For now, return success as placeholder
-            logger.info(f"🔑 Using session for account {account['id']}")
-            return True, "Posted via session (placeholder)"
-            
-        except Exception as e:
-            logger.error(f"❌ Session posting failed: {e}")
-            return False, f"Session error: {str(e)}"
+
     
     def record_posting_history(self, account_id: int, caption_id: int, image_id: Optional[int], 
                               success: bool, message: str) -> bool:

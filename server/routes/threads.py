@@ -47,27 +47,45 @@ def post_to_threads():
                 "error": "Account not found"
             }), 404
         
-        # Simple posting logic (placeholder for now)
-        # This will be replaced with actual Threads API integration
-        post_data = {
-            "account_id": account_id,
-            "username": account.get('username'),
-            "text": text,
-            "image_url": image_url,
-            "posted_at": datetime.now().isoformat(),
-            "status": "posted"
-        }
+        # Use ThreadsClient for posting
+        from services.threads_api import threads_client
+        
+        success, message = threads_client.post_thread(account, text, image_url)
         
         # Store posting record
-        db.record_posting_history(account_id, None, None, None, "posted")
+        status = "posted" if success else "failed"
+        db.record_posting_history(account_id, None, None, None, status)
         
-        logger.info(f"✅ Posted successfully for account {account_id}")
-        
-        return jsonify({
-            "ok": True,
-            "post": post_data,
-            "message": "Post created successfully"
-        }), 201
+        if success:
+            # Update account last posted time
+            db.update_account(account_id, {
+                'last_posted_at': datetime.now().isoformat(),
+                'updated_at': datetime.now().isoformat()
+            })
+            
+            logger.info(f"✅ Posted successfully for account {account_id}")
+            
+            post_data = {
+                "account_id": account_id,
+                "username": account.get('username'),
+                "text": text,
+                "image_url": image_url,
+                "posted_at": datetime.now().isoformat(),
+                "status": "posted",
+                "method": threads_client.get_posting_method(account)
+            }
+            
+            return jsonify({
+                "ok": True,
+                "post": post_data,
+                "message": f"Post created successfully via {post_data['method']}"
+            }), 201
+        else:
+            logger.error(f"❌ Failed to post for account {account_id}: {message}")
+            return jsonify({
+                "ok": False,
+                "error": message
+            }), 500
         
     except Exception as e:
         logger.error(f"❌ Error posting to Threads: {e}")

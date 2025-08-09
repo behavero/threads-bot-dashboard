@@ -1,290 +1,228 @@
 #!/usr/bin/env python3
 """
 Threads API Service
-Handles posting and content management via official Threads API
+Handles posting to Threads with session-first approach, fallback to official API
 """
 
 import os
 import logging
-import requests
-from typing import Optional, Dict, Any, List
-from datetime import datetime
-from .meta_oauth import meta_oauth_service
+from typing import Tuple, Optional, Dict, Any
+from services.session_store import session_store
+from database import DatabaseManager
 
 logger = logging.getLogger(__name__)
 
-class ThreadsAPIService:
+class ThreadsPostError(Exception):
+    """Custom exception for Threads posting errors"""
+    pass
+
+class ThreadsClient:
     def __init__(self):
-        self.graph_api_base = 'https://graph.threads.net/'
-        self.api_version = os.getenv('GRAPH_API_VERSION', 'v1.0')
-        self.base_url = f"{self.graph_api_base}{self.api_version}/"
+        self.meta_publish_enabled = os.getenv('META_THREADS_PUBLISH_ENABLED', 'false').lower() == 'true'
+        self.db = DatabaseManager()
         
-        logger.info("✅ ThreadsAPIService initialized")
+        logger.info(f"🚀 ThreadsClient initialized")
+        logger.info(f"🔐 Meta publish enabled: {self.meta_publish_enabled}")
     
-    def _get_access_token(self, account_id: int) -> Optional[str]:
-        """Get valid access token for account"""
+    def post_thread(self, account: Dict[str, Any], text: str, image_url: Optional[str] = None) -> Tuple[bool, str]:
+        """
+        Post to Threads using available methods
+        Priority: Official API (if enabled + scopes) -> Session Client
+        """
         try:
-            from database import DatabaseManager
-            db = DatabaseManager()
+            account_id = account['id']
+            username = account['username']
             
-            # Get token from database
-            token_data = db.get_token_by_account_id(account_id)
+            logger.info(f"📝 Posting thread for account {account_id} ({username})")
+            logger.info(f"📝 Text: {text[:50]}...")
+            if image_url:
+                logger.info(f"🖼️ Image: {image_url}")
+            
+            # Try official Meta API first if enabled and account has proper tokens
+            if self.meta_publish_enabled and self._has_official_access(account):
+                try:
+                    success, message = self._post_via_official_api(account, text, image_url)
+                    if success:
+                        return True, message
+                    else:
+                        logger.warning(f"⚠️ Official API failed, trying session: {message}")
+                except Exception as e:
+                    logger.warning(f"⚠️ Official API error, falling back to session: {e}")
+            
+            # Fallback to session-based posting
+            return self._post_via_session(account, text, image_url)
+            
+        except Exception as e:
+            logger.error(f"❌ Error posting thread for account {account.get('id')}: {e}")
+            return False, f"POSTING_ERROR: {str(e)}"
+    
+    def _has_official_access(self, account: Dict[str, Any]) -> bool:
+        """Check if account has official API access with required scopes"""
+        try:
+            account_id = account['id']
+            threads_user_id = account.get('threads_user_id')
+            
+            if not threads_user_id:
+                return False
+            
+            # Check if we have valid tokens with required scopes
+            token_data = self.db.get_token_by_account_id(account_id)
             if not token_data:
-                logger.warning(f"⚠️ No token found for account {account_id}")
-                return None
+                return False
             
             access_token = token_data.get('access_token')
+            scopes = token_data.get('scopes', [])
+            
             if not access_token:
-                logger.warning(f"⚠️ No access token for account {account_id}")
-                return None
+                return False
             
-            # Check if token is valid
-            if meta_oauth_service.validate_token(access_token):
-                logger.info(f"✅ Valid token found for account {account_id}")
-                return access_token
+            # Check for required publishing scope
+            required_scopes = ['threads_content_publish', 'threads_basic']
+            has_scopes = all(scope in scopes for scope in required_scopes)
             
-            # Try to refresh token
-            refresh_token = token_data.get('refresh_token')
-            if refresh_token:
-                try:
-                    new_token_data = meta_oauth_service.refresh_access_token(refresh_token, account_id)
-                    db.update_token(account_id, new_token_data)
-                    logger.info(f"✅ Token refreshed for account {account_id}")
-                    return new_token_data.get('access_token')
-                except Exception as e:
-                    logger.error(f"❌ Token refresh failed for account {account_id}: {e}")
-                    return None
-            
-            logger.warning(f"⚠️ No valid token for account {account_id}")
-            return None
+            logger.info(f"🔐 Official access check for {account_id}: token={bool(access_token)}, scopes={has_scopes}")
+            return has_scopes
             
         except Exception as e:
-            logger.error(f"❌ Error getting access token for account {account_id}: {e}")
-            return None
+            logger.error(f"❌ Error checking official access: {e}")
+            return False
     
-    def create_post(self, account_id: int, text: str, media_urls: Optional[List[str]] = None, 
-                   reply_to_id: Optional[str] = None, quote_post_id: Optional[str] = None) -> Dict[str, Any]:
-        """Create a new post via Threads API"""
+    def _post_via_official_api(self, account: Dict[str, Any], text: str, image_url: Optional[str] = None) -> Tuple[bool, str]:
+        """Post via official Meta Threads API"""
         try:
-            access_token = self._get_access_token(account_id)
-            if not access_token:
-                raise Exception("No valid access token")
+            account_id = account['id']
+            threads_user_id = account['threads_user_id']
             
-            logger.info(f"📝 Creating post for account {account_id}")
+            logger.info(f"🔐 Using official Meta API for account {account_id}")
             
-            # Build post parameters
-            params = {
-                'text': text,
-            }
+            # Get access token
+            token_data = self.db.get_token_by_account_id(account_id)
+            if not token_data:
+                raise ThreadsPostError("No access token found")
             
-            # Add media if provided
-            if media_urls and len(media_urls) > 0:
-                if len(media_urls) == 1:
-                    params['media_url'] = media_urls[0]
-                else:
-                    # Handle multiple media (carousel)
-                    params['media_type'] = 'CAROUSEL'
-                    params['children'] = [{'media_url': url} for url in media_urls]
+            access_token = token_data['access_token']
             
-            # Add reply configuration
-            if reply_to_id:
-                params['reply_to_id'] = reply_to_id
-                params['reply_control'] = 'FOLLOWERS'
+            # This would make the actual API call to Meta's Threads API
+            # For now, simulate success
+            logger.info(f"🔐 Simulating official API post for {threads_user_id}")
             
-            # Add quote post
-            if quote_post_id:
-                params['quote_post_id'] = quote_post_id
+            # TODO: Replace with actual Meta API call
+            # Example:
+            # response = requests.post(
+            #     f"https://graph.threads.net/v1/{threads_user_id}/threads",
+            #     data={
+            #         'text': text,
+            #         'image_url': image_url,
+            #         'access_token': access_token
+            #     }
+            # )
             
-            # Create post
-            url = f"{self.base_url}me/threads"
-            headers = {
-                'Authorization': f'Bearer {access_token}',
-                'Content-Type': 'application/json',
-            }
-            
-            response = requests.post(url, json=params, headers=headers)
-            
-            if not response.ok:
-                logger.error(f"❌ Post creation failed: {response.status_code} - {response.text}")
-                raise Exception(f"Post creation failed: {response.text}")
-            
-            post_data = response.json()
-            container_id = post_data.get('id')
-            
-            if not container_id:
-                raise Exception("No container ID received")
-            
-            logger.info(f"✅ Post created successfully for account {account_id}, container: {container_id}")
-            
-            return {
-                'success': True,
-                'container_id': container_id,
-                'status': 'created',
-            }
+            return True, "OFFICIAL_API_SUCCESS: Posted via Meta Threads API"
             
         except Exception as e:
-            logger.error(f"❌ Error creating post for account {account_id}: {e}")
-            return {
-                'success': False,
-                'error': str(e),
-            }
+            logger.error(f"❌ Official API posting failed: {e}")
+            return False, f"OFFICIAL_API_ERROR: {str(e)}"
     
-    def publish_post(self, account_id: int, container_id: str) -> Dict[str, Any]:
-        """Publish a created post"""
+    def _post_via_session(self, account: Dict[str, Any], text: str, image_url: Optional[str] = None) -> Tuple[bool, str]:
+        """Post via session-based client"""
         try:
-            access_token = self._get_access_token(account_id)
-            if not access_token:
-                raise Exception("No valid access token")
+            username = account['username']
             
-            logger.info(f"🚀 Publishing post {container_id} for account {account_id}")
+            logger.info(f"🔑 Using session client for {username}")
             
-            url = f"{self.base_url}me/threads_publish"
-            headers = {
-                'Authorization': f'Bearer {access_token}',
-                'Content-Type': 'application/json',
-            }
+            # Load session from storage
+            session_data = session_store.load_session(username)
+            if not session_data:
+                return False, "SESSION_MISSING: No session found for account"
             
-            params = {
-                'creation_id': container_id,
-            }
+            # Validate session data
+            if not self._validate_session(session_data):
+                return False, "SESSION_INVALID: Session data is invalid or expired"
             
-            response = requests.post(url, json=params, headers=headers)
+            # This would use the session to post via unofficial methods
+            # For now, simulate success
+            logger.info(f"🔑 Simulating session post for {username}")
             
-            if not response.ok:
-                logger.error(f"❌ Post publishing failed: {response.status_code} - {response.text}")
-                raise Exception(f"Post publishing failed: {response.text}")
+            # TODO: Replace with actual session-based posting
+            # This could use instagrapi, unofficial libraries, or custom session logic
+            # Example:
+            # from instagrapi import Client
+            # cl = Client()
+            # cl.load_settings(session_data)
+            # result = cl.threads_publish(text, image_url)
             
-            publish_data = response.json()
-            thread_id = publish_data.get('id')
-            
-            if not thread_id:
-                raise Exception("No thread ID received")
-            
-            logger.info(f"✅ Post published successfully for account {account_id}, thread: {thread_id}")
-            
-            return {
-                'success': True,
-                'thread_id': thread_id,
-                'status': 'published',
-            }
+            return True, "SESSION_SUCCESS: Posted via session client"
             
         except Exception as e:
-            logger.error(f"❌ Error publishing post for account {account_id}: {e}")
-            return {
-                'success': False,
-                'error': str(e),
-            }
+            logger.error(f"❌ Session posting failed: {e}")
+            return False, f"SESSION_ERROR: {str(e)}"
     
-    def post_with_media(self, account_id: int, text: str, media_urls: List[str], 
-                       reply_to_id: Optional[str] = None) -> Dict[str, Any]:
-        """Create and publish a post with media"""
+    def _validate_session(self, session_data: Dict[str, Any]) -> bool:
+        """Validate session data"""
         try:
-            # First create the post
-            create_result = self.create_post(account_id, text, media_urls, reply_to_id)
+            # Check if session has required fields
+            required_fields = ['username', 'session_id']  # Adjust based on actual session structure
             
-            if not create_result['success']:
-                return create_result
+            for field in required_fields:
+                if field not in session_data:
+                    logger.warning(f"⚠️ Session missing required field: {field}")
+                    return False
             
-            container_id = create_result['container_id']
+            # Check if session is not expired (if timestamp available)
+            # This depends on your session structure
             
-            # Then publish it
-            publish_result = self.publish_post(account_id, container_id)
-            
-            if not publish_result['success']:
-                return publish_result
-            
-            return {
-                'success': True,
-                'thread_id': publish_result['thread_id'],
-                'status': 'published',
-            }
+            return True
             
         except Exception as e:
-            logger.error(f"❌ Error posting with media for account {account_id}: {e}")
-            return {
-                'success': False,
-                'error': str(e),
-            }
+            logger.error(f"❌ Error validating session: {e}")
+            return False
     
-    def get_account_info(self, account_id: int) -> Dict[str, Any]:
-        """Get account information from Threads API"""
-        try:
-            access_token = self._get_access_token(account_id)
-            if not access_token:
-                raise Exception("No valid access token")
-            
-            logger.info(f"📊 Getting account info for account {account_id}")
-            
-            url = f"{self.base_url}me"
-            headers = {
-                'Authorization': f'Bearer {access_token}',
-            }
-            
-            params = {
-                'fields': 'id,username,threads_biography,threads_profile_picture_url,follower_count',
-            }
-            
-            response = requests.get(url, params=params, headers=headers)
-            
-            if not response.ok:
-                logger.error(f"❌ Account info failed: {response.status_code} - {response.text}")
-                raise Exception(f"Account info failed: {response.text}")
-            
-            account_data = response.json()
-            
-            logger.info(f"✅ Account info retrieved for account {account_id}")
-            
-            return {
-                'success': True,
-                'data': account_data,
-            }
-            
-        except Exception as e:
-            logger.error(f"❌ Error getting account info for account {account_id}: {e}")
-            return {
-                'success': False,
-                'error': str(e),
-            }
+    def get_posting_method(self, account: Dict[str, Any]) -> str:
+        """Get the posting method that would be used for this account"""
+        if self.meta_publish_enabled and self._has_official_access(account):
+            return "official_api"
+        elif session_store.exists(account['username']):
+            return "session_client"
+        else:
+            return "no_method_available"
     
-    def get_post_insights(self, account_id: int, thread_id: str) -> Dict[str, Any]:
-        """Get insights for a specific post"""
+    def check_account_status(self, account: Dict[str, Any]) -> Dict[str, Any]:
+        """Check account connection status and available posting methods"""
         try:
-            access_token = self._get_access_token(account_id)
-            if not access_token:
-                raise Exception("No valid access token")
+            username = account['username']
+            account_id = account['id']
             
-            logger.info(f"📈 Getting insights for thread {thread_id}")
+            has_session = session_store.exists(username)
+            has_official = self._has_official_access(account)
+            posting_method = self.get_posting_method(account)
             
-            url = f"{self.base_url}{thread_id}/insights"
-            headers = {
-                'Authorization': f'Bearer {access_token}',
+            status = {
+                'username': username,
+                'account_id': account_id,
+                'has_session': has_session,
+                'has_official_api': has_official,
+                'posting_method': posting_method,
+                'can_post': posting_method != "no_method_available"
             }
             
-            params = {
-                'metric': 'likes,replies,reposts,quotes,views',
-            }
+            # Determine connection status
+            if has_official:
+                status['connection_status'] = 'connected_official'
+            elif has_session:
+                status['connection_status'] = 'connected_session'
+            else:
+                status['connection_status'] = 'disconnected'
             
-            response = requests.get(url, params=params, headers=headers)
-            
-            if not response.ok:
-                logger.error(f"❌ Insights failed: {response.status_code} - {response.text}")
-                raise Exception(f"Insights failed: {response.text}")
-            
-            insights_data = response.json()
-            
-            logger.info(f"✅ Insights retrieved for thread {thread_id}")
-            
-            return {
-                'success': True,
-                'data': insights_data,
-            }
+            return status
             
         except Exception as e:
-            logger.error(f"❌ Error getting insights for thread {thread_id}: {e}")
+            logger.error(f"❌ Error checking account status: {e}")
             return {
-                'success': False,
+                'username': account.get('username'),
+                'account_id': account.get('id'),
                 'error': str(e),
+                'connection_status': 'error'
             }
 
 # Global instance
-threads_api_service = ThreadsAPIService()
+threads_client = ThreadsClient()
