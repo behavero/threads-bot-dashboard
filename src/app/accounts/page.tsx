@@ -331,7 +331,7 @@ export default function AccountsPage() {
                         disabled={!account.threads_connected}
                         onChange={(e) => toggleAutopilot(account.id, e.target.checked)}
                         className="rounded border-glass-border bg-glass-100 text-primary focus:ring-primary/60 disabled:opacity-50 disabled:cursor-not-allowed"
-                        title={!account.threads_connected ? "Connect account first" : ""}
+                        title={!account.threads_connected ? "Reconnect account first" : ""}
                       />
                       <span className="text-sm text-white/80">
                         {account.autopilot_enabled ? 'Enabled' : 'Disabled'}
@@ -372,7 +372,7 @@ export default function AccountsPage() {
                   
                   <div>
                     <div className="flex items-center gap-2">
-                      {/* Connect Button */}
+                      {/* Reconnect Button */}
                       {!account.threads_connected && (
                         <GlassButton
                           size="sm"
@@ -380,10 +380,10 @@ export default function AccountsPage() {
                           className="relative"
                         >
                           <LinkIcon className="w-4 h-4" />
-                          Connect
+                          Reconnect
                           {/* Connection indicator dot */}
                           <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-400 rounded-full animate-pulse" 
-                                title="Connect via Meta OAuth" />
+                                title="Reconnect via Meta OAuth" />
                         </GlassButton>
                       )}
                       
@@ -436,7 +436,7 @@ export default function AccountsPage() {
                             disabled={!account.threads_connected}
                             onChange={(e) => toggleAutopilot(account.id, e.target.checked)}
                             className="rounded border-glass-border bg-glass-100 text-primary focus:ring-primary/60 disabled:opacity-50 disabled:cursor-not-allowed"
-                            title={!account.threads_connected ? "Connect account first" : ""}
+                            title={!account.threads_connected ? "Reconnect account first" : ""}
                           />
                           <span className="text-sm text-white/80">
                             {account.autopilot_enabled ? 'Enabled' : 'Disabled'}
@@ -485,10 +485,10 @@ export default function AccountsPage() {
                           className="flex-1 relative"
                         >
                           <LinkIcon className="w-4 h-4" />
-                          Connect
+                          Reconnect
                           {/* Connection indicator dot */}
                           <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-400 rounded-full animate-pulse" 
-                                title="Connect via Meta OAuth" />
+                                title="Reconnect via Meta OAuth" />
                         </GlassButton>
                       )}
                       

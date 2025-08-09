@@ -88,8 +88,8 @@ export async function updateCadence(
 }
 
 export function startOAuth(accountId: string): void {
-  // Direct redirect to backend OAuth endpoint - backend will handle the redirect to Meta
-  window.location.href = `${API_BASE}/auth/meta/start?account_id=${accountId}`;
+  // Direct redirect to backend OAuth endpoint with reconnect purpose - backend will handle the redirect to Meta
+  window.location.href = `${API_BASE}/auth/meta/start?account_id=${accountId}&purpose=reconnect`;
 }
 
 export async function testPost(accountId: string): Promise<TestPostResponse> {
