@@ -7,30 +7,26 @@
 -- ============================================
 
 -- Basic autopilot configuration
-ALTER TABLE accounts 
-  ADD COLUMN IF NOT EXISTS autopilot_enabled boolean DEFAULT false,
-  ADD COLUMN IF NOT EXISTS cadence_minutes int DEFAULT 10,
-  ADD COLUMN IF NOT EXISTS jitter_seconds int DEFAULT 60;
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS autopilot_enabled boolean DEFAULT false;
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS cadence_minutes int DEFAULT 10;
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS jitter_seconds int DEFAULT 60;
 
 -- Scheduling and status tracking  
-ALTER TABLE accounts 
-  ADD COLUMN IF NOT EXISTS last_posted_at timestamptz NULL,
-  ADD COLUMN IF NOT EXISTS next_run_at timestamptz NULL,
-  ADD COLUMN IF NOT EXISTS threads_user_id text NULL,
-  ADD COLUMN IF NOT EXISTS connection_status text DEFAULT 'disconnected';
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS last_posted_at timestamptz NULL;
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS next_run_at timestamptz NULL;
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS threads_user_id text NULL;
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS connection_status text DEFAULT 'disconnected';
 
 -- Resilience and error handling
-ALTER TABLE accounts 
-  ADD COLUMN IF NOT EXISTS last_caption_id int NULL,
-  ADD COLUMN IF NOT EXISTS last_error text NULL,
-  ADD COLUMN IF NOT EXISTS error_count int DEFAULT 0;
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS last_caption_id int NULL;
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS last_error text NULL;
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS error_count int DEFAULT 0;
 
 -- ============================================
 -- 2. Add use tracking to images table  
 -- ============================================
 
-ALTER TABLE images 
-  ADD COLUMN IF NOT EXISTS use_count int DEFAULT 0;
+ALTER TABLE images ADD COLUMN IF NOT EXISTS use_count int DEFAULT 0;
 
 -- ============================================
 -- 3. Create autopilot_locks table
