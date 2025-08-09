@@ -11,6 +11,7 @@ interface GlassCardProps {
   actions?: ReactNode
   dense?: boolean
   animate?: boolean
+  style?: React.CSSProperties
 }
 
 const GlassCard = forwardRef<HTMLDivElement, GlassCardProps>(

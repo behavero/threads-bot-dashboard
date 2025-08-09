@@ -229,21 +229,21 @@ export default function Dashboard() {
         <GlassCard title="Recent Activity" className="animate-slide-up" style={{ animationDelay: '400ms' }}>
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <StatusChip status="success" />
+              <div className="w-2 h-2 bg-emerald-400 rounded-full flex-shrink-0"></div>
               <div className="min-w-0 flex-1">
                 <p className="text-body text-sm">Posted to @username1</p>
                 <p className="text-caption">2 minutes ago</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <StatusChip status="info" />
+              <div className="w-2 h-2 bg-blue-400 rounded-full flex-shrink-0"></div>
               <div className="min-w-0 flex-1">
                 <p className="text-body text-sm">Scheduled next post</p>
                 <p className="text-caption">5 minutes ago</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <StatusChip status="success" />
+              <div className="w-2 h-2 bg-emerald-400 rounded-full flex-shrink-0"></div>
               <div className="min-w-0 flex-1">
                 <p className="text-body text-sm">Posted to @username2</p>
                 <p className="text-caption">15 minutes ago</p>
