@@ -155,6 +155,7 @@ try:
     from routes.auth import auth
     from routes.threads import threads
     from routes.scheduler import scheduler
+    from routes.autopilot import autopilot
     from routes.config_status import bp as config_status_bp
     
     app.register_blueprint(accounts)
@@ -162,6 +163,7 @@ try:
     app.register_blueprint(auth, url_prefix='/auth')
     app.register_blueprint(threads, url_prefix='/threads')
     app.register_blueprint(scheduler, url_prefix='/scheduler')
+    app.register_blueprint(autopilot, url_prefix='/autopilot')
     app.register_blueprint(config_status_bp)
     print("✅ Route blueprints registered successfully")
 except ImportError as e:

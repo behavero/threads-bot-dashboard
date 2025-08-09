@@ -1109,4 +1109,21 @@ class DatabaseManager:
                 
         except Exception as e:
             print(f"❌ record_posting_history: Error: {e}")
+            return False
+    
+    def _make_request(self, method: str, url: str, **kwargs):
+        """Make HTTP request with proper headers"""
+        return requests.request(method, url, headers=self.headers, **kwargs)
+    
+    def update_image_use_count(self, image_id: int, update_data: dict) -> bool:
+        """Update image use count"""
+        try:
+            response = requests.patch(
+                f"{self.supabase_url}/rest/v1/images?id=eq.{image_id}",
+                json=update_data,
+                headers=self.headers
+            )
+            return response.status_code == 204
+        except Exception as e:
+            print(f"❌ Error updating image use count: {e}")
             return False 
