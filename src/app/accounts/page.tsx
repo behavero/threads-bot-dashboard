@@ -156,7 +156,8 @@ export default function AccountsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           account_id: accountId,
-          text: `Test post from Threads Bot! 🚀 ${new Date().toLocaleTimeString()}`
+          text: `Test post from Threads Bot! 🚀 ${new Date().toLocaleTimeString()}`,
+          is_test: true
         })
       })
       
@@ -166,7 +167,13 @@ export default function AccountsPage() {
         setMessage(`Test post successful! Method: ${data.post?.method}`)
         await fetchAccounts()
       } else {
-        setError(data.error || 'Test post failed')
+        if (response.status === 429) {
+          setError(`Rate limit: ${data.error}`)
+        } else if (response.status === 403) {
+          setError(`Cannot post: ${data.error}`)
+        } else {
+          setError(data.error || 'Test post failed')
+        }
       }
     } catch (err) {
       setError('Failed to send test post')

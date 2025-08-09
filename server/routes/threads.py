@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Threads API Routes
-Handles direct posting to Threads without OAuth
+Handles direct posting to Threads with session-first approach
 """
 
 import os
@@ -10,13 +10,14 @@ import requests
 from datetime import datetime
 from flask import Blueprint, request, jsonify
 from database import DatabaseManager
+from services.rate_limiter import rate_limiter, TEST_POST_LIMIT, TEST_POST_WINDOW
 
 logger = logging.getLogger(__name__)
 threads = Blueprint('threads', __name__)
 
 @threads.route('/api/threads/post', methods=['POST'])
 def post_to_threads():
-    """Post content to Threads using direct API"""
+    """Post content to Threads using session-first approach"""
     try:
         data = request.get_json()
         if not data:
@@ -28,6 +29,7 @@ def post_to_threads():
         account_id = data.get('account_id')
         text = data.get('text')
         image_url = data.get('image_url')
+        is_test = data.get('is_test', False)
         
         if not account_id or not text:
             return jsonify({
@@ -35,7 +37,25 @@ def post_to_threads():
                 "error": "Account ID and text are required"
             }), 400
         
-        logger.info(f"📝 Posting to Threads for account {account_id}")
+        # Rate limiting for test posts
+        if is_test:
+            rate_key = f"test_post_account_{account_id}"
+            allowed, remaining = rate_limiter.is_allowed(
+                rate_key, TEST_POST_LIMIT, TEST_POST_WINDOW
+            )
+            
+            if not allowed:
+                return jsonify({
+                    "ok": False,
+                    "error": f"Rate limit exceeded. Max {TEST_POST_LIMIT} test posts per hour per account.",
+                    "rate_limit": {
+                        "max_requests": TEST_POST_LIMIT,
+                        "window_seconds": TEST_POST_WINDOW,
+                        "remaining": remaining
+                    }
+                }), 429
+        
+        logger.info(f"📝 Posting to Threads for account {account_id} (test: {is_test})")
         
         # Get account details from database
         db = DatabaseManager()
@@ -46,6 +66,21 @@ def post_to_threads():
                 "ok": False,
                 "error": "Account not found"
             }), 404
+        
+        # Check if account can post (has session or official API)
+        from services.threads_api import threads_client
+        posting_method = threads_client.get_posting_method(account)
+        
+        if posting_method == "no_method_available":
+            return jsonify({
+                "ok": False,
+                "error": "Account cannot post. Please upload a session file or connect via Meta OAuth.",
+                "help": {
+                    "session": "Upload a .json session file in the Accounts page",
+                    "oauth": "Connect via Meta OAuth (requires official API access)"
+                },
+                "connection_status": account.get('connection_status', 'disconnected')
+            }), 403
         
         # Use ThreadsClient for posting
         from services.threads_api import threads_client

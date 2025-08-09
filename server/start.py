@@ -151,20 +151,14 @@ except Exception as e:
 # Register new route blueprints
 try:
     from routes.accounts import accounts
-    from routes.stats import stats
-    from routes.auth import auth
     from routes.threads import threads
-    from routes.scheduler import scheduler
     from routes.autopilot import autopilot
     from routes.captions import captions
     from routes.images import images
     from routes.config_status import bp as config_status_bp
     
     app.register_blueprint(accounts)
-    app.register_blueprint(stats)
-    app.register_blueprint(auth, url_prefix='/auth')
     app.register_blueprint(threads, url_prefix='/threads')
-    app.register_blueprint(scheduler, url_prefix='/scheduler')
     app.register_blueprint(autopilot, url_prefix='/autopilot')
     app.register_blueprint(captions)
     app.register_blueprint(images)
@@ -203,9 +197,20 @@ def status():
         "backend_url": "https://threads-bot-dashboard-3.onrender.com"
     })
 
+@app.route('/health', methods=['GET'])
+def health_simple():
+    """Simple health check endpoint"""
+    from datetime import datetime
+    return jsonify({
+        "ok": True,
+        "time": datetime.now().isoformat(),
+        "service": "threads-bot-backend",
+        "version": "2.0.0"
+    }), 200
+
 @app.route('/api/health')
 def health():
-    """Health check endpoint"""
+    """Detailed health check endpoint"""
     try:
         # Test database connection
         db = DatabaseManager()
@@ -216,8 +221,8 @@ def health():
         oauth_ok = meta_oauth_service.app_id is not None
         
         # Test Threads API service
-        from services.threads_api import threads_api_service
-        threads_ok = threads_api_service.base_url is not None
+        from services.threads_api import threads_client
+        threads_ok = hasattr(threads_client, 'post_thread')
         
         return jsonify({
             "ok": True,
@@ -1040,6 +1045,25 @@ if __name__ == '__main__':
 
     
 
+    
+    # Start rate limiter cleanup task
+    import threading
+    import time
+    
+    def rate_limiter_cleanup():
+        """Periodic cleanup for rate limiter"""
+        while True:
+            try:
+                time.sleep(300)  # Run every 5 minutes
+                from services.rate_limiter import rate_limiter
+                rate_limiter.cleanup_old_entries(max_age_seconds=3600)
+            except Exception as e:
+                logger.error(f"Rate limiter cleanup error: {e}")
+    
+    # Start cleanup thread
+    cleanup_thread = threading.Thread(target=rate_limiter_cleanup, daemon=True)
+    cleanup_thread.start()
+    print("🧹 Rate limiter cleanup thread started")
     
     # Start Flask app
     print(f"🌐 Starting Flask server on port {port}")
