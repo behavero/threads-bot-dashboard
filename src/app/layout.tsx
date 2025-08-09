@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Inter, JetBrains_Mono } from 'next/font/google'
+import { Inter } from 'next/font/google'
 import './globals.css'
 import BackgroundCanvas from '@/components/layout/BackgroundCanvas'
 import AppNav from '@/components/layout/AppNav'
@@ -7,11 +7,7 @@ import AppNav from '@/components/layout/AppNav'
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
-})
-
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ['latin'],
-  variable: '--font-jetbrains-mono',
+  display: 'swap',
 })
 
 export const metadata: Metadata = {
@@ -25,7 +21,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable}`}>
+    <html lang="en" className={inter.variable}>
       <body className="font-sans antialiased">
         <BackgroundCanvas />
         <div className="relative min-h-screen">
