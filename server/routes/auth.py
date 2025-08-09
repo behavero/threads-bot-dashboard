@@ -45,10 +45,15 @@ def start_oauth():
                 "error": "OAuth not configured on this server"
             }), 503
         
+        # Debug: Log OAuth configuration
+        logger.info(f"🔍 OAuth config - App ID: {oauth_service.app_id[:8] if oauth_service.app_id else 'None'}...")
+        logger.info(f"🔍 OAuth config - Redirect URI: {oauth_service.redirect_uri}")
+        
         # Generate OAuth URL
         auth_url = oauth_service.build_auth_url(int(account_id), account['username'])
         
         logger.info(f"🔗 Starting OAuth flow for account {account_id}: {account['username']}")
+        logger.info(f"🔗 Redirect URL: {auth_url}")
         
         # Redirect to Meta OAuth
         return redirect(auth_url)

@@ -30,7 +30,7 @@ class MetaOAuthService:
             logger.warning("⚠️ Meta OAuth not configured - using direct account creation")
         
         self.graph_api_base = 'https://graph.threads.net/'
-        self.auth_base = 'https://www.threads.net'
+        self.auth_base = 'https://www.facebook.com'
         
         # Threads API permissions (from Meta documentation)
         self.scopes = [
@@ -57,7 +57,7 @@ class MetaOAuthService:
                 'state': str(account_id),  # Pass account_id as state
             }
             
-            auth_url = f"{self.auth_base}/oauth/authorize?{urlencode(params)}"
+            auth_url = f"{self.auth_base}/dialog/oauth?{urlencode(params)}"
             logger.info(f"🔗 Built auth URL for account {account_id} ({username})")
             return auth_url
             
