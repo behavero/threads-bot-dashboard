@@ -69,13 +69,13 @@ export default function ImagesPage() {
     try {
       setUploading(true)
       
-      const formData = new FormData()
-      formData.append('image_file', file)
-      formData.append('alt_text', formData.alt_text || '')
+      const uploadFormData = new FormData()
+      uploadFormData.append('image_file', file)
+      uploadFormData.append('alt_text', formData.alt_text || '')
       
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/images/upload`, {
         method: 'POST',
-        body: formData
+        body: uploadFormData
       })
       
       const data = await response.json()

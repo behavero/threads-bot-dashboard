@@ -5,6 +5,9 @@ Contains all route blueprints for the Threads Bot
 """
 
 from .accounts import accounts
-from .stats import stats
+from .threads import threads
+from .autopilot import autopilot
+from .captions import captions
+from .images import images
 
-__all__ = ['accounts', 'stats', 'auth', 'threads', 'scheduler']
+__all__ = ['accounts', 'threads', 'autopilot', 'captions', 'images']

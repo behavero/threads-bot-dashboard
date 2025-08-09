@@ -132,7 +132,6 @@ if not validate_environment():
     exit(1)
 
 from database import DatabaseManager
-from engagement_tracker import engagement_tracker
 import asyncio
 
 app = Flask(__name__)
@@ -297,40 +296,7 @@ def get_status():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/api/stats', methods=['GET'])
-def get_stats():
-    """Get comprehensive statistics"""
-    try:
-        db = DatabaseManager()
-        stats = db.get_statistics()
-        stats["bot_status"] = "running" if bot_running else "stopped"
-        return jsonify(stats)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-@app.route('/api/stats/engagement', methods=['GET'])
-def get_engagement_stats():
-    """Get daily engagement statistics"""
-    try:
-        days = request.args.get('days', 7, type=int)
-        stats = engagement_tracker.get_daily_engagement_stats(days)
-        return jsonify(stats)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-@app.route('/api/stats/refresh', methods=['POST'])
-def refresh_engagement_stats():
-    """Manually refresh engagement data"""
-    try:
-        # Run async function in sync context
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        result = loop.run_until_complete(engagement_tracker.refresh_engagement_data())
-        loop.close()
-        
-        return jsonify(result)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+# Legacy stats routes removed - use /autopilot/status for current stats
 
 @app.route('/api/accounts', methods=['GET'])
 def get_accounts():

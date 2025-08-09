@@ -44,8 +44,8 @@ export default function Dashboard() {
       
       if (accountsData.ok && autopilotData.ok) {
         const accounts = accountsData.accounts || []
-        const sessionAccounts = accounts.filter(a => a.connection_status === 'connected_session').length
-        const officialAccounts = accounts.filter(a => a.connection_status === 'connected_official').length
+        const sessionAccounts = accounts.filter((a: any) => a.connection_status === 'connected_session').length
+        const officialAccounts = accounts.filter((a: any) => a.connection_status === 'connected_official').length
         
         // Get last error from autopilot status
         const errorDetails = autopilotData.error_details || []
@@ -156,16 +156,16 @@ export default function Dashboard() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Accounts Connected</p>
                 <div className="flex items-center space-x-2">
-                  <p className="text-2xl font-bold text-gray-900">{stats?.accountsConnected.total}</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats?.accountsConnected?.total || 0}</p>
                   <div className="flex space-x-1">
-                    {stats?.accountsConnected.session > 0 && (
+                    {(stats?.accountsConnected?.session || 0) > 0 && (
                       <span className="badge-success text-xs">
-                        {stats.accountsConnected.session} Session
+                        {stats?.accountsConnected?.session} Session
                       </span>
                     )}
-                    {stats?.accountsConnected.official > 0 && (
+                    {(stats?.accountsConnected?.official || 0) > 0 && (
                       <span className="badge-info text-xs">
-                        {stats.accountsConnected.official} Official
+                        {stats?.accountsConnected?.official} Official
                       </span>
                     )}
                   </div>
