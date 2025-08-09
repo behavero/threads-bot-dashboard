@@ -326,7 +326,7 @@ def get_accounts():
             logger.info(f"📋 Sample account: {accounts[0]}")
         
         # Return response
-        response_data = {"success": True, "accounts": accounts}
+        response_data = {"ok": True, "accounts": accounts}
         logger.info(f"✅ Returning {len(accounts)} accounts")
         return jsonify(response_data)
         
@@ -372,7 +372,7 @@ def add_account():
         if success:
             logger.info(f"✅ Account {username} added successfully")
             return jsonify({
-                "success": True, 
+                "ok": True, 
                 "message": "Account added successfully"
             }), 201
         else:
@@ -424,7 +424,7 @@ def update_account(account_id):
         
         if success:
             logger.info(f"✅ Account {account_id} updated successfully")
-            return jsonify({"success": True, "message": "Account updated successfully"})
+            return jsonify({"ok": True, "message": "Account updated successfully"})
         else:
             logger.error(f"❌ Failed to update account {account_id}")
             return jsonify({"success": False, "error": "Failed to update account. Please try again."}), 500
@@ -451,7 +451,7 @@ def delete_account(account_id):
         
         if success:
             logger.info(f"✅ Account {account_id} deleted successfully")
-            return jsonify({"success": True, "message": "Account deleted successfully"})
+            return jsonify({"ok": True, "message": "Account deleted successfully"})
         else:
             logger.error(f"❌ Failed to delete account {account_id}")
             return jsonify({"success": False, "error": "Failed to delete account. Please try again."}), 500
@@ -537,7 +537,7 @@ def get_captions():
             processed_captions.append(processed_caption)
         
         logger.info(f"✅ Retrieved {len(processed_captions)} captions")
-        return jsonify({"success": True, "captions": processed_captions})
+        return jsonify({"ok": True, "captions": processed_captions})
         
     except Exception as e:
         error_response, status_code = handle_api_error(e, "get_captions", "Failed to fetch captions")
@@ -728,7 +728,7 @@ def get_images():
             )[0]), 500
         
         logger.info(f"✅ Retrieved {len(images)} images")
-        return jsonify({"success": True, "images": images})
+        return jsonify({"ok": True, "images": images})
         
     except Exception as e:
         error_response, status_code = handle_api_error(e, "get_images", "Failed to fetch images")
@@ -805,7 +805,7 @@ def add_image():
             
             if uploaded_images:
                 return jsonify({
-                    "success": True,
+                    "ok": True,
                     "message": f"Successfully uploaded {len(uploaded_images)} images",
                     "images": uploaded_images
                 }), 201
@@ -853,7 +853,7 @@ def delete_image(image_id):
         
         if success:
             logger.info(f"✅ Image {image_id} deleted successfully")
-            return jsonify({"success": True, "message": "Image deleted successfully"}), 200
+            return jsonify({"ok": True, "message": "Image deleted successfully"}), 200
         else:
             logger.error(f"❌ Failed to delete image {image_id}")
             return jsonify({"success": False, "error": "Failed to delete image. Please try again."}), 500
