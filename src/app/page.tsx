@@ -10,6 +10,7 @@ import {
   ExclamationTriangleIcon,
   PlayIcon
 } from '@heroicons/react/24/outline'
+import { API_BASE } from '@/lib/config'
 
 interface DashboardStats {
   accountsConnected: {
@@ -35,8 +36,8 @@ export default function Dashboard() {
     try {
       // Fetch actual stats from backend
       const [accountsResponse, autopilotResponse] = await Promise.all([
-        fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/accounts`),
-        fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/autopilot/status`)
+        fetch(`${API_BASE}/api/accounts`),
+        fetch(`${API_BASE}/autopilot/status`)
       ])
       
       const accountsData = await accountsResponse.json()
@@ -95,7 +96,7 @@ export default function Dashboard() {
   const runAutopilotTick = async () => {
     setRunningTick(true)
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/autopilot/tick`, {
+      const response = await fetch(`${API_BASE}/autopilot/tick`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

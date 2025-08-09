@@ -12,6 +12,7 @@ import {
   XMarkIcon,
   ExclamationTriangleIcon
 } from '@heroicons/react/24/outline'
+import { API_BASE } from '@/lib/config'
 
 interface Image {
   id: number
@@ -50,7 +51,7 @@ export default function ImagesPage() {
   const fetchImages = async () => {
     try {
       setLoading(true)
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/images`)
+      const response = await fetch(`${API_BASE}/api/images`)
       const data = await response.json()
       
       if (data.ok) {
@@ -73,7 +74,7 @@ export default function ImagesPage() {
       uploadFormData.append('image_file', file)
       uploadFormData.append('alt_text', formData.alt_text || '')
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/images/upload`, {
+      const response = await fetch(`${API_BASE}/api/images/upload`, {
         method: 'POST',
         body: uploadFormData
       })
@@ -99,7 +100,7 @@ export default function ImagesPage() {
     try {
       setUploading(true)
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/images`, {
+      const response = await fetch(`${API_BASE}/api/images`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -129,7 +130,7 @@ export default function ImagesPage() {
     if (!confirm('Are you sure you want to delete this image?')) return
     
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/images/${imageId}`, {
+      const response = await fetch(`${API_BASE}/api/images/${imageId}`, {
         method: 'DELETE'
       })
       

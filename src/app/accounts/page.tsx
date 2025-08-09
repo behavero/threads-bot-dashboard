@@ -11,6 +11,7 @@ import {
   XMarkIcon,
   ExclamationTriangleIcon
 } from '@heroicons/react/24/outline'
+import { API_BASE } from '@/lib/config'
 
 interface Account {
   id: number
@@ -50,7 +51,7 @@ export default function AccountsPage() {
   const fetchAccounts = async () => {
     try {
       setLoading(true)
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/accounts`)
+      const response = await fetch(`${API_BASE}/api/accounts`)
       const data = await response.json()
       
       if (data.ok) {
@@ -67,7 +68,7 @@ export default function AccountsPage() {
 
   const createAccount = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/accounts/login`, {
+      const response = await fetch(`${API_BASE}/api/accounts/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
@@ -90,7 +91,7 @@ export default function AccountsPage() {
 
   const toggleAutopilot = async (accountId: number, enabled: boolean) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/accounts/${accountId}`, {
+      const response = await fetch(`${API_BASE}/api/accounts/${accountId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ autopilot_enabled: enabled })
@@ -107,7 +108,7 @@ export default function AccountsPage() {
 
   const updateCadence = async (accountId: number, cadence: number) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/accounts/${accountId}`, {
+      const response = await fetch(`${API_BASE}/api/accounts/${accountId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ cadence_minutes: cadence })
@@ -129,7 +130,7 @@ export default function AccountsPage() {
       const formData = new FormData()
       formData.append('session_file', file)
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/accounts/${accountId}/session`, {
+      const response = await fetch(`${API_BASE}/api/accounts/${accountId}/session`, {
         method: 'POST',
         body: formData
       })
@@ -151,7 +152,7 @@ export default function AccountsPage() {
 
   const testPost = async (accountId: number) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/threads/post`, {
+      const response = await fetch(`${API_BASE}/api/threads/post`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -12,6 +12,7 @@ import {
   XMarkIcon,
   ExclamationTriangleIcon
 } from '@heroicons/react/24/outline'
+import { API_BASE } from '@/lib/config'
 
 interface Caption {
   id: number
@@ -51,7 +52,7 @@ export default function CaptionsPage() {
   const fetchCaptions = async () => {
     try {
       setLoading(true)
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/captions`)
+      const response = await fetch(`${API_BASE}/api/captions`)
       const data = await response.json()
       
       if (data.ok) {
@@ -70,7 +71,7 @@ export default function CaptionsPage() {
     try {
       const tags = formData.tags ? formData.tags.split(',').map(t => t.trim()).filter(Boolean) : []
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/captions`, {
+      const response = await fetch(`${API_BASE}/api/captions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -101,7 +102,7 @@ export default function CaptionsPage() {
     try {
       const tags = formData.tags ? formData.tags.split(',').map(t => t.trim()).filter(Boolean) : []
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/captions/${editingCaption.id}`, {
+      const response = await fetch(`${API_BASE}/api/captions/${editingCaption.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -131,7 +132,7 @@ export default function CaptionsPage() {
     if (!confirm('Are you sure you want to delete this caption?')) return
     
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/captions/${captionId}`, {
+      const response = await fetch(`${API_BASE}/api/captions/${captionId}`, {
         method: 'DELETE'
       })
       
@@ -150,7 +151,7 @@ export default function CaptionsPage() {
     if (!confirm('Are you sure you want to mark all captions as unused? This cannot be undone.')) return
     
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/captions/reset`, {
+      const response = await fetch(`${API_BASE}/api/captions/reset`, {
         method: 'POST'
       })
       
@@ -174,7 +175,7 @@ export default function CaptionsPage() {
       const formData = new FormData()
       formData.append('csv_file', file)
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/captions/upload`, {
+      const response = await fetch(`${API_BASE}/api/captions/upload`, {
         method: 'POST',
         body: formData
       })
