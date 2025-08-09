@@ -17,19 +17,25 @@ class SessionStore:
         self.supabase_url = os.getenv('SUPABASE_URL')
         self.supabase_key = os.getenv('SUPABASE_SERVICE_ROLE_KEY')
         self.bucket_name = 'sessions'
+        self.configured = False
         
-        if not self.supabase_url or not self.supabase_key:
-            raise ValueError("Missing Supabase credentials for session storage")
-        
-        self.headers = {
-            'Authorization': f'Bearer {self.supabase_key}',
-            'Content-Type': 'application/json'
-        }
-        
-        logger.info("✅ SessionStore initialized")
+        if self.supabase_url and self.supabase_key:
+            self.headers = {
+                'Authorization': f'Bearer {self.supabase_key}',
+                'Content-Type': 'application/json'
+            }
+            self.configured = True
+            logger.info("✅ SessionStore initialized with Supabase")
+        else:
+            self.headers = {}
+            logger.warning("⚠️ SessionStore initialized without Supabase credentials - session features disabled")
     
     def exists(self, username: str) -> bool:
         """Check if session exists for username"""
+        if not self.configured:
+            logger.debug(f"🔕 Session check disabled for {username} - Supabase not configured")
+            return False
+            
         try:
             file_path = f"{username}.json"
             
@@ -48,6 +54,10 @@ class SessionStore:
     
     def load_session(self, username: str) -> Optional[Dict[Any, Any]]:
         """Load session data for username"""
+        if not self.configured:
+            logger.debug(f"🔕 Session load disabled for {username} - Supabase not configured")
+            return None
+            
         try:
             file_path = f"{username}.json"
             
@@ -73,6 +83,10 @@ class SessionStore:
     
     def save_session(self, username: str, session_data: Dict[Any, Any]) -> bool:
         """Save session data for username"""
+        if not self.configured:
+            logger.warning(f"🔕 Session save disabled for {username} - Supabase not configured")
+            return False
+            
         try:
             file_path = f"{username}.json"
             
@@ -118,6 +132,10 @@ class SessionStore:
     
     def delete_session(self, username: str) -> bool:
         """Delete session for username"""
+        if not self.configured:
+            logger.warning(f"🔕 Session delete disabled for {username} - Supabase not configured")
+            return False
+            
         try:
             file_path = f"{username}.json"
             
