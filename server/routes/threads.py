@@ -29,7 +29,30 @@ def post_to_threads():
         account_id = data.get('account_id')
         text = data.get('text')
         image_url = data.get('image_url')
+        image_id = data.get('image_id')
+        use_random = data.get('use_random', False)
         is_test = data.get('is_test', False)
+        
+        # If use_random is True, pick random caption and image
+        if use_random:
+            db = DatabaseManager()
+            
+            # Pick random caption
+            captions = db.get_captions()
+            unused_captions = [c for c in captions if not c.get('used', False)]
+            if unused_captions:
+                import random
+                caption = random.choice(unused_captions)
+                text = caption['text']
+                logger.info(f"📝 Using random caption: {text[:50]}...")
+            
+            # Pick random image
+            images = db.get_images()
+            if images:
+                import random
+                image = random.choice(images)
+                image_url = image['url']
+                logger.info(f"🖼️ Using random image: {image['filename']}")
         
         if not account_id or not text:
             return jsonify({

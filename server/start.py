@@ -150,6 +150,7 @@ except Exception as e:
 # Register new route blueprints
 try:
     from routes.accounts import accounts
+    from routes.auth import auth
     from routes.threads import threads
     from routes.autopilot import autopilot
     from routes.captions import captions
@@ -157,6 +158,7 @@ try:
     from routes.config_status import bp as config_status_bp
     
     app.register_blueprint(accounts)
+    app.register_blueprint(auth)
     app.register_blueprint(threads, url_prefix='/threads')
     app.register_blueprint(autopilot, url_prefix='/autopilot')
     app.register_blueprint(captions)
@@ -307,28 +309,56 @@ def get_accounts():
         # Test database connection
         db = DatabaseManager()
         logger.info(f"✅ DatabaseManager initialized")
-        logger.info(f"📊 Supabase URL: {db.supabase_url}")
-        logger.info(f"📊 Headers configured: {list(db.headers.keys())}")
         
         # Get accounts with safe operation
-        accounts = safe_database_operation("get_active_accounts", db.get_active_accounts)
+        raw_accounts = safe_database_operation("get_active_accounts", db.get_active_accounts)
         
-        if accounts is None:
+        if raw_accounts is None:
             return jsonify(handle_api_error(
                 Exception("Database operation failed"), 
                 "get_accounts", 
                 "Failed to fetch accounts from database"
             )[0]), 500
         
-        logger.info(f"📋 Retrieved {len(accounts)} accounts")
+        logger.info(f"📋 Retrieved {len(raw_accounts)} raw accounts")
         
-        if accounts:
-            logger.info(f"📋 Sample account: {accounts[0]}")
+        # Transform accounts to match frontend expectations
+        accounts = []
+        for account in raw_accounts:
+            # Check if account has a token (connected via OAuth)
+            has_token = db.get_token_by_account_id(account['id']) is not None
+            
+            # Check session connection
+            from services.session_store import session_store
+            has_session = session_store.exists(account.get('username', ''))
+            
+            # Determine connection status
+            if has_token:
+                threads_connected = True
+                connection_status = 'connected_official'
+            elif has_session:
+                threads_connected = True
+                connection_status = 'connected_session'
+            else:
+                threads_connected = False
+                connection_status = 'disconnected'
+            
+            # Transform account data
+            transformed_account = {
+                "id": str(account['id']),
+                "username": account.get('username', ''),
+                "description": account.get('description', ''),
+                "threads_connected": threads_connected,
+                "autopilot_enabled": bool(account.get('autopilot_enabled', False)),
+                "cadence_minutes": int(account.get('cadence_minutes', 10)),
+                "next_run_at": account.get('next_run_at'),
+                "last_posted_at": account.get('last_posted_at'),
+                "connection_status": connection_status
+            }
+            accounts.append(transformed_account)
         
-        # Return response
-        response_data = {"ok": True, "accounts": accounts}
-        logger.info(f"✅ Returning {len(accounts)} accounts")
-        return jsonify(response_data)
+        logger.info(f"✅ Returning {len(accounts)} transformed accounts")
+        return jsonify({"ok": True, "accounts": accounts})
         
     except Exception as e:
         error_response, status_code = handle_api_error(e, "get_accounts", "Failed to fetch accounts")

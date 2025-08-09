@@ -1157,4 +1157,44 @@ class DatabaseManager:
             return None
         except Exception as e:
             print(f"❌ Error getting token: {e}")
-            return None 
+            return None
+    
+    def store_access_token(self, account_id: int, token_data: dict) -> bool:
+        """Store access token for an account"""
+        try:
+            print(f"🔍 store_access_token: Storing token for account {account_id}")
+            
+            # First, check if token already exists
+            existing_token = self.get_token_by_account_id(account_id)
+            
+            token_record = {
+                'account_id': account_id,
+                'access_token': token_data.get('access_token'),
+                'refresh_token': token_data.get('refresh_token'),
+                'expires_at': token_data.get('expires_at'),
+                'scope': token_data.get('scope'),
+                'updated_at': datetime.now().isoformat()
+            }
+            
+            if existing_token:
+                # Update existing token
+                response = requests.patch(
+                    f"{self.supabase_url}/rest/v1/oauth_tokens?id=eq.{existing_token['id']}",
+                    json=token_record,
+                    headers=self.headers
+                )
+            else:
+                # Create new token
+                token_record['created_at'] = datetime.now().isoformat()
+                response = requests.post(
+                    f"{self.supabase_url}/rest/v1/oauth_tokens",
+                    json=token_record,
+                    headers=self.headers
+                )
+            
+            print(f"🔍 store_access_token: Response status: {response.status_code}")
+            return response.status_code in [200, 201, 204]
+            
+        except Exception as e:
+            print(f"❌ store_access_token: Error: {e}")
+            return False 

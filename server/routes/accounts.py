@@ -238,7 +238,7 @@ def update_account(account_id):
         
         if 'cadence_minutes' in data:
             cadence = int(data['cadence_minutes'])
-            if cadence not in [5, 10, 15, 30, 60]:
+            if cadence not in [5, 10, 15, 30, 60, 120, 180, 240]:
                 return jsonify({
                     "ok": False,
                     "error": "Invalid cadence value"

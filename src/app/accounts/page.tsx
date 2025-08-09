@@ -9,26 +9,22 @@ import {
   CheckIcon,
   XMarkIcon,
   ExclamationTriangleIcon,
-  EllipsisVerticalIcon
+  EllipsisVerticalIcon,
+  LinkIcon
 } from '@heroicons/react/24/outline'
-import { API_BASE } from '@/lib/config'
+import { 
+  fetchAccounts, 
+  patchAccount, 
+  startOAuth, 
+  testPost, 
+  uploadSession 
+} from '@/lib/api/client'
+import type { Account } from '@/types/accounts'
 import GlassCard from '@/components/ui/GlassCard'
 import GlassButton from '@/components/ui/GlassButton'
 import StatusChip from '@/components/ui/StatusChip'
 import GlassModal from '@/components/ui/GlassModal'
-
-interface Account {
-  id: number
-  username: string
-  description: string
-  status: string
-  connection_status: 'connected_session' | 'connected_official' | 'disconnected'
-  autopilot_enabled: boolean
-  cadence_minutes: number
-  next_run_at: string | null
-  last_posted_at: string | null
-  created_at: string
-}
+import { API_BASE } from '@/lib/config'
 
 interface AccountFormData {
   username: string
@@ -45,26 +41,36 @@ export default function AccountsPage() {
     username: '',
     description: ''
   })
-  const [sessionUploads, setSessionUploads] = useState<{[key: number]: boolean}>({})
-  const sessionInputRefs = useRef<{[key: number]: HTMLInputElement}>({})
+  const [sessionUploads, setSessionUploads] = useState<{[key: string]: boolean}>({})
+  const [testingPosts, setTestingPosts] = useState<{[key: string]: boolean}>({})
+  const sessionInputRefs = useRef<{[key: string]: HTMLInputElement}>({})
 
   useEffect(() => {
-    fetchAccounts()
+    loadAccounts()
+    
+    // Check for OAuth success/error in URL params
+    const urlParams = new URLSearchParams(window.location.search)
+    const success = urlParams.get('success')
+    const error = urlParams.get('error')
+    
+    if (success === 'oauth_completed') {
+      setMessage('Account connected successfully via Meta OAuth!')
+      // Clear URL params
+      window.history.replaceState({}, '', '/accounts')
+    } else if (error) {
+      setError(`OAuth failed: ${error}`)
+      // Clear URL params
+      window.history.replaceState({}, '', '/accounts')
+    }
   }, [])
 
-  const fetchAccounts = async () => {
+  const loadAccounts = async () => {
     try {
       setLoading(true)
-      const response = await fetch(`${API_BASE}/api/accounts`)
-      const data = await response.json()
-      
-      if (data.ok) {
-        setAccounts(data.accounts || [])
-      } else {
-        setError(data.error || 'Failed to fetch accounts')
-      }
+      const accountsData = await fetchAccounts()
+      setAccounts(accountsData)
     } catch (err) {
-      setError('Failed to connect to server')
+      setError(err instanceof Error ? err.message : 'Failed to fetch accounts')
     } finally {
       setLoading(false)
     }
@@ -84,7 +90,7 @@ export default function AccountsPage() {
         setMessage('Account created successfully!')
         setShowModal(false)
         resetForm()
-        await fetchAccounts()
+        await loadAccounts()
       } else {
         setError(data.error || 'Failed to create account')
       }
@@ -93,96 +99,85 @@ export default function AccountsPage() {
     }
   }
 
-  const toggleAutopilot = async (accountId: number, enabled: boolean) => {
+  const toggleAutopilot = async (accountId: string, enabled: boolean) => {
+    // Optimistic update
+    setAccounts(prev => prev.map(acc => 
+      acc.id === accountId 
+        ? { ...acc, autopilot_enabled: enabled }
+        : acc
+    ))
+    
     try {
-      const response = await fetch(`${API_BASE}/api/accounts/${accountId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ autopilot_enabled: enabled })
-      })
-      
-      if (response.ok) {
-        await fetchAccounts()
-        setMessage(`Autopilot ${enabled ? 'enabled' : 'disabled'} successfully`)
-      }
+      await patchAccount(accountId, { autopilot_enabled: enabled })
+      setMessage(`Autopilot ${enabled ? 'enabled' : 'disabled'} successfully`)
     } catch (err) {
-      setError('Failed to update autopilot setting')
+      // Revert optimistic update on error
+      setAccounts(prev => prev.map(acc => 
+        acc.id === accountId 
+          ? { ...acc, autopilot_enabled: !enabled }
+          : acc
+      ))
+      setError(err instanceof Error ? err.message : 'Failed to update autopilot setting')
     }
   }
 
-  const updateCadence = async (accountId: number, cadence: number) => {
+  const updateCadence = async (accountId: string, cadence: number) => {
+    // Optimistic update
+    setAccounts(prev => prev.map(acc => 
+      acc.id === accountId 
+        ? { ...acc, cadence_minutes: cadence }
+        : acc
+    ))
+    
     try {
-      const response = await fetch(`${API_BASE}/api/accounts/${accountId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cadence_minutes: cadence })
-      })
-      
-      if (response.ok) {
-        await fetchAccounts()
-        setMessage('Cadence updated successfully')
-      }
+      await patchAccount(accountId, { cadence_minutes: cadence })
+      setMessage('Cadence updated successfully')
     } catch (err) {
-      setError('Failed to update cadence')
+      // Revert optimistic update on error
+      await loadAccounts()
+      setError(err instanceof Error ? err.message : 'Failed to update cadence')
     }
   }
 
-  const uploadSession = async (accountId: number, file: File) => {
+  const handleUploadSession = async (accountId: string, file: File) => {
     try {
       setSessionUploads(prev => ({ ...prev, [accountId]: true }))
-      
-      const formData = new FormData()
-      formData.append('session_file', file)
-      
-      const response = await fetch(`${API_BASE}/api/accounts/${accountId}/session`, {
-        method: 'POST',
-        body: formData
-      })
-      
-      const data = await response.json()
-      
-      if (data.ok) {
-        setMessage('Session uploaded successfully!')
-        await fetchAccounts()
-      } else {
-        setError(data.error || 'Failed to upload session')
-      }
+      await uploadSession(accountId, file)
+      setMessage('Session uploaded successfully!')
+      await loadAccounts()
     } catch (err) {
-      setError('Failed to upload session')
+      setError(err instanceof Error ? err.message : 'Failed to upload session')
     } finally {
       setSessionUploads(prev => ({ ...prev, [accountId]: false }))
     }
   }
 
-  const testPost = async (accountId: number) => {
+  const handleTestPost = async (accountId: string) => {
     try {
-      const response = await fetch(`${API_BASE}/api/threads/post`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          account_id: accountId,
-          text: `Test post from Threads Bot! 🚀 ${new Date().toLocaleTimeString()}`,
-          is_test: true
-        })
-      })
+      setTestingPosts(prev => ({ ...prev, [accountId]: true }))
+      const result = await testPost(accountId)
       
-      const data = await response.json()
-      
-      if (data.ok) {
-        setMessage(`Test post successful! Method: ${data.post?.method}`)
-        await fetchAccounts()
+      if (result.ok) {
+        setMessage(`Test post successful! Method: ${result.post?.method}`)
+        await loadAccounts()
       } else {
-        if (response.status === 429) {
-          setError(`Rate limit: ${data.error}`)
-        } else if (response.status === 403) {
-          setError(`Cannot post: ${data.error}`)
+        if (result.error?.includes('Rate limit')) {
+          setError(`Rate limit: ${result.error}`)
+        } else if (result.error?.includes('Cannot post') || result.error?.includes('not connected')) {
+          setError(`Cannot post: ${result.error}`)
         } else {
-          setError(data.error || 'Test post failed')
+          setError(result.error || 'Test post failed')
         }
       }
     } catch (err) {
-      setError('Failed to send test post')
+      setError(err instanceof Error ? err.message : 'Failed to send test post')
+    } finally {
+      setTestingPosts(prev => ({ ...prev, [accountId]: false }))
     }
+  }
+
+  const handleConnect = (accountId: string) => {
+    startOAuth(accountId)
   }
 
   const resetForm = () => {
@@ -191,18 +186,22 @@ export default function AccountsPage() {
     setMessage('')
   }
 
-  const getConnectionBadge = (status: string) => {
-    switch (status) {
-      case 'connected_session':
-        return <StatusChip status="success">Connected (Session)</StatusChip>
-      case 'connected_official':
-        return <StatusChip status="info">Connected (Official)</StatusChip>
-      default:
-        return <StatusChip status="error">Disconnected</StatusChip>
+  const getConnectionBadge = (account: Account) => {
+    if (account.threads_connected) {
+      switch (account.connection_status) {
+        case 'connected_session':
+          return <StatusChip status="success">Connected (Session)</StatusChip>
+        case 'connected_official':
+          return <StatusChip status="info">Connected (Official)</StatusChip>
+        default:
+          return <StatusChip status="success">Connected</StatusChip>
+      }
+    } else {
+      return <StatusChip status="error">Disconnected</StatusChip>
     }
   }
 
-  const formatDate = (dateString: string | null) => {
+  const formatDate = (dateString: string | null | undefined) => {
     if (!dateString) return 'Never'
     return new Date(dateString).toLocaleString()
   }
@@ -301,7 +300,7 @@ export default function AccountsPage() {
                   </div>
                   
                   <div>
-                    {getConnectionBadge(account.connection_status)}
+                    {getConnectionBadge(account)}
                   </div>
                   
                   <div>
@@ -309,8 +308,10 @@ export default function AccountsPage() {
                       <input
                         type="checkbox"
                         checked={account.autopilot_enabled}
+                        disabled={!account.threads_connected}
                         onChange={(e) => toggleAutopilot(account.id, e.target.checked)}
-                        className="rounded border-glass-border bg-glass-100 text-primary focus:ring-primary/60"
+                        className="rounded border-glass-border bg-glass-100 text-primary focus:ring-primary/60 disabled:opacity-50 disabled:cursor-not-allowed"
+                        title={!account.threads_connected ? "Connect account first" : ""}
                       />
                       <span className="text-sm text-white/80">
                         {account.autopilot_enabled ? 'Enabled' : 'Disabled'}
@@ -329,6 +330,9 @@ export default function AccountsPage() {
                       <option value={15}>15m</option>
                       <option value={30}>30m</option>
                       <option value={60}>1h</option>
+                      <option value={120}>2h</option>
+                      <option value={180}>3h</option>
+                      <option value={240}>4h</option>
                     </select>
                   </div>
                   
@@ -346,39 +350,28 @@ export default function AccountsPage() {
                   
                   <div>
                     <div className="flex items-center gap-2">
-                      {/* Session Upload */}
-                      {account.connection_status === 'disconnected' && (
-                        <div className="relative">
-                          <input
-                            ref={(el) => {
-                              if (el) sessionInputRefs.current[account.id] = el
-                            }}
-                            type="file"
-                            accept=".json"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0]
-                              if (file) uploadSession(account.id, file)
-                            }}
-                            className="hidden"
-                          />
-                          <GlassButton
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => sessionInputRefs.current[account.id]?.click()}
-                            disabled={sessionUploads[account.id]}
-                            loading={sessionUploads[account.id]}
-                          >
-                            <CloudArrowUpIcon className="w-4 h-4" />
-                            Session
-                          </GlassButton>
-                        </div>
+                      {/* Connect Button */}
+                      {!account.threads_connected && (
+                        <GlassButton
+                          size="sm"
+                          onClick={() => handleConnect(account.id)}
+                          className="relative"
+                        >
+                          <LinkIcon className="w-4 h-4" />
+                          Connect
+                          {/* Connection indicator dot */}
+                          <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-400 rounded-full animate-pulse" 
+                                title="Connect via Meta to enable posting" />
+                        </GlassButton>
                       )}
                       
                       {/* Test Post */}
                       <GlassButton
                         variant="ghost"
                         size="sm"
-                        onClick={() => testPost(account.id)}
+                        onClick={() => handleTestPost(account.id)}
+                        loading={testingPosts[account.id]}
+                        disabled={testingPosts[account.id]}
                       >
                         <PlayIcon className="w-4 h-4" />
                         Test
@@ -402,7 +395,7 @@ export default function AccountsPage() {
                           <p className="text-caption">{account.description}</p>
                         )}
                       </div>
-                      {getConnectionBadge(account.connection_status)}
+                      {getConnectionBadge(account)}
                     </div>
                     
                     {/* Settings */}
@@ -413,8 +406,10 @@ export default function AccountsPage() {
                           <input
                             type="checkbox"
                             checked={account.autopilot_enabled}
+                            disabled={!account.threads_connected}
                             onChange={(e) => toggleAutopilot(account.id, e.target.checked)}
-                            className="rounded border-glass-border bg-glass-100 text-primary focus:ring-primary/60"
+                            className="rounded border-glass-border bg-glass-100 text-primary focus:ring-primary/60 disabled:opacity-50 disabled:cursor-not-allowed"
+                            title={!account.threads_connected ? "Connect account first" : ""}
                           />
                           <span className="text-sm text-white/80">
                             {account.autopilot_enabled ? 'Enabled' : 'Disabled'}
@@ -434,6 +429,9 @@ export default function AccountsPage() {
                           <option value={15}>15 minutes</option>
                           <option value={30}>30 minutes</option>
                           <option value={60}>1 hour</option>
+                          <option value={120}>2 hours</option>
+                          <option value={180}>3 hours</option>
+                          <option value={240}>4 hours</option>
                         </select>
                       </div>
                     </div>
@@ -452,37 +450,25 @@ export default function AccountsPage() {
                     
                     {/* Actions */}
                     <div className="flex gap-2">
-                      {account.connection_status === 'disconnected' && (
-                        <div className="relative flex-1">
-                          <input
-                            ref={(el) => {
-                              if (el) sessionInputRefs.current[account.id] = el
-                            }}
-                            type="file"
-                            accept=".json"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0]
-                              if (file) uploadSession(account.id, file)
-                            }}
-                            className="hidden"
-                          />
-                          <GlassButton
-                            variant="ghost"
-                            onClick={() => sessionInputRefs.current[account.id]?.click()}
-                            disabled={sessionUploads[account.id]}
-                            loading={sessionUploads[account.id]}
-                            className="w-full"
-                          >
-                            <CloudArrowUpIcon className="w-4 h-4" />
-                            Connect via Session
-                          </GlassButton>
-                        </div>
+                      {!account.threads_connected && (
+                        <GlassButton
+                          onClick={() => handleConnect(account.id)}
+                          className="flex-1 relative"
+                        >
+                          <LinkIcon className="w-4 h-4" />
+                          Connect
+                          {/* Connection indicator dot */}
+                          <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-400 rounded-full animate-pulse" 
+                                title="Connect via Meta to enable posting" />
+                        </GlassButton>
                       )}
                       
                       <GlassButton
                         variant="ghost"
-                        onClick={() => testPost(account.id)}
-                        className={account.connection_status === 'disconnected' ? 'flex-1' : 'w-full'}
+                        onClick={() => handleTestPost(account.id)}
+                        loading={testingPosts[account.id]}
+                        disabled={testingPosts[account.id]}
+                        className={!account.threads_connected ? 'flex-1' : 'w-full'}
                       >
                         <PlayIcon className="w-4 h-4" />
                         Test Post
