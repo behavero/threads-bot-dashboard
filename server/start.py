@@ -152,6 +152,7 @@ try:
     from routes.accounts import accounts
     from routes.auth import auth
     from routes.threads import threads
+    from routes.scheduler import scheduler
     from routes.autopilot import autopilot
     from routes.captions import captions
     from routes.images import images
@@ -160,6 +161,7 @@ try:
     app.register_blueprint(accounts)
     app.register_blueprint(auth)
     app.register_blueprint(threads, url_prefix='/threads')
+    app.register_blueprint(scheduler)
     app.register_blueprint(autopilot, url_prefix='/autopilot')
     app.register_blueprint(captions)
     app.register_blueprint(images)

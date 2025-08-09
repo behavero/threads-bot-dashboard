@@ -1,16 +1,16 @@
 # Render Cron Configuration
 # This file configures automated tasks for the Threads Bot
 
-# Run autopilot tick every minute
-- schedule: "*/1 * * * *"
-  url: https://threads-bot-dashboard-3.onrender.com/autopilot/tick
+# Run scheduler every 5 minutes for autoposting
+- schedule: "*/5 * * * *"
+  url: https://threads-bot-dashboard-3.onrender.com/api/scheduler/run
   method: POST
   headers:
     Content-Type: application/json
   body: '{}'
   timeout: 300  # 5 minutes timeout
-  retries: 3
-  name: "autopilot-tick"
+  retries: 2
+  name: "autopost-scheduler"
 
 # Health check every 10 minutes
 - schedule: "*/10 * * * *"
