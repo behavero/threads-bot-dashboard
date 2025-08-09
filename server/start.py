@@ -343,6 +343,9 @@ def get_accounts():
                 threads_connected = False
                 connection_status = 'disconnected'
             
+            # Get last posted from posting history (more accurate than account.last_posted_at)
+            last_posted_from_history = db.get_last_posted_for_account(account['id'])
+            
             # Transform account data
             transformed_account = {
                 "id": str(account['id']),
@@ -352,8 +355,9 @@ def get_accounts():
                 "autopilot_enabled": bool(account.get('autopilot_enabled', False)),
                 "cadence_minutes": int(account.get('cadence_minutes', 10)),
                 "next_run_at": account.get('next_run_at'),
-                "last_posted_at": account.get('last_posted_at'),
-                "connection_status": connection_status
+                "last_posted_at": last_posted_from_history or account.get('last_posted_at'),
+                "connection_status": connection_status,
+                "oauth_status": account.get('oauth_status', '')
             }
             accounts.append(transformed_account)
         

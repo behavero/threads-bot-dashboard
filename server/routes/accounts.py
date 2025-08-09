@@ -273,3 +273,141 @@ def update_account(account_id):
             "ok": False,
             "error": str(e)
         }), 500
+
+@accounts.route('/api/accounts/<int:account_id>/autopilot', methods=['PATCH'])
+def update_autopilot(account_id):
+    """Update autopilot enabled status and set next_run accordingly"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                "ok": False,
+                "error": "No JSON data provided"
+            }), 400
+        
+        enabled = data.get('enabled')
+        if enabled is None:
+            return jsonify({
+                "ok": False,
+                "error": "enabled field is required"
+            }), 400
+        
+        enabled = bool(enabled)
+        
+        # Get account to check current state
+        db = DatabaseManager()
+        account = db.get_account_by_id(account_id)
+        if not account:
+            return jsonify({
+                "ok": False,
+                "error": "Account not found"
+            }), 404
+        
+        # Prepare update data
+        update_data = {
+            'autopilot_enabled': enabled,
+            'updated_at': datetime.now().isoformat()
+        }
+        
+        if enabled:
+            # When enabling, set next_run = NOW() + cadence_minutes
+            cadence_minutes = account.get('cadence_minutes', 10)
+            from datetime import timedelta
+            next_run = datetime.now() + timedelta(minutes=cadence_minutes)
+            update_data['next_run_at'] = next_run.isoformat()
+            logger.info(f"🔄 Enabling autopilot for account {account_id}, next run: {next_run}")
+        else:
+            # When disabling, clear next_run
+            update_data['next_run_at'] = None
+            logger.info(f"⏹️ Disabling autopilot for account {account_id}")
+        
+        # Update account
+        if db.update_account(account_id, update_data):
+            return jsonify({
+                "ok": True,
+                "autopilot_enabled": enabled,
+                "next_run_at": update_data.get('next_run_at'),
+                "message": f"Autopilot {'enabled' if enabled else 'disabled'} successfully"
+            }), 200
+        else:
+            return jsonify({
+                "ok": False,
+                "error": "Failed to update autopilot setting"
+            }), 500
+            
+    except Exception as e:
+        logger.error(f"❌ Error updating autopilot: {e}")
+        return jsonify({
+            "ok": False,
+            "error": str(e)
+        }), 500
+
+@accounts.route('/api/accounts/<int:account_id>/cadence', methods=['PATCH'])
+def update_cadence(account_id):
+    """Update cadence and recompute next_run if autopilot is enabled"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({
+                "ok": False,
+                "error": "No JSON data provided"
+            }), 400
+        
+        minutes = data.get('minutes')
+        if minutes is None:
+            return jsonify({
+                "ok": False,
+                "error": "minutes field is required"
+            }), 400
+        
+        # Validate cadence values
+        if minutes not in [5, 10, 15, 30, 60, 120, 180, 240]:
+            return jsonify({
+                "ok": False,
+                "error": "Invalid cadence value. Must be one of: 5, 10, 15, 30, 60, 120, 180, 240"
+            }), 400
+        
+        # Get account to check current state
+        db = DatabaseManager()
+        account = db.get_account_by_id(account_id)
+        if not account:
+            return jsonify({
+                "ok": False,
+                "error": "Account not found"
+            }), 404
+        
+        # Prepare update data
+        update_data = {
+            'cadence_minutes': minutes,
+            'updated_at': datetime.now().isoformat()
+        }
+        
+        # If autopilot is enabled, recompute next_run
+        if account.get('autopilot_enabled', False):
+            from datetime import timedelta
+            next_run = datetime.now() + timedelta(minutes=minutes)
+            update_data['next_run_at'] = next_run.isoformat()
+            logger.info(f"🔄 Updating cadence for account {account_id} to {minutes}m, next run: {next_run}")
+        else:
+            logger.info(f"🔄 Updating cadence for account {account_id} to {minutes}m (autopilot disabled)")
+        
+        # Update account
+        if db.update_account(account_id, update_data):
+            return jsonify({
+                "ok": True,
+                "cadence_minutes": minutes,
+                "next_run_at": update_data.get('next_run_at'),
+                "message": f"Cadence updated to {minutes} minutes"
+            }), 200
+        else:
+            return jsonify({
+                "ok": False,
+                "error": "Failed to update cadence"
+            }), 500
+            
+    except Exception as e:
+        logger.error(f"❌ Error updating cadence: {e}")
+        return jsonify({
+            "ok": False,
+            "error": str(e)
+        }), 500

@@ -8,6 +8,7 @@ export type Account = {
   next_run_at?: string | null;
   last_posted_at?: string | null;
   connection_status: 'connected_session' | 'connected_official' | 'disconnected';
+  oauth_status?: string;
 };
 
 export type AccountUpdatePayload = Partial<{

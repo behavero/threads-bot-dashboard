@@ -1197,4 +1197,35 @@ class DatabaseManager:
             
         except Exception as e:
             print(f"❌ store_access_token: Error: {e}")
-            return False 
+            return False
+    
+    def get_last_posted_for_account(self, account_id: int) -> Optional[str]:
+        """Get the latest successful post timestamp for an account"""
+        try:
+            print(f"🔍 get_last_posted_for_account: Getting last posted for account {account_id}")
+            
+            response = requests.get(
+                f"{self.supabase_url}/rest/v1/posting_history",
+                headers=self.headers,
+                params={
+                    'account_id': f'eq.{account_id}',
+                    'status': 'eq.posted',
+                    'order': 'posted_at.desc',
+                    'limit': '1'
+                }
+            )
+            
+            if response.status_code == 200:
+                posts = response.json()
+                if posts:
+                    return posts[0].get('posted_at')
+                else:
+                    print(f"📂 get_last_posted_for_account: No posts found for account {account_id}")
+                    return None
+            else:
+                print(f"❌ get_last_posted_for_account: HTTP {response.status_code}: {response.text}")
+                return None
+                
+        except Exception as e:
+            print(f"❌ get_last_posted_for_account: Error: {e}")
+            return None 

@@ -17,7 +17,9 @@ import {
   patchAccount, 
   startOAuth, 
   testPost, 
-  uploadSession 
+  uploadSession,
+  updateAutopilot,
+  updateCadence 
 } from '@/lib/api/client'
 import type { Account } from '@/types/accounts'
 import GlassCard from '@/components/ui/GlassCard'
@@ -48,17 +50,17 @@ export default function AccountsPage() {
   useEffect(() => {
     loadAccounts()
     
-    // Check for OAuth success/error in URL params
+    // Check for OAuth status/message in URL params
     const urlParams = new URLSearchParams(window.location.search)
-    const success = urlParams.get('success')
-    const error = urlParams.get('error')
+    const status = urlParams.get('status')
+    const message = urlParams.get('message')
     
-    if (success === 'oauth_completed') {
-      setMessage('Account connected successfully via Meta OAuth!')
+    if (status === 'success') {
+      setMessage(message || 'Account connected successfully!')
       // Clear URL params
       window.history.replaceState({}, '', '/accounts')
-    } else if (error) {
-      setError(`OAuth failed: ${error}`)
+    } else if (status === 'error') {
+      setError(message || 'OAuth connection failed')
       // Clear URL params
       window.history.replaceState({}, '', '/accounts')
     }
@@ -108,7 +110,19 @@ export default function AccountsPage() {
     ))
     
     try {
-      await patchAccount(accountId, { autopilot_enabled: enabled })
+      const result = await updateAutopilot(accountId, enabled)
+      
+      // Update with server response (includes next_run_at)
+      setAccounts(prev => prev.map(acc => 
+        acc.id === accountId 
+          ? { 
+              ...acc, 
+              autopilot_enabled: result.autopilot_enabled,
+              next_run_at: result.next_run_at 
+            }
+          : acc
+      ))
+      
       setMessage(`Autopilot ${enabled ? 'enabled' : 'disabled'} successfully`)
     } catch (err) {
       // Revert optimistic update on error
@@ -121,16 +135,28 @@ export default function AccountsPage() {
     }
   }
 
-  const updateCadence = async (accountId: string, cadence: number) => {
+  const handleCadenceChange = async (accountId: string, minutes: number) => {
     // Optimistic update
     setAccounts(prev => prev.map(acc => 
       acc.id === accountId 
-        ? { ...acc, cadence_minutes: cadence }
+        ? { ...acc, cadence_minutes: minutes }
         : acc
     ))
     
     try {
-      await patchAccount(accountId, { cadence_minutes: cadence })
+      const result = await updateCadence(accountId, minutes)
+      
+      // Update with server response (includes next_run_at if autopilot enabled)
+      setAccounts(prev => prev.map(acc => 
+        acc.id === accountId 
+          ? { 
+              ...acc, 
+              cadence_minutes: result.cadence_minutes,
+              next_run_at: result.next_run_at 
+            }
+          : acc
+      ))
+      
       setMessage('Cadence updated successfully')
     } catch (err) {
       // Revert optimistic update on error
@@ -203,7 +229,11 @@ export default function AccountsPage() {
 
   const formatDate = (dateString: string | null | undefined) => {
     if (!dateString) return 'Never'
-    return new Date(dateString).toLocaleString()
+    try {
+      return new Date(dateString).toLocaleString()
+    } catch {
+      return 'Never'
+    }
   }
 
   if (loading) {
@@ -296,6 +326,11 @@ export default function AccountsPage() {
                       {account.description && (
                         <p className="text-caption">{account.description}</p>
                       )}
+                      {account.oauth_status && account.oauth_status.startsWith('error:') && (
+                        <div className="mt-1 px-2 py-1 bg-red-500/20 border border-red-400/30 rounded text-xs text-red-300">
+                          {account.oauth_status.replace('error: ', '')}
+                        </div>
+                      )}
                     </div>
                   </div>
                   
@@ -322,8 +357,10 @@ export default function AccountsPage() {
                   <div>
                     <select
                       value={account.cadence_minutes}
-                      onChange={(e) => updateCadence(account.id, parseInt(e.target.value))}
-                      className="glass-input w-20 text-sm"
+                      disabled={!account.autopilot_enabled}
+                      onChange={(e) => handleCadenceChange(account.id, parseInt(e.target.value))}
+                      className="glass-input w-20 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                      title={!account.autopilot_enabled ? "Enable autopilot first" : ""}
                     >
                       <option value={5}>5m</option>
                       <option value={10}>10m</option>
@@ -361,7 +398,7 @@ export default function AccountsPage() {
                           Connect
                           {/* Connection indicator dot */}
                           <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-400 rounded-full animate-pulse" 
-                                title="Connect via Meta to enable posting" />
+                                title="Connect via Meta OAuth" />
                         </GlassButton>
                       )}
                       
@@ -389,10 +426,15 @@ export default function AccountsPage() {
                   <div className="space-y-4">
                     {/* Header */}
                     <div className="flex items-start justify-between">
-                      <div>
+                      <div className="flex-1">
                         <p className="font-medium text-white">@{account.username}</p>
                         {account.description && (
                           <p className="text-caption">{account.description}</p>
+                        )}
+                        {account.oauth_status && account.oauth_status.startsWith('error:') && (
+                          <div className="mt-2 px-2 py-1 bg-red-500/20 border border-red-400/30 rounded text-xs text-red-300">
+                            {account.oauth_status.replace('error: ', '')}
+                          </div>
                         )}
                       </div>
                       {getConnectionBadge(account)}
@@ -421,8 +463,10 @@ export default function AccountsPage() {
                         <p className="text-caption mb-2">Cadence</p>
                         <select
                           value={account.cadence_minutes}
-                          onChange={(e) => updateCadence(account.id, parseInt(e.target.value))}
-                          className="glass-input w-full text-sm"
+                          disabled={!account.autopilot_enabled}
+                          onChange={(e) => handleCadenceChange(account.id, parseInt(e.target.value))}
+                          className="glass-input w-full text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                          title={!account.autopilot_enabled ? "Enable autopilot first" : ""}
                         >
                           <option value={5}>5 minutes</option>
                           <option value={10}>10 minutes</option>
@@ -459,7 +503,7 @@ export default function AccountsPage() {
                           Connect
                           {/* Connection indicator dot */}
                           <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-400 rounded-full animate-pulse" 
-                                title="Connect via Meta to enable posting" />
+                                title="Connect via Meta OAuth" />
                         </GlassButton>
                       )}
                       

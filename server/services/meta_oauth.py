@@ -32,13 +32,12 @@ class MetaOAuthService:
         self.graph_api_base = 'https://graph.threads.net/'
         self.auth_base = 'https://www.facebook.com'
         
-        # Threads API permissions (from Meta documentation)
+        # Threads API permissions - only request scopes available at standard access level
         self.scopes = [
-            'threads_basic',
-            'threads_content_publish',
-            'threads_manage_insights',
-            'threads_manage_replies',
-            'threads_read_replies',
+            'threads_business_basic',   # ✅ allowed at standard access
+            # REMOVED for now - require higher access levels:
+            # 'threads_basic','threads_content_publish','threads_manage_insights',
+            # 'threads_manage_replies','threads_read_replies'
         ]
         
         logger.info("✅ MetaOAuthService initialized (OAuth configured: {})".format(self.oauth_configured))

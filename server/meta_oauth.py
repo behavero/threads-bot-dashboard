@@ -30,13 +30,12 @@ class MetaOAuthHelper:
         if not self.oauth_configured:
             logger.warning("⚠️ Meta OAuth not configured - using direct account creation")
         
-        # Threads API permissions (from Meta documentation)
+        # Threads API permissions - only request scopes available at standard access level
         self.scopes = [
-            'threads_basic',
-            'threads_content_publish',
-            'threads_manage_insights',
-            'threads_manage_replies',
-            'threads_read_replies',
+            'threads_business_basic',   # ✅ allowed at standard access
+            # REMOVED for now - require higher access levels:
+            # 'threads_basic','threads_content_publish','threads_manage_insights',
+            # 'threads_manage_replies','threads_read_replies'
         ]
         
         logger.info("✅ MetaOAuthHelper initialized (OAuth configured: {})".format(self.oauth_configured))
