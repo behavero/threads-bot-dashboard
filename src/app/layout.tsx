@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import BackgroundCanvas from '@/components/layout/BackgroundCanvas'
 import AppNav from '@/components/layout/AppNav'
+import CapabilityBanner from '@/components/ui/CapabilityBanner'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -26,6 +27,7 @@ export default function RootLayout({
         <BackgroundCanvas />
         <div className="relative min-h-screen">
           <AppNav />
+          <CapabilityBanner />
           <main className="content-container py-8">
             {children}
           </main>

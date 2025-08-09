@@ -8,6 +8,13 @@ type ApiResponse<T = any> = {
   message?: string;
 } & T;
 
+// Config status types
+export type ConfigStatus = {
+  oauthConfigured: boolean;
+  scopes: string[];
+  publishEnabled: boolean;
+};
+
 // Account API functions
 export async function fetchAccounts(): Promise<Account[]> {
   const response = await fetch(`${API_BASE}/api/accounts`);
@@ -109,4 +116,18 @@ export async function testPost(accountId: string): Promise<TestPostResponse> {
   return data;
 }
 
-// Session upload functionality moved to Images page if needed
+// Config API functions
+export async function fetchConfigStatus(): Promise<ConfigStatus> {
+  const response = await fetch(`${API_BASE}/config/status`);
+  const data: ApiResponse<ConfigStatus> = await response.json();
+  
+  if (!data.ok) {
+    throw new Error(data.error || 'Failed to fetch config status');
+  }
+  
+  return {
+    oauthConfigured: data.oauthConfigured,
+    scopes: data.scopes || [],
+    publishEnabled: data.publishEnabled || false
+  };
+}
