@@ -109,19 +109,4 @@ export async function testPost(accountId: string): Promise<TestPostResponse> {
   return data;
 }
 
-// Session upload
-export async function uploadSession(accountId: string, file: File): Promise<void> {
-  const formData = new FormData();
-  formData.append('session_file', file);
-  
-  const response = await fetch(`${API_BASE}/api/accounts/${accountId}/session`, {
-    method: 'POST',
-    body: formData,
-  });
-  
-  const data: ApiResponse = await response.json();
-  
-  if (!data.ok) {
-    throw new Error(data.error || 'Failed to upload session');
-  }
-}
+// Session upload functionality moved to Images page if needed

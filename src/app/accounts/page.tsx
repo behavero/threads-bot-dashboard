@@ -3,7 +3,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { 
   UserPlusIcon, 
-  CloudArrowUpIcon,
   PlayIcon,
   CogIcon,
   CheckIcon,
@@ -16,8 +15,7 @@ import {
   fetchAccounts, 
   patchAccount, 
   startOAuth, 
-  testPost, 
-  uploadSession,
+  testPost,
   updateAutopilot,
   updateCadence 
 } from '@/lib/api/client'
@@ -43,9 +41,7 @@ export default function AccountsPage() {
     username: '',
     description: ''
   })
-  const [sessionUploads, setSessionUploads] = useState<{[key: string]: boolean}>({})
   const [testingPosts, setTestingPosts] = useState<{[key: string]: boolean}>({})
-  const sessionInputRefs = useRef<{[key: string]: HTMLInputElement}>({})
 
   useEffect(() => {
     loadAccounts()
@@ -165,18 +161,7 @@ export default function AccountsPage() {
     }
   }
 
-  const handleUploadSession = async (accountId: string, file: File) => {
-    try {
-      setSessionUploads(prev => ({ ...prev, [accountId]: true }))
-      await uploadSession(accountId, file)
-      setMessage('Session uploaded successfully!')
-      await loadAccounts()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to upload session')
-    } finally {
-      setSessionUploads(prev => ({ ...prev, [accountId]: false }))
-    }
-  }
+
 
   const handleTestPost = async (accountId: string) => {
     try {
