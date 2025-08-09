@@ -1,16 +1,20 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import Layout from '@/components/Layout'
 import { 
   UserGroupIcon, 
   ChatBubbleLeftRightIcon, 
   PhotoIcon,
   ClockIcon,
   ExclamationTriangleIcon,
-  PlayIcon
+  PlayIcon,
+  CheckCircleIcon,
+  TrophyIcon
 } from '@heroicons/react/24/outline'
 import { API_BASE } from '@/lib/config'
+import GlassCard from '@/components/ui/GlassCard'
+import GlassButton from '@/components/ui/GlassButton'
+import StatusChip from '@/components/ui/StatusChip'
 
 interface DashboardStats {
   accountsConnected: {
@@ -118,187 +122,181 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <Layout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-        </div>
-      </Layout>
+      <div className="flex items-center justify-center h-64">
+        <div className="loading-shimmer w-32 h-32 rounded-full border-4 border-glass-border border-t-primary animate-spin"></div>
+      </div>
     )
   }
 
   return (
-    <Layout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-            <p className="text-gray-600 mt-1">Overview of your Threads automation</p>
-          </div>
-          
-          <button
-            onClick={runAutopilotTick}
-            disabled={runningTick}
-            className="btn-primary flex items-center space-x-2"
-          >
-            <PlayIcon className="w-5 h-5" />
-            <span>{runningTick ? 'Running...' : 'Run Autopilot Tick'}</span>
-          </button>
+    <div className="space-y-8 animate-fade-in">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="heading-1 gradient-text">Dashboard</h1>
+          <p className="text-body mt-2">Overview of your Threads automation</p>
         </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* Accounts Connected */}
-          <div className="card">
-            <div className="flex items-center">
-              <div className="p-3 rounded-xl bg-blue-100">
-                <UserGroupIcon className="w-6 h-6 text-blue-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Accounts Connected</p>
-                <div className="flex items-center space-x-2">
-                  <p className="text-2xl font-bold text-gray-900">{stats?.accountsConnected?.total || 0}</p>
-                  <div className="flex space-x-1">
-                    {(stats?.accountsConnected?.session || 0) > 0 && (
-                      <span className="badge-success text-xs">
-                        {stats?.accountsConnected?.session} Session
-                      </span>
-                    )}
-                    {(stats?.accountsConnected?.official || 0) > 0 && (
-                      <span className="badge-info text-xs">
-                        {stats?.accountsConnected?.official} Official
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Posts Today */}
-          <div className="card">
-            <div className="flex items-center">
-              <div className="p-3 rounded-xl bg-green-100">
-                <ChatBubbleLeftRightIcon className="w-6 h-6 text-green-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Posts Today</p>
-                <p className="text-2xl font-bold text-gray-900">{stats?.postsToday}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Pending Due */}
-          <div className="card">
-            <div className="flex items-center">
-              <div className="p-3 rounded-xl bg-amber-100">
-                <ClockIcon className="w-6 h-6 text-amber-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Pending Due (60 min)</p>
-                <p className="text-2xl font-bold text-gray-900">{stats?.pendingDue}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Last Error */}
-          <div className="card">
-            <div className="flex items-center">
-              <div className="p-3 rounded-xl bg-red-100">
-                <ExclamationTriangleIcon className="w-6 h-6 text-red-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Last Error</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {stats?.lastError ? '1' : '0'}
-                </p>
-                {stats?.lastError && (
-                  <p className="text-xs text-red-600 mt-1 truncate">
-                    {stats.lastError}
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="card">
-            <h3 className="card-title">Recent Activity</h3>
-            <div className="space-y-3">
-              <div className="flex items-center space-x-3">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <div className="flex-1">
-                  <p className="text-sm text-gray-900">Posted to @username1</p>
-                  <p className="text-xs text-gray-500">2 minutes ago</p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-3">
-                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                <div className="flex-1">
-                  <p className="text-sm text-gray-900">Scheduled next post</p>
-                  <p className="text-xs text-gray-500">5 minutes ago</p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-3">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <div className="flex-1">
-                  <p className="text-sm text-gray-900">Posted to @username2</p>
-                  <p className="text-xs text-gray-500">15 minutes ago</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="card">
-            <h3 className="card-title">Autopilot Status</h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Status</span>
-                <span className="badge-success">Active</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Mode</span>
-                <span className="text-sm text-gray-900">Session-first</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Next Tick</span>
-                <span className="text-sm text-gray-900">2 minutes</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Max per Tick</span>
-                <span className="text-sm text-gray-900">5 accounts</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="card">
-            <h3 className="card-title">Content Stats</h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <ChatBubbleLeftRightIcon className="w-5 h-5 text-gray-400" />
-                  <span className="text-sm text-gray-600">Captions</span>
-                </div>
-                <span className="text-sm text-gray-900">45 total</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <PhotoIcon className="w-5 h-5 text-gray-400" />
-                  <span className="text-sm text-gray-600">Images</span>
-                </div>
-                <span className="text-sm text-gray-900">28 total</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Unused Captions</span>
-                <span className="badge-info">23</span>
-              </div>
-            </div>
-          </div>
-        </div>
+        
+        <GlassButton
+          onClick={runAutopilotTick}
+          disabled={runningTick}
+          loading={runningTick}
+          className="responsive"
+        >
+          <PlayIcon className="w-5 h-5" />
+          {runningTick ? 'Running Tick...' : 'Run Autopilot Tick'}
+        </GlassButton>
       </div>
-    </Layout>
+
+      {/* Stats Cards */}
+      <div className="responsive-grid">
+        {/* Accounts Connected */}
+        <GlassCard className="animate-slide-up" dense>
+          <div className="flex items-center gap-4">
+            <div className="empty-state-blob">
+              <UserGroupIcon className="w-6 h-6 text-primary" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-caption">Accounts Connected</p>
+              <div className="flex items-center gap-3 mt-1">
+                <p className="heading-3 text-white">{stats?.accountsConnected?.total || 0}</p>
+                <div className="flex gap-1">
+                  {(stats?.accountsConnected?.session || 0) > 0 && (
+                    <StatusChip status="success" className="text-xs">
+                      {stats?.accountsConnected?.session} Session
+                    </StatusChip>
+                  )}
+                  {(stats?.accountsConnected?.official || 0) > 0 && (
+                    <StatusChip status="info" className="text-xs">
+                      {stats?.accountsConnected?.official} Official
+                    </StatusChip>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </GlassCard>
+
+        {/* Posts Today */}
+        <GlassCard className="animate-slide-up" dense style={{ animationDelay: '100ms' }}>
+          <div className="flex items-center gap-4">
+            <div className="empty-state-blob">
+              <TrophyIcon className="w-6 h-6 text-accent" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-caption">Posts Today</p>
+              <p className="heading-3 text-white mt-1">{stats?.postsToday}</p>
+            </div>
+          </div>
+        </GlassCard>
+
+        {/* Pending Due */}
+        <GlassCard className="animate-slide-up" dense style={{ animationDelay: '200ms' }}>
+          <div className="flex items-center gap-4">
+            <div className="empty-state-blob">
+              <ClockIcon className="w-6 h-6 text-amber-400" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-caption">Pending Due (60 min)</p>
+              <p className="heading-3 text-white mt-1">{stats?.pendingDue}</p>
+            </div>
+          </div>
+        </GlassCard>
+
+        {/* Last Error */}
+        <GlassCard className="animate-slide-up" dense style={{ animationDelay: '300ms' }}>
+          <div className="flex items-center gap-4">
+            <div className="empty-state-blob">
+              <ExclamationTriangleIcon className="w-6 h-6 text-red-400" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-caption">Last Error</p>
+              <p className="heading-3 text-white mt-1">
+                {stats?.lastError ? '1' : '0'}
+              </p>
+              {stats?.lastError && (
+                <p className="text-xs text-red-400 mt-1 truncate">
+                  {stats.lastError}
+                </p>
+              )}
+            </div>
+          </div>
+        </GlassCard>
+      </div>
+
+      {/* Content Sections */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <GlassCard title="Recent Activity" className="animate-slide-up" style={{ animationDelay: '400ms' }}>
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <StatusChip status="success" />
+              <div className="min-w-0 flex-1">
+                <p className="text-body text-sm">Posted to @username1</p>
+                <p className="text-caption">2 minutes ago</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <StatusChip status="info" />
+              <div className="min-w-0 flex-1">
+                <p className="text-body text-sm">Scheduled next post</p>
+                <p className="text-caption">5 minutes ago</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <StatusChip status="success" />
+              <div className="min-w-0 flex-1">
+                <p className="text-body text-sm">Posted to @username2</p>
+                <p className="text-caption">15 minutes ago</p>
+              </div>
+            </div>
+          </div>
+        </GlassCard>
+
+        <GlassCard title="Autopilot Status" className="animate-slide-up" style={{ animationDelay: '500ms' }}>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-caption">Status</span>
+              <StatusChip status="success">Active</StatusChip>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-caption">Mode</span>
+              <span className="text-body text-sm">Session-first</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-caption">Next Tick</span>
+              <span className="text-body text-sm">2 minutes</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-caption">Max per Tick</span>
+              <span className="text-body text-sm">5 accounts</span>
+            </div>
+          </div>
+        </GlassCard>
+
+        <GlassCard title="Content Stats" className="animate-slide-up" style={{ animationDelay: '600ms' }}>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ChatBubbleLeftRightIcon className="w-4 h-4 text-white/60" />
+                <span className="text-caption">Captions</span>
+              </div>
+              <span className="text-body text-sm">45 total</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <PhotoIcon className="w-4 h-4 text-white/60" />
+                <span className="text-caption">Images</span>
+              </div>
+              <span className="text-body text-sm">28 total</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-caption">Unused Captions</span>
+              <StatusChip status="info">23</StatusChip>
+            </div>
+          </div>
+        </GlassCard>
+      </div>
+    </div>
   )
 }
 

@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { Inter, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
+import BackgroundCanvas from '@/components/layout/BackgroundCanvas'
+import AppNav from '@/components/layout/AppNav'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -13,8 +15,8 @@ const jetbrainsMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Threads Bot Dashboard',
-  description: 'Automated Threads posting with session-first approach',
+  title: 'Threadly - Threads Bot Dashboard',
+  description: 'Automated Threads posting with liquid glass design',
 }
 
 export default function RootLayout({
@@ -24,8 +26,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable}`}>
-      <body className="font-sans antialiased bg-gray-50">
-        {children}
+      <body className="font-sans antialiased">
+        <BackgroundCanvas />
+        <div className="relative min-h-screen">
+          <AppNav />
+          <main className="content-container py-8">
+            {children}
+          </main>
+        </div>
       </body>
     </html>
   )
