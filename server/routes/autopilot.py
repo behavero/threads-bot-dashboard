@@ -140,8 +140,8 @@ def tick():
                 
                 logger.info(f"📝 Processing account {account_id} ({username})")
                 
-                # Pick content
-                caption = autopilot_service.pick_caption()
+                # Pick content with deduplication
+                caption = autopilot_service.pick_caption(account)
                 if not caption:
                     logger.warning(f"⚠️ No caption available for account {account_id}")
                     results.append({
@@ -157,7 +157,7 @@ def tick():
                 if image:
                     logger.info(f"🖼️ Using image: {image['id']}")
                 
-                # Post content
+                # Post content with retry logic
                 success, message = autopilot_service.post_once(account, caption, image)
                 
                 # Record history
@@ -169,15 +169,13 @@ def tick():
                     message=message
                 )
                 
-                # Mark caption as used if successful
+                # Handle success/failure with resilience logic
                 if success:
-                    autopilot_service.mark_caption_used(caption['id'])
-                
-                # Update account stats
-                autopilot_service.update_account_posting_stats(account_id, success)
-                
-                # Schedule next run
-                autopilot_service.schedule_next(account)
+                    autopilot_service.handle_posting_success(
+                        account_id, caption['id'], image['id'] if image else None
+                    )
+                else:
+                    autopilot_service.handle_posting_failure(account_id, message)
                 
                 # Record result
                 result = {
@@ -260,13 +258,13 @@ def status():
         db = DatabaseManager()
         now = datetime.now()
         
-        # Get autopilot-enabled accounts
+        # Get autopilot-enabled accounts with error info
         response = db._make_request(
             'GET',
             f"{db.supabase_url}/rest/v1/accounts",
             params={
                 'autopilot_enabled': 'eq.true',
-                'select': 'id,username,next_run_at,last_posted_at,cadence_minutes,jitter_seconds'
+                'select': 'id,username,next_run_at,last_posted_at,cadence_minutes,jitter_seconds,error_count,last_error,connection_status'
             }
         )
         
@@ -277,11 +275,26 @@ def status():
             total_accounts = len(accounts)
             due_accounts = len([a for a in accounts if a.get('next_run_at') and 
                               datetime.fromisoformat(a['next_run_at']) <= now])
+            error_accounts = len([a for a in accounts if a.get('error_count', 0) > 0])
+            
+            # Get error details
+            error_details = [
+                {
+                    'id': a['id'],
+                    'username': a['username'],
+                    'error_count': a.get('error_count', 0),
+                    'last_error': a.get('last_error'),
+                    'next_run_at': a.get('next_run_at')
+                }
+                for a in accounts if a.get('error_count', 0) > 0
+            ]
             
             return jsonify({
                 'ok': True,
                 'total_accounts': total_accounts,
                 'due_accounts': due_accounts,
+                'error_accounts': error_accounts,
+                'error_details': error_details,
                 'timestamp': now.isoformat()
             })
         else:

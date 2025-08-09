@@ -9,7 +9,10 @@ ALTER TABLE accounts
   ADD COLUMN IF NOT EXISTS last_posted_at timestamptz NULL,
   ADD COLUMN IF NOT EXISTS next_run_at timestamptz NULL,
   ADD COLUMN IF NOT EXISTS threads_user_id text NULL,
-  ADD COLUMN IF NOT EXISTS connection_status text DEFAULT 'disconnected';
+  ADD COLUMN IF NOT EXISTS connection_status text DEFAULT 'disconnected',
+  ADD COLUMN IF NOT EXISTS last_caption_id int NULL,
+  ADD COLUMN IF NOT EXISTS last_error text NULL,
+  ADD COLUMN IF NOT EXISTS error_count int DEFAULT 0;
 
 -- Create index for efficient autopilot queries
 CREATE INDEX IF NOT EXISTS idx_accounts_next_run ON accounts(next_run_at)
@@ -34,4 +37,7 @@ COMMENT ON COLUMN accounts.jitter_seconds IS 'Random seconds to add to cadence (
 COMMENT ON COLUMN accounts.last_posted_at IS 'Timestamp of last successful post';
 COMMENT ON COLUMN accounts.next_run_at IS 'Next scheduled post time';
 COMMENT ON COLUMN accounts.connection_status IS 'Account connection status: connected, disconnected, error';
+COMMENT ON COLUMN accounts.last_caption_id IS 'ID of last caption used (for deduplication)';
+COMMENT ON COLUMN accounts.last_error IS 'Last error message for troubleshooting';
+COMMENT ON COLUMN accounts.error_count IS 'Consecutive error count for backoff logic';
 COMMENT ON COLUMN images.use_count IS 'Number of times this image has been used in posts';
