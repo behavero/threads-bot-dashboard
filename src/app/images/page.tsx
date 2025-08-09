@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
-import Layout from '@/components/Layout'
 import { 
   PlusIcon, 
   CloudArrowUpIcon,
@@ -10,9 +9,14 @@ import {
   EyeIcon,
   CheckIcon,
   XMarkIcon,
-  ExclamationTriangleIcon
+  ExclamationTriangleIcon,
+  PhotoIcon
 } from '@heroicons/react/24/outline'
 import { API_BASE } from '@/lib/config'
+import GlassCard from '@/components/ui/GlassCard'
+import GlassButton from '@/components/ui/GlassButton'
+import StatusChip from '@/components/ui/StatusChip'
+import GlassModal from '@/components/ui/GlassModal'
 
 interface Image {
   id: number
@@ -175,293 +179,303 @@ export default function ImagesPage() {
 
   if (loading) {
     return (
-      <Layout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-        </div>
-      </Layout>
+      <div className="flex items-center justify-center h-64">
+        <div className="loading-shimmer w-32 h-32 rounded-full border-4 border-glass-border border-t-primary animate-spin"></div>
+      </div>
     )
   }
 
   return (
-    <Layout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Images</h1>
-            <p className="text-gray-600 mt-1">Manage your image library for automated posting</p>
-          </div>
+    <div className="space-y-8 animate-fade-in">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="heading-1 gradient-text">Images</h1>
+          <p className="text-body mt-2">Manage your image library for automated posting</p>
+        </div>
+        
+        <div className="flex flex-col sm:flex-row gap-2">
+          <GlassButton
+            variant="ghost"
+            onClick={() => openModal('url')}
+          >
+            <LinkIcon className="w-5 h-5" />
+            Add URL
+          </GlassButton>
           
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={() => openModal('url')}
-              className="btn-secondary flex items-center space-x-2"
-            >
-              <LinkIcon className="w-5 h-5" />
-              <span>Add URL</span>
-            </button>
-            
-            <button
-              onClick={() => openModal('upload')}
-              className="btn-primary flex items-center space-x-2"
-            >
-              <CloudArrowUpIcon className="w-5 h-5" />
-              <span>Upload Image</span>
-            </button>
-          </div>
+          <GlassButton onClick={() => openModal('upload')}>
+            <CloudArrowUpIcon className="w-5 h-5" />
+            Upload Image
+          </GlassButton>
         </div>
+      </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="card">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-gray-900">{images.length}</p>
-              <p className="text-sm text-gray-600">Total Images</p>
-            </div>
-          </div>
-          <div className="card">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-blue-600">{totalUseCount}</p>
-              <p className="text-sm text-gray-600">Total Uses</p>
-            </div>
-          </div>
-          <div className="card">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-purple-600">{averageUseCount}</p>
-              <p className="text-sm text-gray-600">Avg Uses</p>
-            </div>
-          </div>
-          <div className="card">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-green-600">
-                {images.filter(img => img.use_count === 0).length}
-              </p>
-              <p className="text-sm text-gray-600">Unused</p>
-            </div>
-          </div>
-        </div>
+      {/* Stats */}
+      <div className="responsive-grid">
+        <GlassCard dense className="animate-slide-up text-center">
+          <p className="heading-3 text-white mb-1">{images.length}</p>
+          <p className="text-caption">Total Images</p>
+        </GlassCard>
+        
+        <GlassCard dense className="animate-slide-up text-center" style={{ animationDelay: '100ms' }}>
+          <p className="heading-3 text-blue-400 mb-1">{totalUseCount}</p>
+          <p className="text-caption">Total Uses</p>
+        </GlassCard>
+        
+        <GlassCard dense className="animate-slide-up text-center" style={{ animationDelay: '200ms' }}>
+          <p className="heading-3 text-primary mb-1">{averageUseCount}</p>
+          <p className="text-caption">Avg Uses</p>
+        </GlassCard>
+        
+        <GlassCard dense className="animate-slide-up text-center" style={{ animationDelay: '300ms' }}>
+          <p className="heading-3 text-emerald-400 mb-1">
+            {images.filter(img => img.use_count === 0).length}
+          </p>
+          <p className="text-caption">Unused</p>
+        </GlassCard>
+      </div>
 
-        {/* Messages */}
-        {error && (
-          <div className="glass-card border-red-200 bg-red-50 rounded-xl p-4">
-            <div className="flex items-center">
-              <ExclamationTriangleIcon className="w-5 h-5 text-red-600 mr-2" />
-              <p className="text-red-700">{error}</p>
-              <button onClick={() => setError('')} className="ml-auto">
-                <XMarkIcon className="w-5 h-5 text-red-600" />
-              </button>
+      {/* Messages */}
+      {error && (
+        <GlassCard className="border-red-500/20 bg-red-500/10 animate-slide-down">
+          <div className="flex items-center gap-3">
+            <ExclamationTriangleIcon className="w-5 h-5 text-red-400 flex-shrink-0" />
+            <p className="text-red-300 flex-1">{error}</p>
+            <GlassButton variant="ghost" size="sm" onClick={() => setError('')} className="!p-1">
+              <XMarkIcon className="w-4 h-4" />
+            </GlassButton>
+          </div>
+        </GlassCard>
+      )}
+
+      {message && (
+        <GlassCard className="border-emerald-500/20 bg-emerald-500/10 animate-slide-down">
+          <div className="flex items-center gap-3">
+            <CheckIcon className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+            <p className="text-emerald-300 flex-1">{message}</p>
+            <GlassButton variant="ghost" size="sm" onClick={() => setMessage('')} className="!p-1">
+              <XMarkIcon className="w-4 h-4" />
+            </GlassButton>
+          </div>
+        </GlassCard>
+      )}
+
+      {/* Images Grid */}
+      <GlassCard 
+        title="Image Library" 
+        subtitle={`${images.length} total images`}
+        className="animate-slide-up"
+      >
+        {images.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-state-blob">
+              <PhotoIcon className="w-8 h-8 text-primary" />
+            </div>
+            <h3 className="heading-4 text-white mb-2">No images yet</h3>
+            <p className="text-body mb-6">Upload or add images to enhance your posts</p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <GlassButton onClick={() => openModal('upload')}>
+                Upload Image
+              </GlassButton>
+              <GlassButton variant="ghost" onClick={() => openModal('url')}>
+                Add by URL
+              </GlassButton>
             </div>
           </div>
-        )}
-
-        {message && (
-          <div className="glass-card border-green-200 bg-green-50 rounded-xl p-4">
-            <div className="flex items-center">
-              <CheckIcon className="w-5 h-5 text-green-600 mr-2" />
-              <p className="text-green-700">{message}</p>
-              <button onClick={() => setMessage('')} className="ml-auto">
-                <XMarkIcon className="w-5 h-5 text-green-600" />
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Images Grid */}
-        <div className="card">
-          <div className="card-header">
-            <h2 className="card-title">Image Library</h2>
-            <span className="text-sm text-gray-500">{images.length} total</span>
-          </div>
-
-          {images.length === 0 ? (
-            <div className="text-center py-12">
-              <CloudArrowUpIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No images yet</h3>
-              <p className="text-gray-600 mb-4">Upload or add images to enhance your posts</p>
-              <div className="flex justify-center space-x-3">
-                <button onClick={() => openModal('upload')} className="btn-primary">
-                  Upload Image
-                </button>
-                <button onClick={() => openModal('url')} className="btn-secondary">
-                  Add by URL
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {images.map((image) => (
-                <div
-                  key={image.id}
-                  className="glass-card rounded-xl overflow-hidden border border-gray-200"
-                >
-                  <div className="aspect-square relative bg-gray-100">
+        ) : (
+          <div className="responsive-grid">
+            {images.map((image, index) => (
+              <GlassCard
+                key={image.id}
+                dense
+                className="animate-slide-up overflow-hidden"
+                style={{ animationDelay: `${index * 50}ms` }}
+              >
+                <div className="space-y-3">
+                  {/* Image */}
+                  <div className="aspect-square relative bg-glass-100 rounded-2xl overflow-hidden">
                     <img
                       src={image.url}
                       alt={image.alt_text || image.filename}
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement
-                        target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMDAgMTAwTDEwMCAxMDBaIiBzdHJva2U9IiM5Q0E5QjQiIHN0cm9rZS13aWR0aD0iMiIvPgo8L3N2Zz4K'
+                        target.style.display = 'none'
+                        const parent = target.parentElement
+                        if (parent) {
+                          parent.innerHTML = `
+                            <div class="w-full h-full flex items-center justify-center">
+                              <svg class="w-12 h-12 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                              </svg>
+                            </div>
+                          `
+                        }
                       }}
                     />
-                    <div className="absolute top-2 right-2 flex space-x-1">
-                      <button
+                    
+                    {/* Actions */}
+                    <div className="absolute top-2 right-2 flex gap-1">
+                      <GlassButton
+                        variant="ghost"
+                        size="sm"
                         onClick={() => window.open(image.url, '_blank')}
-                        className="p-1 bg-black bg-opacity-50 rounded text-white hover:bg-opacity-70"
+                        className="!p-1 !w-7 !h-7"
                       >
-                        <EyeIcon className="w-4 h-4" />
-                      </button>
-                      <button
+                        <EyeIcon className="w-3 h-3" />
+                      </GlassButton>
+                      <GlassButton
+                        variant="danger"
+                        size="sm"
                         onClick={() => deleteImage(image.id)}
-                        className="p-1 bg-black bg-opacity-50 rounded text-white hover:bg-opacity-70"
+                        className="!p-1 !w-7 !h-7"
                       >
-                        <TrashIcon className="w-4 h-4" />
-                      </button>
+                        <TrashIcon className="w-3 h-3" />
+                      </GlassButton>
                     </div>
                     
+                    {/* Use Count Badge */}
                     {image.use_count > 0 && (
                       <div className="absolute top-2 left-2">
-                        <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded">
+                        <StatusChip status="info" className="text-xs">
                           {image.use_count} uses
-                        </span>
+                        </StatusChip>
                       </div>
                     )}
                   </div>
                   
-                  <div className="p-3">
-                    <p className="text-sm font-medium text-gray-900 truncate">
+                  {/* Image Info */}
+                  <div className="space-y-2">
+                    <p className="text-body text-sm font-medium truncate">
                       {image.filename}
                     </p>
                     
                     {image.alt_text && (
-                      <p className="text-xs text-gray-600 mt-1 line-clamp-2">
+                      <p className="text-caption text-xs overflow-hidden" style={{
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical'
+                      }}>
                         {image.alt_text}
                       </p>
                     )}
                     
-                    <div className="flex items-center justify-between mt-2">
-                      <p className="text-xs text-gray-500">
+                    <div className="flex items-center justify-between text-xs">
+                      <p className="text-caption">
                         {new Date(image.created_at).toLocaleDateString()}
                       </p>
                       
                       {image.last_used_at && (
-                        <p className="text-xs text-blue-600">
-                          Last used {new Date(image.last_used_at).toLocaleDateString()}
+                        <p className="text-blue-400">
+                          Used {new Date(image.last_used_at).toLocaleDateString()}
                         </p>
                       )}
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
+              </GlassCard>
+            ))}
+          </div>
+        )}
+      </GlassCard>
 
-        {/* Add Image Modal */}
-        {showModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="card w-full max-w-lg max-h-[90vh] overflow-y-auto">
-              <div className="card-header">
-                <h3 className="card-title">
-                  {modalType === 'upload' ? 'Upload Image' : 'Add Image by URL'}
-                </h3>
-                <button onClick={() => { setShowModal(false); resetForm(); }}>
-                  <XMarkIcon className="w-6 h-6 text-gray-400" />
-                </button>
-              </div>
+      {/* Add Image Modal */}
+      <GlassModal
+        isOpen={showModal}
+        onClose={() => { setShowModal(false); resetForm(); }}
+        title={modalType === 'upload' ? 'Upload Image' : 'Add Image by URL'}
+        size="md"
+      >
+        <div className="space-y-6">
+          {modalType === 'upload' ? (
+            <div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0]
+                  if (file) handleFileSelect(file)
+                }}
+                className="hidden"
+              />
               
-              <div className="space-y-4">
-                {modalType === 'upload' ? (
-                  <div>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0]
-                        if (file) handleFileSelect(file)
-                      }}
-                      className="hidden"
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className="border-2 border-dashed border-glass-border rounded-2xl p-8 text-center cursor-pointer hover:border-primary/60 transition-colors glass-card bg-glass-100"
+              >
+                {previewImage ? (
+                  <div className="space-y-4">
+                    <img
+                      src={previewImage}
+                      alt="Preview"
+                      className="w-32 h-32 object-cover rounded-2xl mx-auto"
                     />
-                    
-                    <div
-                      onClick={() => fileInputRef.current?.click()}
-                      className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:border-blue-400 transition-colors"
-                    >
-                      {previewImage ? (
-                        <div className="space-y-4">
-                          <img
-                            src={previewImage}
-                            alt="Preview"
-                            className="w-32 h-32 object-cover rounded-lg mx-auto"
-                          />
-                          <p className="text-sm text-gray-600">Click to select a different image</p>
-                        </div>
-                      ) : (
-                        <div>
-                          <CloudArrowUpIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                          <p className="text-lg text-gray-600 mb-2">Drop image here or click to browse</p>
-                          <p className="text-sm text-gray-500">PNG, JPG, GIF up to 10MB</p>
-                        </div>
-                      )}
-                    </div>
+                    <p className="text-caption">Click to select a different image</p>
                   </div>
                 ) : (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Image URL *
-                    </label>
-                    <input
-                      type="url"
-                      value={formData.url}
-                      onChange={(e) => setFormData({ ...formData, url: e.target.value })}
-                      placeholder="https://example.com/image.jpg"
-                      className="form-input"
-                      required
-                    />
+                    <CloudArrowUpIcon className="w-12 h-12 text-white/60 mx-auto mb-4" />
+                    <p className="text-body mb-2">Drop image here or click to browse</p>
+                    <p className="text-caption">PNG, JPG, GIF up to 10MB</p>
                   </div>
                 )}
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Alt Text / Description
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.alt_text}
-                    onChange={(e) => setFormData({ ...formData, alt_text: e.target.value })}
-                    placeholder="Describe the image for accessibility"
-                    className="form-input"
-                  />
-                </div>
-                
-                <div className="flex space-x-3 pt-4">
-                  <button
-                    onClick={() => {
-                      if (modalType === 'upload' && fileInputRef.current?.files?.[0]) {
-                        uploadFile(fileInputRef.current.files[0])
-                      } else if (modalType === 'url') {
-                        addImageByUrl()
-                      }
-                    }}
-                    className="btn-primary flex-1"
-                    disabled={uploading || (modalType === 'url' && !formData.url)}
-                  >
-                    {uploading ? 'Processing...' : modalType === 'upload' ? 'Upload Image' : 'Add Image'}
-                  </button>
-                  <button
-                    onClick={() => { setShowModal(false); resetForm(); }}
-                    className="btn-ghost flex-1"
-                  >
-                    Cancel
-                  </button>
-                </div>
               </div>
             </div>
+          ) : (
+            <div>
+              <label className="block text-sm font-medium text-white/80 mb-2">
+                Image URL *
+              </label>
+              <input
+                type="url"
+                value={formData.url}
+                onChange={(e) => setFormData({ ...formData, url: e.target.value })}
+                placeholder="https://example.com/image.jpg"
+                className="glass-input"
+                required
+              />
+            </div>
+          )}
+          
+          <div>
+            <label className="block text-sm font-medium text-white/80 mb-2">
+              Alt Text / Description
+            </label>
+            <input
+              type="text"
+              value={formData.alt_text}
+              onChange={(e) => setFormData({ ...formData, alt_text: e.target.value })}
+              placeholder="Describe the image for accessibility"
+              className="glass-input"
+            />
           </div>
-        )}
-      </div>
-    </Layout>
+          
+          <div className="flex gap-3 pt-4">
+            <GlassButton
+              onClick={() => {
+                if (modalType === 'upload' && fileInputRef.current?.files?.[0]) {
+                  uploadFile(fileInputRef.current.files[0])
+                } else if (modalType === 'url') {
+                  addImageByUrl()
+                }
+              }}
+              disabled={uploading || (modalType === 'url' && !formData.url)}
+              loading={uploading}
+              className="flex-1"
+            >
+              {modalType === 'upload' ? 'Upload Image' : 'Add Image'}
+            </GlassButton>
+            <GlassButton
+              variant="ghost"
+              onClick={() => { setShowModal(false); resetForm(); }}
+              className="flex-1"
+            >
+              Cancel
+            </GlassButton>
+          </div>
+        </div>
+      </GlassModal>
+    </div>
   )
 }

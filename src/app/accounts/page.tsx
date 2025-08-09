@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
-import Layout from '@/components/Layout'
 import { 
   UserPlusIcon, 
   CloudArrowUpIcon,
@@ -9,9 +8,14 @@ import {
   CogIcon,
   CheckIcon,
   XMarkIcon,
-  ExclamationTriangleIcon
+  ExclamationTriangleIcon,
+  EllipsisVerticalIcon
 } from '@heroicons/react/24/outline'
 import { API_BASE } from '@/lib/config'
+import GlassCard from '@/components/ui/GlassCard'
+import GlassButton from '@/components/ui/GlassButton'
+import StatusChip from '@/components/ui/StatusChip'
+import GlassModal from '@/components/ui/GlassModal'
 
 interface Account {
   id: number
@@ -190,11 +194,11 @@ export default function AccountsPage() {
   const getConnectionBadge = (status: string) => {
     switch (status) {
       case 'connected_session':
-        return <span className="badge-success">Connected (Session)</span>
+        return <StatusChip status="success">Connected (Session)</StatusChip>
       case 'connected_official':
-        return <span className="badge-info">Connected (Official)</span>
+        return <StatusChip status="info">Connected (Official)</StatusChip>
       default:
-        return <span className="badge-error">Disconnected</span>
+        return <StatusChip status="error">Disconnected</StatusChip>
     }
   }
 
@@ -205,249 +209,346 @@ export default function AccountsPage() {
 
   if (loading) {
     return (
-      <Layout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-        </div>
-      </Layout>
+      <div className="flex items-center justify-center h-64">
+        <div className="loading-shimmer w-32 h-32 rounded-full border-4 border-glass-border border-t-primary animate-spin"></div>
+      </div>
     )
   }
 
   return (
-    <Layout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Accounts</h1>
-            <p className="text-gray-600 mt-1">Manage your Threads accounts and autopilot settings</p>
-          </div>
-          
-          <button
-            onClick={() => setShowModal(true)}
-            className="btn-primary flex items-center space-x-2"
-          >
-            <UserPlusIcon className="w-5 h-5" />
-            <span>Add Account</span>
-          </button>
+    <div className="space-y-8 animate-fade-in">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="heading-1 gradient-text">Accounts</h1>
+          <p className="text-body mt-2">Manage your Threads accounts and autopilot settings</p>
         </div>
+        
+        <GlassButton
+          onClick={() => setShowModal(true)}
+          className="responsive"
+        >
+          <UserPlusIcon className="w-5 h-5" />
+          Add Account
+        </GlassButton>
+      </div>
 
-        {/* Messages */}
-        {error && (
-          <div className="glass-card border-red-200 bg-red-50 rounded-xl p-4">
-            <div className="flex items-center">
-              <ExclamationTriangleIcon className="w-5 h-5 text-red-600 mr-2" />
-              <p className="text-red-700">{error}</p>
-              <button onClick={() => setError('')} className="ml-auto">
-                <XMarkIcon className="w-5 h-5 text-red-600" />
-              </button>
-            </div>
+      {/* Messages */}
+      {error && (
+        <GlassCard className="border-red-500/20 bg-red-500/10 animate-slide-down">
+          <div className="flex items-center gap-3">
+            <ExclamationTriangleIcon className="w-5 h-5 text-red-400 flex-shrink-0" />
+            <p className="text-red-300 flex-1">{error}</p>
+            <GlassButton variant="ghost" size="sm" onClick={() => setError('')} className="!p-1">
+              <XMarkIcon className="w-4 h-4" />
+            </GlassButton>
           </div>
-        )}
+        </GlassCard>
+      )}
 
-        {message && (
-          <div className="glass-card border-green-200 bg-green-50 rounded-xl p-4">
-            <div className="flex items-center">
-              <CheckIcon className="w-5 h-5 text-green-600 mr-2" />
-              <p className="text-green-700">{message}</p>
-              <button onClick={() => setMessage('')} className="ml-auto">
-                <XMarkIcon className="w-5 h-5 text-green-600" />
-              </button>
-            </div>
+      {message && (
+        <GlassCard className="border-emerald-500/20 bg-emerald-500/10 animate-slide-down">
+          <div className="flex items-center gap-3">
+            <CheckIcon className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+            <p className="text-emerald-300 flex-1">{message}</p>
+            <GlassButton variant="ghost" size="sm" onClick={() => setMessage('')} className="!p-1">
+              <XMarkIcon className="w-4 h-4" />
+            </GlassButton>
           </div>
-        )}
+        </GlassCard>
+      )}
 
-        {/* Accounts Table */}
-        <div className="card">
-          <div className="card-header">
-            <h2 className="card-title">Connected Accounts</h2>
-            <span className="text-sm text-gray-500">{accounts.length} total</span>
-          </div>
-
-          {accounts.length === 0 ? (
-            <div className="text-center py-12">
-              <UserPlusIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No accounts yet</h3>
-              <p className="text-gray-600 mb-4">Get started by adding your first Threads account</p>
-              <button onClick={() => setShowModal(true)} className="btn-primary">
-                Add Your First Account
-              </button>
+      {/* Accounts Section */}
+      <GlassCard 
+        title="Connected Accounts" 
+        subtitle={`${accounts.length} total accounts`}
+        className="animate-slide-up"
+      >
+        {accounts.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-state-blob">
+              <UserPlusIcon className="w-8 h-8 text-primary" />
             </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Username</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Status</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Autopilot</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Cadence</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Next Run</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Last Posted</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {accounts.map((account) => (
-                    <tr key={account.id} className="border-b border-gray-100 hover:bg-gray-50/50">
-                      <td className="py-4 px-4">
-                        <div>
-                          <p className="font-medium text-gray-900">@{account.username}</p>
-                          {account.description && (
-                            <p className="text-sm text-gray-500">{account.description}</p>
-                          )}
+            <h3 className="heading-4 text-white mb-2">No accounts yet</h3>
+            <p className="text-body mb-6">Get started by adding your first Threads account</p>
+            <GlassButton onClick={() => setShowModal(true)}>
+              Add Your First Account
+            </GlassButton>
+          </div>
+        ) : (
+          <>
+            {/* Desktop Table */}
+            <div className="hidden lg:block glass-table">
+              <div className="grid grid-cols-7 glass-table-header">
+                <div>Username</div>
+                <div>Status</div>
+                <div>Autopilot</div>
+                <div>Cadence</div>
+                <div>Next Run</div>
+                <div>Last Posted</div>
+                <div>Actions</div>
+              </div>
+              
+              {accounts.map((account, index) => (
+                <div key={account.id} className="grid grid-cols-7 glass-table-row" style={{ animationDelay: `${index * 100}ms` }}>
+                  <div>
+                    <div>
+                      <p className="font-medium text-white">@{account.username}</p>
+                      {account.description && (
+                        <p className="text-caption">{account.description}</p>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    {getConnectionBadge(account.connection_status)}
+                  </div>
+                  
+                  <div>
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={account.autopilot_enabled}
+                        onChange={(e) => toggleAutopilot(account.id, e.target.checked)}
+                        className="rounded border-glass-border bg-glass-100 text-primary focus:ring-primary/60"
+                      />
+                      <span className="text-sm text-white/80">
+                        {account.autopilot_enabled ? 'Enabled' : 'Disabled'}
+                      </span>
+                    </label>
+                  </div>
+                  
+                  <div>
+                    <select
+                      value={account.cadence_minutes}
+                      onChange={(e) => updateCadence(account.id, parseInt(e.target.value))}
+                      className="glass-input w-20 text-sm"
+                    >
+                      <option value={5}>5m</option>
+                      <option value={10}>10m</option>
+                      <option value={15}>15m</option>
+                      <option value={30}>30m</option>
+                      <option value={60}>1h</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <span className="text-caption">
+                      {formatDate(account.next_run_at)}
+                    </span>
+                  </div>
+                  
+                  <div>
+                    <span className="text-caption">
+                      {formatDate(account.last_posted_at)}
+                    </span>
+                  </div>
+                  
+                  <div>
+                    <div className="flex items-center gap-2">
+                      {/* Session Upload */}
+                      {account.connection_status === 'disconnected' && (
+                        <div className="relative">
+                          <input
+                            ref={(el) => {
+                              if (el) sessionInputRefs.current[account.id] = el
+                            }}
+                            type="file"
+                            accept=".json"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0]
+                              if (file) uploadSession(account.id, file)
+                            }}
+                            className="hidden"
+                          />
+                          <GlassButton
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => sessionInputRefs.current[account.id]?.click()}
+                            disabled={sessionUploads[account.id]}
+                            loading={sessionUploads[account.id]}
+                          >
+                            <CloudArrowUpIcon className="w-4 h-4" />
+                            Session
+                          </GlassButton>
                         </div>
-                      </td>
+                      )}
                       
-                      <td className="py-4 px-4">
-                        {getConnectionBadge(account.connection_status)}
-                      </td>
-                      
-                      <td className="py-4 px-4">
-                        <label className="flex items-center">
+                      {/* Test Post */}
+                      <GlassButton
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => testPost(account.id)}
+                      >
+                        <PlayIcon className="w-4 h-4" />
+                        Test
+                      </GlassButton>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Mobile Cards */}
+            <div className="lg:hidden space-y-4">
+              {accounts.map((account, index) => (
+                <GlassCard key={account.id} dense className="animate-slide-up" style={{ animationDelay: `${index * 100}ms` }}>
+                  <div className="space-y-4">
+                    {/* Header */}
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="font-medium text-white">@{account.username}</p>
+                        {account.description && (
+                          <p className="text-caption">{account.description}</p>
+                        )}
+                      </div>
+                      {getConnectionBadge(account.connection_status)}
+                    </div>
+                    
+                    {/* Settings */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-caption mb-2">Autopilot</p>
+                        <label className="flex items-center gap-2">
                           <input
                             type="checkbox"
                             checked={account.autopilot_enabled}
                             onChange={(e) => toggleAutopilot(account.id, e.target.checked)}
-                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            className="rounded border-glass-border bg-glass-100 text-primary focus:ring-primary/60"
                           />
-                          <span className="ml-2 text-sm text-gray-900">
+                          <span className="text-sm text-white/80">
                             {account.autopilot_enabled ? 'Enabled' : 'Disabled'}
                           </span>
                         </label>
-                      </td>
+                      </div>
                       
-                      <td className="py-4 px-4">
+                      <div>
+                        <p className="text-caption mb-2">Cadence</p>
                         <select
                           value={account.cadence_minutes}
                           onChange={(e) => updateCadence(account.id, parseInt(e.target.value))}
-                          className="form-select w-20 text-sm"
+                          className="glass-input w-full text-sm"
                         >
-                          <option value={5}>5m</option>
-                          <option value={10}>10m</option>
-                          <option value={15}>15m</option>
-                          <option value={30}>30m</option>
-                          <option value={60}>1h</option>
+                          <option value={5}>5 minutes</option>
+                          <option value={10}>10 minutes</option>
+                          <option value={15}>15 minutes</option>
+                          <option value={30}>30 minutes</option>
+                          <option value={60}>1 hour</option>
                         </select>
-                      </td>
-                      
-                      <td className="py-4 px-4">
-                        <span className="text-sm text-gray-600">
-                          {formatDate(account.next_run_at)}
-                        </span>
-                      </td>
-                      
-                      <td className="py-4 px-4">
-                        <span className="text-sm text-gray-600">
-                          {formatDate(account.last_posted_at)}
-                        </span>
-                      </td>
-                      
-                      <td className="py-4 px-4">
-                        <div className="flex items-center space-x-2">
-                          {/* Session Upload */}
-                          {account.connection_status === 'disconnected' && (
-                            <div className="relative">
-                              <input
-                                ref={(el) => {
-                                  if (el) sessionInputRefs.current[account.id] = el
-                                }}
-                                type="file"
-                                accept=".json"
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0]
-                                  if (file) uploadSession(account.id, file)
-                                }}
-                                className="hidden"
-                              />
-                              <button
-                                onClick={() => sessionInputRefs.current[account.id]?.click()}
-                                disabled={sessionUploads[account.id]}
-                                className="btn-secondary text-xs flex items-center space-x-1"
-                              >
-                                <CloudArrowUpIcon className="w-4 h-4" />
-                                <span>{sessionUploads[account.id] ? 'Uploading...' : 'Session'}</span>
-                              </button>
-                            </div>
-                          )}
-                          
-                          {/* Test Post */}
-                          <button
-                            onClick={() => testPost(account.id)}
-                            className="btn-secondary text-xs flex items-center space-x-1"
+                      </div>
+                    </div>
+                    
+                    {/* Timestamps */}
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <p className="text-caption">Next Run</p>
+                        <p className="text-white/80">{formatDate(account.next_run_at)}</p>
+                      </div>
+                      <div>
+                        <p className="text-caption">Last Posted</p>
+                        <p className="text-white/80">{formatDate(account.last_posted_at)}</p>
+                      </div>
+                    </div>
+                    
+                    {/* Actions */}
+                    <div className="flex gap-2">
+                      {account.connection_status === 'disconnected' && (
+                        <div className="relative flex-1">
+                          <input
+                            ref={(el) => {
+                              if (el) sessionInputRefs.current[account.id] = el
+                            }}
+                            type="file"
+                            accept=".json"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0]
+                              if (file) uploadSession(account.id, file)
+                            }}
+                            className="hidden"
+                          />
+                          <GlassButton
+                            variant="ghost"
+                            onClick={() => sessionInputRefs.current[account.id]?.click()}
+                            disabled={sessionUploads[account.id]}
+                            loading={sessionUploads[account.id]}
+                            className="w-full"
                           >
-                            <PlayIcon className="w-4 h-4" />
-                            <span>Test</span>
-                          </button>
+                            <CloudArrowUpIcon className="w-4 h-4" />
+                            Connect via Session
+                          </GlassButton>
                         </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                      )}
+                      
+                      <GlassButton
+                        variant="ghost"
+                        onClick={() => testPost(account.id)}
+                        className={account.connection_status === 'disconnected' ? 'flex-1' : 'w-full'}
+                      >
+                        <PlayIcon className="w-4 h-4" />
+                        Test Post
+                      </GlassButton>
+                    </div>
+                  </div>
+                </GlassCard>
+              ))}
             </div>
-          )}
-        </div>
-
-        {/* Create Account Modal */}
-        {showModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="card w-full max-w-md">
-              <div className="card-header">
-                <h3 className="card-title">Add Threads Account</h3>
-                <button onClick={() => setShowModal(false)}>
-                  <XMarkIcon className="w-6 h-6 text-gray-400" />
-                </button>
-              </div>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Username *
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.username}
-                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                    placeholder="@username"
-                    className="form-input"
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Description
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Optional description"
-                    className="form-input"
-                  />
-                </div>
-                
-                <div className="flex space-x-3 pt-4">
-                  <button
-                    onClick={createAccount}
-                    className="btn-primary flex-1"
-                    disabled={!formData.username}
-                  >
-                    Create Account
-                  </button>
-                  <button
-                    onClick={() => setShowModal(false)}
-                    className="btn-ghost flex-1"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+          </>
         )}
-      </div>
-    </Layout>
+      </GlassCard>
+
+      {/* Create Account Modal */}
+      <GlassModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        title="Add Threads Account"
+        size="md"
+      >
+        <div className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-white/80 mb-2">
+              Username *
+            </label>
+            <input
+              type="text"
+              value={formData.username}
+              onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+              placeholder="@username"
+              className="glass-input"
+              required
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-white/80 mb-2">
+              Description
+            </label>
+            <input
+              type="text"
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              placeholder="Optional description"
+              className="glass-input"
+            />
+          </div>
+          
+          <div className="flex gap-3 pt-4">
+            <GlassButton
+              onClick={createAccount}
+              disabled={!formData.username}
+              className="flex-1"
+            >
+              Create Account
+            </GlassButton>
+            <GlassButton
+              variant="ghost"
+              onClick={() => setShowModal(false)}
+              className="flex-1"
+            >
+              Cancel
+            </GlassButton>
+          </div>
+        </div>
+      </GlassModal>
+    </div>
   )
 }
